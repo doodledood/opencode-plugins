@@ -5,7 +5,7 @@ description: Fetch claude-code-plugins repo and convert plugins to OpenCode form
 
 # Sync Claude Code Plugins to OpenCode
 
-Convert Claude Code plugins to OpenCode format.
+Convert Claude Code plugins to OpenCode format. **All conversion rules are in `references/CONVERSION_GUIDE.md`** - read it first.
 
 ## Arguments
 
@@ -13,7 +13,18 @@ Convert Claude Code plugins to OpenCode format.
 
 ## Execution
 
-### 1. Locate Source Repo
+### 1. Read the Conversion Guide
+
+**FIRST**: Read `references/CONVERSION_GUIDE.md` to understand:
+- Directory structure mapping
+- Skill classification rules (command vs skill)
+- Frontmatter transformations
+- Tool permission mapping
+- Model ID mapping
+- Skill() call transformations
+- Hook event mapping
+
+### 2. Locate Source Repo
 
 ```bash
 REPO=""
@@ -23,12 +34,11 @@ done
 [ -z "$REPO" ] && git clone https://github.com/doodledood/claude-code-plugins.git /tmp/claude-code-plugins && REPO=/tmp/claude-code-plugins
 ```
 
-### 2. Discover Plugins
+### 3. Discover Plugins
 
-If no plugins specified, discover all available plugins:
+If no plugins specified, discover all available:
 
 ```bash
-# Find all directories with .claude-plugin/plugin.json
 PLUGINS=""
 for dir in "$REPO"/claude-plugins/*/; do
   [ -d "$dir" ] || continue
@@ -37,9 +47,9 @@ done
 echo "Available plugins: $PLUGINS"
 ```
 
-If `$ARGUMENTS` is provided, use those instead (normalize commas to spaces).
+If `$ARGUMENTS` provided, use those (normalize commas to spaces).
 
-### 3. Bulk Copy (per plugin)
+### 4. Bulk Copy (per plugin)
 
 ```bash
 SCRIPTS="${CLAUDE_SKILL_ROOT}/scripts"
@@ -48,136 +58,77 @@ for PLUGIN in $PLUGINS; do
 done
 ```
 
-### 4. Transform Files
+### 5. Transform Files
 
 ```bash
-python3 "${CLAUDE_SKILL_ROOT}/scripts/transform.py"
+python3 "${CLAUDE_SKILL_ROOT}/scripts/transform.py" "./*"
 ```
 
-### 5. Convert Hooks to TypeScript
+### 6. Convert Hooks (if source has hooks/)
 
-If plugin.json has hooks, create `plugin/hooks.ts`:
+See CONVERSION_GUIDE.md section "Converting Hooks" for:
+- Event mapping table
+- TypeScript template
+- Blocking behavior differences
 
-```typescript
-export default async ({ project, client }) => {
-  return {
-    // SessionStart → session.created
-    "session.created": async () => {
-      return { additionalContext: "<system-reminder>...</system-reminder>" };
-    },
+Create `plugin/hooks.ts` following the guide's template.
 
-    // PostCompact → session.compacted
-    "session.compacted": async () => {
-      return { additionalContext: "..." };
-    },
+### 7. Create package.json (per plugin)
 
-    // PostToolUse → tool.execute.after
-    "tool.execute.after": async (event) => {
-      if (event.tool !== "todo") return;
-      // handle...
-    },
+See CONVERSION_GUIDE.md section "Plugin Manifest Conversion" for format.
 
-    // PreToolUse → tool.execute.before (CAN BLOCK via output.abort)
-    "tool.execute.before": async (input, output) => {
-      // Block via: output.abort = "reason";
-    },
-
-    // Stop → session.idle (CANNOT BLOCK STOPPING)
-    "session.idle": async () => {
-      // Cannot prevent stopping in OpenCode
-    },
-  };
-};
-```
-
-**Hook mapping:**
-| Claude Code | OpenCode | Can Block? |
-|-------------|----------|------------|
-| SessionStart | session.created | N/A |
-| PostCompact | session.compacted | N/A |
-| PostToolUse | tool.execute.after | No |
-| PreToolUse | tool.execute.before | **Yes** (via `output.abort`) |
-| Stop | session.idle | **No** |
-
-### 6. Create package.json (per plugin)
-
-Read `.claude-plugin/plugin.json` and create `package.json`:
-
-```json
-{
-  "name": "opencode-<plugin-name>",
-  "version": "<from plugin.json>",
-  "description": "<from plugin.json>",
-  "author": "<name> <<email>>",
-  "type": "module",
-  "license": "MIT",
-  "keywords": ["opencode", "opencode-plugin", ...],
-  "opencode": {
-    "type": "plugin",
-    "hooks": ["session.created", "tool.execute.before"]
-  },
-  "dependencies": {
-    "@opencode-ai/plugin": "^1.0.162"
-  }
-}
-```
-
-**Note**: This package.json is for npm publishing metadata. OpenCode does NOT read it for discovery - files must be installed to `~/.config/opencode/` via `install.sh`.
-
-### 7. Create README.md
+### 8. Create README.md
 
 List commands, agents, skills for each plugin.
 
-### 8. Validate & Adapt Transformed Output
+### 9. Validate EVERY File Against Conversion Guide
 
-**CRITICAL**: After automated transforms, methodically verify output matches CONVERSION_GUIDE expectations. Read sample files and adapt if needed.
+**CRITICAL**: Verify ALL transformed files match CONVERSION_GUIDE expectations. Do not sample - check everything.
 
-#### Validation Checklist
+#### For Each Plugin, Verify:
 
-For each plugin, verify:
+**Read the CONVERSION_GUIDE sections** for expected format, then check:
 
-1. **Commands** (`command/*.md`):
-   - [ ] NO `name:` field in frontmatter
-   - [ ] Has `description:` field
-   - [ ] Has `agent: build` (or appropriate agent)
-   - [ ] Model converted to full ID (not `opus`, `sonnet`, `haiku`)
-   - [ ] `Skill()` calls for user-invocable targets → `/command` format
+1. **EVERY command** (`command/*.md`):
+   - Compare against "Converting User-Invocable Skills → Commands"
+   - Check "Frontmatter Field Mapping" table
+   - Check "Model Mapping" section
+   - Check "Prompt Content Transformations" for Skill() calls
 
-2. **Agents** (`agent/*.md`):
-   - [ ] NO `name:` field in frontmatter
-   - [ ] Has `mode: subagent`
-   - [ ] `tools:` is YAML object with permissions (not comma list)
-   - [ ] Model converted to full ID
+2. **EVERY agent** (`agent/*.md`):
+   - Compare against "Converting Agents"
+   - Check "Frontmatter Field Mapping" table
+   - Check "Tool Permission Mapping" table
+   - Check "Model Mapping" section
 
-3. **Skills** (`skill/*/SKILL.md`):
-   - [ ] HAS `name:` field (skills keep it!)
-   - [ ] NO `user-invocable:` field (removed)
-   - [ ] `Skill()` calls for non-user-invocable targets → `skill({ name: "..." })`
+3. **EVERY skill** (`skill/*/SKILL.md`):
+   - Compare against "Converting Non-User-Invocable Skills → Skills"
+   - Verify `name:` is KEPT (unlike commands/agents)
+   - Check "Prompt Content Transformations" for Skill() calls
 
-4. **Cross-file references**:
-   - [ ] `Skill("plugin:user-invocable-skill")` → `/skill-name`
-   - [ ] `Skill("plugin:non-user-invocable-skill")` → `skill({ name: "skill-name" })`
-   - [ ] Task tool references → agent references
+4. **Cross-references in ALL files**:
+   - Check "Skill/Command References" section
+   - User-invocable targets → `/command`
+   - Non-user-invocable targets → `skill({ name: "..." })`
+   - Task tool references → agent references
+
+5. **Hooks** (if any):
+   - Compare against "Converting Hooks" section
+   - Verify event names match mapping table
+   - Check blocking behavior notes
 
 #### Adaptation Process
 
 If validation finds issues:
 
-1. **Identify pattern**: What transformation rule was missed or incorrectly applied?
-2. **Fix directly**: Edit the file to correct the issue
-3. **Update transform.py**: If systematic, add the rule to scripts/transform.py
-4. **Re-verify**: Check other files for same issue
-
-#### Sample Verification (minimum)
-
-Read and verify at least these files per plugin:
-- One command with complex content (Skill() calls, model references)
-- One agent with tools list
-- One skill (if any exist)
+1. **Consult CONVERSION_GUIDE**: Which rule was violated?
+2. **Fix the file**: Edit to match guide specification
+3. **Update transform.py**: If systematic issue, add the rule
+4. **Re-verify**: Check all files for same issue
 
 ## Reference
 
-See `references/CONVERSION_GUIDE.md` for full specification.
+**`references/CONVERSION_GUIDE.md`** is the single source of truth for all conversion rules. This skill only describes the workflow.
 
 ## Output
 
@@ -193,13 +144,10 @@ See `references/CONVERSION_GUIDE.md` for full specification.
 
 ## Installation
 
-After conversion, run the install script to copy to OpenCode config:
+After conversion:
 
 ```bash
 ./install.sh                    # Install all plugins
 ./install.sh vibe-workflow      # Install specific plugin
-./install.sh plugin1,plugin2    # Install multiple (comma-separated)
+./install.sh plugin1,plugin2    # Install multiple
 ```
-
-Files are postfixed with plugin name to avoid collisions:
-- `review.md` → `review-vibe-workflow.md` → `/review-vibe-workflow`
