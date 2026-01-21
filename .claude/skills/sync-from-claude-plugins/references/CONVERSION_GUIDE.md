@@ -80,37 +80,46 @@ my-plugin/
 
 ### OpenCode Discovery (Installed)
 
-OpenCode discovers resources from **flat directories**, not nested plugin structures. After installation, files must be in:
+OpenCode discovers resources from **flat directories**, not nested plugin structures. The `install.sh` script copies files with a **plugin postfix** to avoid name collisions:
 
 ```
 ~/.config/opencode/
 ├── command/
-│   ├── review.md            # From any plugin
-│   ├── plan.md
+│   ├── review-vibe-workflow.md        # /review-vibe-workflow
+│   ├── plan-vibe-workflow.md          # /plan-vibe-workflow
+│   ├── define-vibe-experimental.md    # /define-vibe-experimental
 │   └── ...
 ├── agent/
-│   ├── bug-fixer.md
+│   ├── bug-fixer-vibe-workflow.md
+│   ├── criteria-checker-vibe-experimental.md
 │   └── ...
 ├── skill/
-│   └── chunk-impl/
+│   └── verify-vibe-experimental/
 │       └── SKILL.md
 └── plugin/
-    └── hooks.ts             # Or my-plugin-hooks.ts
+    ├── vibe-workflow-hooks.ts
+    └── vibe-experimental-hooks.ts
 ```
 
-**Installation is required**: Use `install.sh` to copy plugin contents to the OpenCode config directory. OpenCode does NOT auto-discover nested plugin directories.
+**Naming convention**: All files are postfixed with `-<plugin-name>` to:
+- Avoid collisions between plugins with similar commands/agents
+- Enable clean uninstall per plugin
+- Support sync (deletions detected by postfix pattern)
 
-**Directory Naming**: OpenCode supports **both singular and plural** via glob patterns (e.g., `{command,commands}/**/*.md`).
+**Installation**: Use `install.sh` which performs a full sync:
+1. Cleans existing files for the plugin (by postfix pattern)
+2. Copies fresh files from source
+3. Updates `name:` fields to match new filenames
 
 ### Path Mapping
 
-| Claude Code | OpenCode | Notes |
-|-------------|----------|-------|
-| `.claude-plugin/plugin.json` | `package.json` | npm package manifest |
-| `skill/<name>/SKILL.md` (user-invocable) | `command/<name>.md` | Flat file, not directory |
-| `skill/<name>/SKILL.md` (non-user-invocable) | `skill/<name>/SKILL.md` | Same structure |
-| `agent/<name>.md` | `agent/<name>.md` | Same |
-| `hooks/*.py` | `plugin/hooks.ts` | Python → TypeScript |
+| Claude Code | OpenCode (Source) | OpenCode (Installed) |
+|-------------|-------------------|----------------------|
+| `.claude-plugin/plugin.json` | `package.json` | N/A (metadata only) |
+| `skill/<name>/SKILL.md` (user-invocable) | `command/<name>.md` | `command/<name>-<plugin>.md` |
+| `skill/<name>/SKILL.md` (non-user-invocable) | `skill/<name>/SKILL.md` | `skill/<name>-<plugin>/SKILL.md` |
+| `agent/<name>.md` | `agent/<name>.md` | `agent/<name>-<plugin>.md` |
+| `hooks/*.py` | `plugin/hooks.ts` | `plugin/<plugin>-hooks.ts` |
 
 ---
 
@@ -859,25 +868,42 @@ tools:
 
 ### Content Transformations
 
-| Find | Replace |
-|------|---------|
-| `Skill("plugin:foo")` | `/foo` |
-| `Skill("plugin:foo", "args")` | `/foo args` |
-| `model: opus/sonnet/haiku` | See [Model Mapping](#model-mapping) |
-| `tools: Bash, Read, ...` | See [Tool Permission Mapping](#tool-permission-mapping) |
+| Find | Replace (Source) | After Install |
+|------|------------------|---------------|
+| `Skill("plugin:foo")` | `/foo` | `/foo-<plugin>` |
+| `Skill("plugin:foo", "args")` | `/foo args` | `/foo-<plugin> args` |
+| `model: opus/sonnet/haiku` | See [Model Mapping](#model-mapping) | Same |
+| `tools: Bash, Read, ...` | See [Tool Permission Mapping](#tool-permission-mapping) | Same |
+
+**Note**: In source files, use short command names (`/foo`). The install script adds the `-<plugin>` postfix automatically.
 
 ### Directory Structure
 
-OpenCode supports both singular and plural via glob patterns. Convention uses plural:
-
+**Source** (this repo):
 ```
-plugin-name/
+<plugin-name>/
 ├── package.json
-├── commands/      # or command/ (both work)
-├── agents/        # or agent/ (both work)
-├── skills/        # folder-per-skill structure
-│   └── <name>/
+├── command/       # User-invocable commands
+│   └── review.md
+├── agent/         # Subagent definitions
+│   └── bug-fixer.md
+├── skill/         # Non-user-invocable skills
+│   └── verify/
 │       └── SKILL.md
-└── plugins/       # or plugin/ (both work)
+└── plugin/        # TypeScript hooks
     └── hooks.ts
+```
+
+**Installed** (after `./install.sh`):
+```
+~/.config/opencode/
+├── command/
+│   └── review-<plugin-name>.md
+├── agent/
+│   └── bug-fixer-<plugin-name>.md
+├── skill/
+│   └── verify-<plugin-name>/
+│       └── SKILL.md
+└── plugin/
+    └── <plugin-name>-hooks.ts
 ```
