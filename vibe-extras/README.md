@@ -1,23 +1,23 @@
-# OpenCode Vibe Extras
+# opencode-vibe-extras
 
-Standalone utilities that complement the core development workflow.
+Standalone utilities that complement the core development workflow
 
-Converted from [claude-code-plugins](https://github.com/doodledood/claude-code-plugins).
+## Installation
 
-## Command (4)
+```bash
+./install.sh vibe-extras
+```
 
-| Command | Description |
-|---------|-------------|
-| `/clean-slop` | Find and remove AI-generated code slop |
-| `/rebase-on-main` | Rebase current branch on main |
-| `/rewrite-history` | Rewrite git history |
-| `/update-claude-md` | Update CLAUDE.md file |
+## Commands
 
-## Agent (1)
+- `/clean-slop-vibe-extras`
+- `/rebase-on-main-vibe-extras`
+- `/rewrite-history-vibe-extras`
+- `/update-claude-md-vibe-extras`
 
-| Agent | Description |
-|-------|-------------|
-| `slop-cleaner` | Clean up AI-generated code patterns |
+## Agents
+
+- `slop-cleaner-vibe-extras`
 
 ## License
 

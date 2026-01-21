@@ -29,7 +29,7 @@ If no arguments: Output error "Usage: /do <manifest-file-path>"
 
 **Must call /verify** - Can't declare done without verification. When all deliverables addressed:
 ```
-/verify /tmp/manifest-{ts}.md /tmp/do-log-{ts}.md
+skill({ name: "verify", arguments: "/tmp/manifest-{ts}.md /tmp/do-log-{ts}.md" })
 ```
 
 ## Todo Discipline
@@ -65,7 +65,7 @@ If no arguments: Output error "Usage: /do <manifest-file-path>"
 
 **Escalate when stuck** - If you've tried 3+ approaches on a criterion and can't satisfy it:
 ```
-/escalate [criterion ID] blocking after 3 attempts
+skill({ name: "escalate", arguments: "[criterion ID] blocking after 3 attempts" })
 ```
 
 ## Log Structure

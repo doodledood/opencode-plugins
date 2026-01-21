@@ -8,7 +8,6 @@ tools:
   skill: allow
   webfetch: allow
   websearch: allow
-
 model: anthropic/claude-sonnet-4-5-20250929
 mode: subagent
 ---

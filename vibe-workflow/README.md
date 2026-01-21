@@ -1,50 +1,50 @@
-# OpenCode Vibe Workflow
+# opencode-vibe-workflow
 
-Ship high-quality code faster with less back-and-forth.
+Ship high-quality code faster with less back-and-forth
 
-Converted from [claude-code-plugins](https://github.com/doodledood/claude-code-plugins).
+## Installation
 
-## Command (18)
+```bash
+./install.sh vibe-workflow
+```
 
-| Command | Description |
-|---------|-------------|
-| `/review` | Run all code review agents in parallel |
-| `/plan` | Create implementation plans from spec |
-| `/implement` | Execute plans via subagents with verification |
-| `/implement-inplace` | Single-agent implementation without subagents |
-| `/spec` | Requirements discovery through structured interview |
-| `/bugfix` | Investigate and fix bugs systematically |
-| `/explore-codebase` | Find all files relevant to a query |
-| `/research-web` | Deep web research with parallel investigators |
-| `/web-research` | Research external topics via web search |
-| `/fix-review-issues` | Fix issues found by /review |
-| `/review-bugs` | Audit code for logical bugs |
-| `/review-coverage` | Verify test coverage for code changes |
-| `/review-maintainability` | Audit for DRY violations, dead code, coupling |
-| `/review-simplicity` | Audit for over-engineering and complexity |
-| `/review-testability` | Audit for testability design patterns |
-| `/review-type-safety` | Audit TypeScript for type safety issues |
-| `/review-docs` | Audit documentation accuracy |
-| `/review-claude-md-adherence` | Verify CLAUDE.md compliance |
+## Commands
 
-## Agent (14)
+- `/bugfix-vibe-workflow`
+- `/explore-codebase-vibe-workflow`
+- `/fix-review-issues-vibe-workflow`
+- `/implement-vibe-workflow`
+- `/implement-inplace-vibe-workflow`
+- `/plan-vibe-workflow`
+- `/research-web-vibe-workflow`
+- `/review-vibe-workflow`
+- `/review-bugs-vibe-workflow`
+- `/review-claude-md-adherence-vibe-workflow`
+- `/review-coverage-vibe-workflow`
+- `/review-docs-vibe-workflow`
+- `/review-maintainability-vibe-workflow`
+- `/review-simplicity-vibe-workflow`
+- `/review-testability-vibe-workflow`
+- `/review-type-safety-vibe-workflow`
+- `/spec-vibe-workflow`
+- `/web-research-vibe-workflow`
 
-| Agent | Description |
-|-------|-------------|
-| `bug-fixer` | Investigate and fix bugs with root cause analysis |
-| `chunk-implementor` | Implement plan chunks |
-| `chunk-verifier` | Verify chunk implementations |
-| `codebase-explorer` | Explore codebases for relevant files |
-| `web-researcher` | Research topics via web search |
-| `plan-verifier` | Verify implementation plans |
-| `code-bugs-reviewer` | Review for logical bugs |
-| `code-coverage-reviewer` | Review test coverage |
-| `code-maintainability-reviewer` | Review for maintainability issues |
-| `code-simplicity-reviewer` | Review for over-engineering |
-| `code-testability-reviewer` | Review for testability issues |
-| `type-safety-reviewer` | Review for type safety issues |
-| `docs-reviewer` | Review documentation accuracy |
-| `claude-md-adherence-reviewer` | Review CLAUDE.md compliance |
+## Agents
+
+- `bug-fixer-vibe-workflow`
+- `chunk-implementor-vibe-workflow`
+- `chunk-verifier-vibe-workflow`
+- `claude-md-adherence-reviewer-vibe-workflow`
+- `code-bugs-reviewer-vibe-workflow`
+- `code-coverage-reviewer-vibe-workflow`
+- `code-maintainability-reviewer-vibe-workflow`
+- `code-simplicity-reviewer-vibe-workflow`
+- `code-testability-reviewer-vibe-workflow`
+- `codebase-explorer-vibe-workflow`
+- `docs-reviewer-vibe-workflow`
+- `plan-verifier-vibe-workflow`
+- `type-safety-reviewer-vibe-workflow`
+- `web-researcher-vibe-workflow`
 
 ## License
 

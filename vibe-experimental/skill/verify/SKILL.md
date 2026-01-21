@@ -1,4 +1,5 @@
 ---
+name: verify
 description: 'Manifest verification runner. Spawns parallel verifiers for Global Invariants and Acceptance Criteria. Called by /do, not directly by users.'
 ---
 

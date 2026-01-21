@@ -1,19 +1,30 @@
 ---
 name: sync-from-claude-plugins
-description: Fetch claude-code-plugins repo and convert specified plugins to OpenCode format. Usage: /sync-from-claude-plugins [plugin-names...] (default: vibe-workflow vibe-extras vibe-experimental)
+description: Fetch claude-code-plugins repo and convert plugins to OpenCode format. Usage: /sync-from-claude-plugins [plugin-names...] (default: all available plugins)
 ---
 
 # Sync Claude Code Plugins to OpenCode
 
-Convert Claude Code plugins to OpenCode format.
+Convert Claude Code plugins to OpenCode format. **All conversion rules are in `references/CONVERSION_GUIDE.md`** - read it first.
 
 ## Arguments
 
-- `$ARGUMENTS`: Plugin names (space-separated), default: `vibe-workflow vibe-extras vibe-experimental`
+- `$ARGUMENTS`: Plugin names (comma or space-separated). If empty, discovers and converts ALL plugins from the source repo.
 
 ## Execution
 
-### 1. Locate Source Repo
+### 1. Read the Conversion Guide
+
+**FIRST**: Read `references/CONVERSION_GUIDE.md` to understand:
+- Directory structure mapping
+- Skill classification rules (command vs skill)
+- Frontmatter transformations
+- Tool permission mapping
+- Model ID mapping
+- Skill() call transformations
+- Hook event mapping
+
+### 2. Locate Source Repo
 
 ```bash
 REPO=""
@@ -23,94 +34,101 @@ done
 [ -z "$REPO" ] && git clone https://github.com/doodledood/claude-code-plugins.git /tmp/claude-code-plugins && REPO=/tmp/claude-code-plugins
 ```
 
-### 2. Bulk Copy (per plugin)
+### 3. Discover Plugins
+
+If no plugins specified, discover all available:
+
+```bash
+PLUGINS=""
+for dir in "$REPO"/claude-plugins/*/; do
+  [ -d "$dir" ] || continue
+  [ -f "$dir/.claude-plugin/plugin.json" ] && PLUGINS="$PLUGINS $(basename "$dir")"
+done
+echo "Available plugins: $PLUGINS"
+```
+
+If `$ARGUMENTS` provided, use those (normalize commas to spaces).
+
+### 4. Bulk Copy (per plugin)
 
 ```bash
 SCRIPTS="${CLAUDE_SKILL_ROOT}/scripts"
-for PLUGIN in vibe-workflow vibe-extras vibe-experimental; do
+for PLUGIN in $PLUGINS; do
   "$SCRIPTS/bulk_copy.sh" "$REPO" "$PLUGIN"
 done
 ```
 
-### 3. Transform Files
+### 5. Transform Files
 
 ```bash
-python3 "${CLAUDE_SKILL_ROOT}/scripts/transform.py"
+python3 "${CLAUDE_SKILL_ROOT}/scripts/transform.py" "./*"
 ```
 
-### 4. Convert Hooks to TypeScript
+### 6. Convert Hooks (if source has hooks/)
 
-If plugin.json has hooks, create `plugin/hooks.ts`:
+See CONVERSION_GUIDE.md section "Converting Hooks" for:
+- Event mapping table
+- TypeScript template
+- Blocking behavior differences
 
-```typescript
-export default async ({ project, client }) => {
-  return {
-    // SessionStart → session.created
-    "session.created": async () => {
-      return { additionalContext: "<system-reminder>...</system-reminder>" };
-    },
+Create `plugin/hooks.ts` following the guide's template.
 
-    // PostCompact → session.compacted
-    "session.compacted": async () => {
-      return { additionalContext: "..." };
-    },
+### 7. Create package.json (per plugin)
 
-    // PostToolUse → tool.execute.after
-    "tool.execute.after": async (event) => {
-      if (event.tool !== "todo") return;
-      // handle...
-    },
+See CONVERSION_GUIDE.md section "Plugin Manifest Conversion" for format.
 
-    // PreToolUse → tool.execute.before (CANNOT BLOCK)
-    "tool.execute.before": async (event) => {
-      // Can only warn, cannot block tool execution
-    },
+### 8. Create README.md
 
-    // Stop → session.idle (CANNOT BLOCK STOPPING)
-    "session.idle": async () => {
-      // Cannot prevent stopping in OpenCode
-    },
-  };
-};
-```
+List commands, agents, skills for each plugin.
 
-**Hook mapping:**
-| Claude Code | OpenCode | Can Block? |
-|-------------|----------|------------|
-| SessionStart | session.created | N/A |
-| PostCompact | session.compacted | N/A |
-| PostToolUse | tool.execute.after | No |
-| PreToolUse | tool.execute.before | **No** |
-| Stop | session.idle | **No** |
+### 9. Validate EVERY File Against Conversion Guide
 
-### 5. Create package.json (per plugin)
+**CRITICAL**: Verify ALL transformed files match CONVERSION_GUIDE expectations. Do not sample - check everything.
 
-Read `.claude-plugin/plugin.json` and create `package.json`:
+#### For Each Plugin, Verify:
 
-```json
-{
-  "name": "opencode-<plugin-name>",
-  "version": "<from plugin.json>",
-  "description": "<from plugin.json>",
-  "author": "<name> <<email>>",
-  "license": "MIT",
-  "keywords": ["opencode", "opencode-plugin", ...],
-  "opencode": {
-    "command": "./command",
-    "agent": "./agent",
-    "skill": "./skill",
-    "plugin": "./plugin"
-  }
-}
-```
+**Read the CONVERSION_GUIDE sections** for expected format, then check:
 
-### 6. Create README.md
+1. **EVERY command** (`command/*.md`):
+   - Compare against "Converting User-Invocable Skills → Commands"
+   - Check "Frontmatter Field Mapping" table
+   - Check "Model Mapping" section
+   - Check "Prompt Content Transformations" for Skill() calls
 
-List commands, agents, skills.
+2. **EVERY agent** (`agent/*.md`):
+   - Compare against "Converting Agents"
+   - Check "Frontmatter Field Mapping" table
+   - Check "Tool Permission Mapping" table
+   - Check "Model Mapping" section
+
+3. **EVERY skill** (`skill/*/SKILL.md`):
+   - Compare against "Converting Non-User-Invocable Skills → Skills"
+   - Verify `name:` is KEPT (unlike commands/agents)
+   - Check "Prompt Content Transformations" for Skill() calls
+
+4. **Cross-references in ALL files**:
+   - Check "Skill/Command References" section
+   - User-invocable targets → `/command`
+   - Non-user-invocable targets → `skill({ name: "..." })`
+   - Task tool references → agent references
+
+5. **Hooks** (if any):
+   - Compare against "Converting Hooks" section
+   - Verify event names match mapping table
+   - Check blocking behavior notes
+
+#### Adaptation Process
+
+If validation finds issues:
+
+1. **Consult CONVERSION_GUIDE**: Which rule was violated?
+2. **Fix the file**: Edit to match guide specification
+3. **Update transform.py**: If systematic issue, add the rule
+4. **Re-verify**: Check all files for same issue
 
 ## Reference
 
-See `references/CONVERSION_GUIDE.md` for full specification.
+**`references/CONVERSION_GUIDE.md`** is the single source of truth for all conversion rules. This skill only describes the workflow.
 
 ## Output
 
@@ -122,4 +140,14 @@ See `references/CONVERSION_GUIDE.md` for full specification.
 ├── agent/*.md
 ├── skill/*/SKILL.md   (non-user-invocable only)
 └── plugin/hooks.ts    (if source has hooks)
+```
+
+## Installation
+
+After conversion:
+
+```bash
+./install.sh                    # Install all plugins
+./install.sh vibe-workflow      # Install specific plugin
+./install.sh plugin1,plugin2    # Install multiple
 ```

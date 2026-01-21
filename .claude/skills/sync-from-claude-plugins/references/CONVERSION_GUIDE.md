@@ -27,11 +27,14 @@ Claude Code and OpenCode share similar concepts but with different implementatio
 
 | Concept | Claude Code | OpenCode |
 |---------|-------------|----------|
-| User commands | Skills (user-invocable) | Commands |
-| Internal skills | Skills (non-user-invocable) | Skills |
-| Subagents | Agents | Agents |
-| Event hooks | Python hooks | TypeScript plugins |
+| User commands | Skills (user-invocable) | Commands (`command/*.md`) |
+| Internal skills | Skills (non-user-invocable) | Skills (`skill/*/SKILL.md`) |
+| Subagents | Agents | Agents (`agent/*.md`) |
+| Event hooks | Python hooks | Hooks (`plugin/*.ts`) |
+| Plugin bundles | Plugins (with plugin.json) | **No equivalent** - flat directories |
 | External tools | MCP servers | MCP servers + custom tools |
+
+**Terminology note**: OpenCode confusingly calls hooks "plugins" (stored in `plugin/` directory). There's no "plugin bundle" concept - OpenCode uses flat directories that are merged together. This repo organizes related resources into directories we call "plugins" for convenience.
 
 ---
 
@@ -56,11 +59,13 @@ my-plugin/
 └── README.md
 ```
 
-### OpenCode Plugin Layout
+### OpenCode Plugin Layout (Source)
+
+This is the **source** layout for plugins in this repository:
 
 ```
 my-plugin/
-├── package.json             # npm manifest with opencode config
+├── package.json             # Plugin metadata (for npm publishing)
 ├── command/
 │   └── review.md            # User-invocable command
 ├── skill/
@@ -73,17 +78,48 @@ my-plugin/
 └── README.md
 ```
 
-**Directory Naming**: OpenCode supports **both singular and plural** via glob patterns (e.g., `{command,commands}/**/*.md`). Official docs use **plural** as convention. Singular works for backwards compatibility.
+### OpenCode Discovery (Installed)
+
+OpenCode discovers resources from **flat directories**, not nested plugin structures. The `install.sh` script copies files with a **plugin postfix** to avoid name collisions:
+
+```
+~/.config/opencode/
+├── command/
+│   ├── review-vibe-workflow.md        # /review-vibe-workflow
+│   ├── plan-vibe-workflow.md          # /plan-vibe-workflow
+│   ├── define-vibe-experimental.md    # /define-vibe-experimental
+│   └── ...
+├── agent/
+│   ├── bug-fixer-vibe-workflow.md
+│   ├── criteria-checker-vibe-experimental.md
+│   └── ...
+├── skill/
+│   └── verify-vibe-experimental/
+│       └── SKILL.md
+└── plugin/
+    ├── vibe-workflow-hooks.ts
+    └── vibe-experimental-hooks.ts
+```
+
+**Naming convention**: All files are postfixed with `-<plugin-name>` to:
+- Avoid collisions between plugins with similar commands/agents
+- Enable clean uninstall per plugin
+- Support sync (deletions detected by postfix pattern)
+
+**Installation**: Use `install.sh` which performs a full sync:
+1. Cleans existing files for the plugin (by postfix pattern)
+2. Copies fresh files from source
+3. Updates `name:` fields to match new filenames
 
 ### Path Mapping
 
-| Claude Code | OpenCode | Notes |
-|-------------|----------|-------|
-| `.claude-plugin/plugin.json` | `package.json` | npm package manifest |
-| `skill/<name>/SKILL.md` (user-invocable) | `command/<name>.md` | Flat file, not directory |
-| `skill/<name>/SKILL.md` (non-user-invocable) | `skill/<name>/SKILL.md` | Same structure |
-| `agent/<name>.md` | `agent/<name>.md` | Same |
-| `hooks/*.py` | `plugin/hooks.ts` | Python → TypeScript |
+| Claude Code | OpenCode (Source) | OpenCode (Installed) |
+|-------------|-------------------|----------------------|
+| `.claude-plugin/plugin.json` | `package.json` | N/A (metadata only) |
+| `skill/<name>/SKILL.md` (user-invocable) | `command/<name>.md` | `command/<name>-<plugin>.md` |
+| `skill/<name>/SKILL.md` (non-user-invocable) | `skill/<name>/SKILL.md` | `skill/<name>-<plugin>/SKILL.md` |
+| `agent/<name>.md` | `agent/<name>.md` | `agent/<name>-<plugin>.md` |
+| `hooks/*.py` | `plugin/hooks.ts` | `plugin/<plugin>-hooks.ts` |
 
 ---
 
@@ -110,18 +146,32 @@ my-plugin/
 
 ## Skill Classification
 
-### User-Invocable vs Non-User-Invocable
+### Critical Distinction: Commands vs Skills in OpenCode
 
-Claude Code skills can be:
-- **User-invocable** (default): Appear in `/` menu, user invokes directly
-- **Non-user-invocable**: Only called via `Skill()` tool programmatically
+**OpenCode commands (`command/*.md`):**
+- Only invocable by **users** via `/command-name` in TUI
+- The model **CANNOT** call commands programmatically
+- Appear in autocomplete menu
 
-### Detection Rules
+**OpenCode skills (`skill/*/SKILL.md`):**
+- Loaded by the **model** via `skill({ name: "skill-name" })` tool
+- Users do NOT see these in the `/` menu
+- Used for programmatic/automated workflows
 
-A skill is **non-user-invocable** if ANY of:
-1. Has `user-invocable: false` in frontmatter (definitive)
-2. Description says "called by /X, not directly" or similar
-3. Is only referenced via `Skill("plugin:name")` calls (never directly by user)
+### Detection Rules: Skill → Command or Skill?
+
+A Claude Code skill becomes an **OpenCode skill** (NOT command) if ANY of:
+1. Has `user-invocable: false` in frontmatter
+2. Is referenced by any agent, skill, or command for programmatic invocation (e.g., `Skill("plugin:verify")`)
+3. Has more than just `SKILL.md` in its directory (e.g., has `references/`, scripts, etc.)
+4. Description indicates it's called by another command (e.g., "called by /do, not directly")
+
+A Claude Code skill becomes an **OpenCode command** if:
+1. It's user-invocable (default) AND
+2. It's NOT referenced for programmatic invocation by other resources AND
+3. It only contains `SKILL.md` (no supporting files)
+
+**Default**: If unsure, convert to **command** (user-invocable is the default).
 
 **Note**: Internal helpers like `chunk-implementor` in vibe-workflow are **agents**, not skills. Check if the file is in `skill/` or `agent/` directory.
 
@@ -129,8 +179,10 @@ A skill is **non-user-invocable** if ANY of:
 
 | Skill Type | → | OpenCode Target | Why |
 |------------|---|-----------------|-----|
-| User-invocable | → | `command/*.md` | Direct `/command` access |
-| Non-user-invocable | → | `skill/*/SKILL.md` | Agent loads via skill tool |
+| User-invocable only | → | `command/*.md` | User invokes via `/command` |
+| Referenced by other resources | → | `skill/*/SKILL.md` | Model loads via `skill()` tool |
+| Has supporting files | → | `skill/*/SKILL.md` | Preserves directory structure |
+| `user-invocable: false` | → | `skill/*/SKILL.md` | Explicit non-user-invocable |
 
 ---
 
@@ -500,21 +552,35 @@ Enable verbose logging with `opencode --verbose`.
 
 ### Skill/Command References
 
-**Claude Code:**
-```markdown
-Use the Skill tool: Skill("vibe-workflow:review-bugs")
+**User-invocable skills → Slash commands:**
 
-Or with arguments:
+Claude Code:
+```markdown
+Skill("vibe-workflow:review")
 Skill("vibe-workflow:explore-codebase", "authentication system")
 ```
 
-**OpenCode:**
+OpenCode:
 ```markdown
-Run the /review-bugs command
-
-Or with arguments:
+/review
 /explore-codebase authentication system
 ```
+
+**Non-user-invocable skills → Skill tool:**
+
+Claude Code:
+```markdown
+Skill("vibe-experimental:verify")
+Skill("vibe-experimental:done", "task completed")
+```
+
+OpenCode:
+```markdown
+Use the skill tool: skill({ name: "verify" })
+Use the skill tool with arguments: skill({ name: "done", arguments: "task completed" })
+```
+
+**Note**: The `skill()` tool is OpenCode's native way to programmatically load skill content into the conversation. It returns the SKILL.md content for the agent to use.
 
 ### Task Tool References
 
@@ -544,9 +610,20 @@ Use `model: anthropic/claude-opus-4-5-20251101` for complex analysis
 
 Apply these transformations to prompt content:
 
+**For user-invocable skills (→ commands):**
 | Pattern | Replacement | Notes |
 |---------|-------------|-------|
 | `Skill\("[\w-]+:([\w-]+)"(?:,\s*"([^"]*)")?\)` | `/$1 $2` | Skill calls → slash commands |
+
+**For non-user-invocable skills (→ skill tool):**
+| Pattern | Replacement | Notes |
+|---------|-------------|-------|
+| `Skill\("[\w-]+:([\w-]+)"\)` | `skill({ name: "$1" })` | Skill calls → skill tool |
+| `Skill\("[\w-]+:([\w-]+)",\s*"([^"]*)"\)` | `skill({ name: "$1", arguments: "$2" })` | With args |
+
+**Other replacements:**
+| Pattern | Replacement | Notes |
+|---------|-------------|-------|
 | `\bopus\b` (in model context) | See [Model Mapping](#model-mapping) | |
 | `\bsonnet\b` (in model context) | See [Model Mapping](#model-mapping) | |
 | `\bhaiku\b` (in model context) | See [Model Mapping](#model-mapping) | |
@@ -636,9 +713,9 @@ model: anthropic/claude-sonnet-4-5-20250929
 
 **Notes**:
 - Use `"type": "module"` for ESM format
-- The `opencode` field contains `type` and `hooks` array (not directory paths)
+- The `opencode` field describes the plugin type and hooks for npm registry metadata
 - Add `@opencode-ai/plugin` dependency for TypeScript types
-- Directory discovery is automatic via glob patterns
+- **Important**: This package.json is for npm publishing. OpenCode does NOT read it for discovery. Files must be installed to `~/.config/opencode/` directories
 
 ---
 
@@ -735,7 +812,7 @@ OpenCode uses glob patterns that accept **both** singular and plural:
 
 ### Known Issues
 
-1. **Skills calling skills**: May need adjustment for skill tool vs `/command`
+1. **Skills calling skills**: Use `skill({ name: "skill-name" })` tool for non-user-invocable skills, `/command` for user-invocable ones
 2. **Agent tool restrictions**: OpenCode tool permissions are more granular
 3. **Context fork**: Claude Code `context: fork` needs testing in OpenCode
 
@@ -746,12 +823,16 @@ OpenCode uses glob patterns that accept **both** singular and plural:
 ### Per Plugin
 
 - [ ] Create `package.json` from `plugin.json` (use singular paths!)
-- [ ] Identify user-invocable vs non-user-invocable skills
-- [ ] Convert user-invocable skills → `command/<name>.md`
-- [ ] Copy non-user-invocable skills → `skill/<name>/SKILL.md`
+- [ ] Classify each skill (see [Skill Classification](#skill-classification)):
+  - [ ] Check for `user-invocable: false` → skill
+  - [ ] Check if referenced by other resources via `Skill()` → skill
+  - [ ] Check if has supporting files (not just SKILL.md) → skill
+  - [ ] Otherwise → command (default)
+- [ ] Convert command-bound skills → `command/<name>.md`
+- [ ] Convert skill-bound skills → `skill/<name>/SKILL.md`
 - [ ] Convert agents → `agent/<name>.md`
 - [ ] Convert hooks → `plugin/hooks.ts` (see [Converting Hooks](#converting-hooks))
-- [ ] Update all `Skill()` references to `/command` format
+- [ ] Update `Skill()` references: commands → `/command`, skills → `skill({ name: "..." })`
 - [ ] Update all model names to full IDs (see [Model Mapping](#model-mapping))
 - [ ] Update tool lists in agents to permission format
 - [ ] Create README for converted plugin
@@ -761,7 +842,7 @@ OpenCode uses glob patterns that accept **both** singular and plural:
 - [ ] Remove `name:` from frontmatter (commands only)
 - [ ] Add `agent:` field if command should use specific agent (optional)
 - [ ] Convert `model:` to full ID
-- [ ] Replace `Skill()` calls in content
+- [ ] Replace `Skill()` calls: → `/command` or → `skill({ name: "..." })`
 - [ ] Replace `Task` tool references
 
 ### Per Agent
@@ -832,25 +913,56 @@ tools:
 
 ### Content Transformations
 
+**User-invocable skills (become commands):**
+
+| Find | Replace (Source) | After Install |
+|------|------------------|---------------|
+| `Skill("plugin:foo")` | `/foo` | `/foo-<plugin>` |
+| `Skill("plugin:foo", "args")` | `/foo args` | `/foo-<plugin> args` |
+
+**Non-user-invocable skills (remain skills):**
+
 | Find | Replace |
 |------|---------|
-| `Skill("plugin:foo")` | `/foo` |
-| `Skill("plugin:foo", "args")` | `/foo args` |
+| `Skill("plugin:foo")` | `skill({ name: "foo" })` |
+| `Skill("plugin:foo", "args")` | `skill({ name: "foo", arguments: "args" })` |
+
+**Other transformations:**
+
+| Find | Replace |
+|------|---------|
 | `model: opus/sonnet/haiku` | See [Model Mapping](#model-mapping) |
 | `tools: Bash, Read, ...` | See [Tool Permission Mapping](#tool-permission-mapping) |
 
+**Note**: The install script adds `-<plugin>` postfix to command filenames. Skill directories also get postfixed (e.g., `skill/verify-<plugin>/SKILL.md`).
+
 ### Directory Structure
 
-OpenCode supports both singular and plural via glob patterns. Convention uses plural:
-
+**Source** (this repo):
 ```
-plugin-name/
+<plugin-name>/
 ├── package.json
-├── commands/      # or command/ (both work)
-├── agents/        # or agent/ (both work)
-├── skills/        # folder-per-skill structure
-│   └── <name>/
+├── command/       # User-invocable commands
+│   └── review.md
+├── agent/         # Subagent definitions
+│   └── bug-fixer.md
+├── skill/         # Non-user-invocable skills
+│   └── verify/
 │       └── SKILL.md
-└── plugins/       # or plugin/ (both work)
+└── plugin/        # TypeScript hooks
     └── hooks.ts
+```
+
+**Installed** (after `./install.sh`):
+```
+~/.config/opencode/
+├── command/
+│   └── review-<plugin-name>.md
+├── agent/
+│   └── bug-fixer-<plugin-name>.md
+├── skill/
+│   └── verify-<plugin-name>/
+│       └── SKILL.md
+└── plugin/
+    └── <plugin-name>-hooks.ts
 ```

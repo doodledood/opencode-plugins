@@ -2,33 +2,85 @@
 
 OpenCode-compatible ports of Claude Code plugins from [doodledood/claude-code-plugins](https://github.com/doodledood/claude-code-plugins).
 
+## Terminology
+
+**Important**: OpenCode doesn't have a "plugin bundle" concept like Claude Code. In OpenCode:
+- **Commands** (`command/*.md`) - Slash commands the user invokes
+- **Agents** (`agent/*.md`) - Subagents that can be spawned
+- **Skills** (`skill/*/SKILL.md`) - Non-user-invocable prompts loaded by agents
+- **Hooks** (`plugin/*.ts`) - TypeScript event handlers (confusingly called "plugins" in OpenCode)
+
+This repo organizes related commands/agents/skills/hooks into directories we call "plugins" for convenience, but they're just bundles that get installed to OpenCode's flat directory structure.
+
 ## Installation
 
-### Recommended: Clone to Global Plugins Directory
+OpenCode discovers resources from flat directories:
+- `~/.config/opencode/command/*.md` - Slash commands
+- `~/.config/opencode/agent/*.md` - Subagents
+- `~/.config/opencode/skill/*/SKILL.md` - Non-user-invocable skills
+- `~/.config/opencode/plugin/*.ts` - Hooks (event handlers)
+
+The install script copies contents to these locations, **postfixing filenames with the plugin name** to avoid collisions:
+- `review.md` → `review-vibe-workflow.md` → `/review-vibe-workflow`
+
+### Quick Install (All Plugins)
 
 ```bash
-# Install or update
-[ -d ~/.config/opencode/plugins/opencode-plugins ] && git -C ~/.config/opencode/plugins/opencode-plugins pull || git clone https://github.com/doodledood/opencode-plugins.git ~/.config/opencode/plugins/opencode-plugins
+# Clone and install all plugins
+git clone https://github.com/doodledood/opencode-plugins.git /tmp/opencode-plugins && \
+/tmp/opencode-plugins/install.sh
 ```
 
-OpenCode auto-discovers plugins from `~/.config/opencode/plugins/`. No config changes needed.
+### Install Specific Plugins
 
-### Alternative: Project-Level
-
-Clone to your project's `.opencode/plugins/`:
+Pass plugin names as arguments (comma or space-separated):
 
 ```bash
-git clone https://github.com/doodledood/opencode-plugins.git .opencode/plugins/opencode-plugins
+# Install only vibe-workflow
+/tmp/opencode-plugins/install.sh vibe-workflow
+
+# Install multiple plugins (comma-separated)
+/tmp/opencode-plugins/install.sh vibe-workflow,vibe-extras
+
+# Or use environment variable
+OPENCODE_PLUGINS="vibe-workflow,vibe-extras" /tmp/opencode-plugins/install.sh
 ```
 
-### Alternative: npm Package (when published)
+### Update Existing Installation
 
-```json
-// ~/.config/opencode/opencode.json
-{
-  "plugin": ["opencode-vibe-workflow"]
-}
+```bash
+# Pull latest and reinstall (FORCE=1 overwrites existing)
+cd /tmp/opencode-plugins && git pull && FORCE=1 ./install.sh
+
+# Or one-liner:
+[ -d /tmp/opencode-plugins ] && git -C /tmp/opencode-plugins pull || \
+git clone https://github.com/doodledood/opencode-plugins.git /tmp/opencode-plugins && \
+FORCE=1 /tmp/opencode-plugins/install.sh
 ```
+
+### Project-Level Installation
+
+Install to a specific project instead of globally:
+
+```bash
+OPENCODE_CONFIG_DIR=".opencode" /tmp/opencode-plugins/install.sh
+```
+
+### What the Install Script Does
+
+The script performs a **full sync** for each plugin:
+
+1. **Cleans** existing files for the plugin (detected by `-<plugin>` postfix)
+2. **Copies** fresh files with plugin postfix:
+   - `review.md` → `review-vibe-workflow.md`
+   - `bug-fixer.md` → `bug-fixer-vibe-workflow.md`
+3. **Updates** `name:` fields in files to match new filenames
+
+This sync behavior ensures:
+- **Additions**: New files are copied
+- **Updates**: Changed files are replaced
+- **Deletions**: Removed files are cleaned up
+- **Isolation**: Each plugin's files are independent (syncing one doesn't affect others)
 
 ## Available Plugins
 
@@ -40,52 +92,68 @@ git clone https://github.com/doodledood/opencode-plugins.git .opencode/plugins/o
 
 ### vibe-workflow Commands
 
+After installation, commands are available as `/command-vibe-workflow`:
+
 | Command | Description |
 |---------|-------------|
-| `/review` | Run all code review agents in parallel |
-| `/plan` | Create implementation plans via iterative research |
-| `/spec` | Requirements discovery through structured interview |
-| `/implement` | Execute plans via subagents with verification |
-| `/implement-inplace` | Single-agent implementation without subagents |
-| `/explore-codebase` | Find files relevant to a query |
-| `/research-web` | Deep web research with parallel investigators |
-| `/bugfix` | Investigate and fix bugs systematically |
-| `/review-bugs` | Audit code for logical bugs |
-| `/review-coverage` | Verify test coverage for changes |
-| `/review-maintainability` | Audit for DRY violations, dead code |
-| `/review-simplicity` | Audit for over-engineering |
-| `/review-testability` | Audit for testability issues |
-| `/review-type-safety` | Audit TypeScript for type safety |
-| `/review-docs` | Audit documentation accuracy |
-| `/review-claude-md-adherence` | Check CLAUDE.md compliance |
-| `/fix-review-issues` | Fix issues found by /review |
+| `/review-vibe-workflow` | Run all code review agents in parallel |
+| `/plan-vibe-workflow` | Create implementation plans via iterative research |
+| `/spec-vibe-workflow` | Requirements discovery through structured interview |
+| `/implement-vibe-workflow` | Execute plans via subagents with verification |
+| `/implement-inplace-vibe-workflow` | Single-agent implementation without subagents |
+| `/explore-codebase-vibe-workflow` | Find files relevant to a query |
+| `/research-web-vibe-workflow` | Deep web research with parallel investigators |
+| `/bugfix-vibe-workflow` | Investigate and fix bugs systematically |
+| `/review-bugs-vibe-workflow` | Audit code for logical bugs |
+| `/review-coverage-vibe-workflow` | Verify test coverage for changes |
+| `/review-maintainability-vibe-workflow` | Audit for DRY violations, dead code |
+| `/review-simplicity-vibe-workflow` | Audit for over-engineering |
+| `/review-testability-vibe-workflow` | Audit for testability issues |
+| `/review-type-safety-vibe-workflow` | Audit TypeScript for type safety |
+| `/review-docs-vibe-workflow` | Audit documentation accuracy |
+| `/review-claude-md-adherence-vibe-workflow` | Check CLAUDE.md compliance |
+| `/fix-review-issues-vibe-workflow` | Fix issues found by /review |
 
 ### vibe-extras Commands
 
 | Command | Description |
 |---------|-------------|
-| `/clean-slop` | Remove AI-generated code slop |
-| `/rebase-on-main` | Rebase current branch on main |
-| `/rewrite-history` | Interactive git history rewriting |
-| `/update-claude-md` | Update CLAUDE.md with project changes |
+| `/clean-slop-vibe-extras` | Remove AI-generated code slop |
+| `/rebase-on-main-vibe-extras` | Rebase current branch on main |
+| `/rewrite-history-vibe-extras` | Interactive git history rewriting |
+| `/update-claude-md-vibe-extras` | Update CLAUDE.md with project changes |
 
 ### vibe-experimental Commands
 
 | Command | Description |
 |---------|-------------|
-| `/define` | Define acceptance criteria for a task |
-| `/do` | Execute task with verification loop |
+| `/define-vibe-experimental` | Define acceptance criteria for a task |
+| `/do-vibe-experimental` | Execute task with verification loop |
 
-## Converting Plugins
+## Uninstall
+
+Remove installed files by plugin:
+
+```bash
+# Remove all vibe-workflow files
+rm ~/.config/opencode/command/*-vibe-workflow.md
+rm ~/.config/opencode/agent/*-vibe-workflow.md
+rm ~/.config/opencode/plugin/vibe-workflow-*.ts
+
+# Or remove everything and reinstall fresh
+rm -rf ~/.config/opencode/{command,agent,skill,plugin}
+```
+
+## Converting Plugins (For Developers)
 
 This repo includes a Claude Code skill to automatically convert plugins:
 
 ```bash
 # In Claude Code, from this repo:
-/sync-from-claude-plugins
+/sync-from-claude-plugins              # Convert ALL available plugins
 
 # Convert specific plugins:
-/sync-from-claude-plugins vibe-workflow vibe-extras
+/sync-from-claude-plugins vibe-workflow,vibe-extras
 ```
 
 ### Conversion Guide
@@ -101,9 +169,9 @@ See the comprehensive conversion specification:
 | Non-user-invocable skills | Skills | Skills | ✅ Full |
 | Agents/subagents | Agents | Agents | ✅ Full |
 | SessionStart hook | Python | TypeScript | ✅ Full |
-| PreToolUse hook | Python | TypeScript | ✅ Full |
+| PreToolUse hook | Python | TypeScript | ✅ Full (can block via `output.abort`) |
 | PostToolUse hook | Python | TypeScript | ✅ Full |
-| Stop hook (blocking) | Python | N/A | ❌ Cannot convert |
+| Stop hook (blocking) | Python | N/A | ❌ Cannot block stopping |
 | MCP servers | Yes | Yes | ✅ Full |
 | `$ARGUMENTS` | Yes | Yes | ✅ Full |
 | Positional args | No | `$1`, `$2` | ✅+ Better |
@@ -113,23 +181,25 @@ See the comprehensive conversion specification:
 ```
 opencode-plugins/
 ├── README.md                                    # This file
+├── install.sh                                   # Installation script
 ├── CLAUDE.md                                    # Project context
 ├── .claude/skills/sync-from-claude-plugins/    # Conversion skill
 │   ├── SKILL.md
 │   └── references/
 │       └── CONVERSION_GUIDE.md                  # Complete spec
-├── vibe-workflow/                               # Converted plugin
-│   ├── package.json
-│   ├── command/
-│   │   ├── review.md
-│   │   ├── plan.md
-│   │   └── ...
-│   ├── agent/
-│   │   ├── bug-fixer.md
-│   │   └── ...
-│   └── README.md
-├── vibe-extras/
-└── vibe-experimental/
+├── vibe-workflow/                               # Plugin: workflow tools
+│   ├── package.json                             # Plugin metadata
+│   ├── command/*.md                             # Slash commands
+│   ├── agent/*.md                               # Subagents
+│   └── plugin/hooks.ts                          # TypeScript hooks
+├── vibe-extras/                                 # Plugin: git utilities
+│   ├── command/*.md
+│   └── agent/*.md
+└── vibe-experimental/                           # Plugin: define/do/verify
+    ├── command/*.md
+    ├── agent/*.md
+    ├── skill/*/SKILL.md                         # Non-user-invocable skills
+    └── plugin/hooks.ts
 ```
 
 ## Verifying Installation
@@ -141,7 +211,14 @@ After installing, verify commands are available:
 opencode
 
 # Type / to see available commands
-# You should see /review, /plan, etc.
+# You should see /review-vibe-workflow, /plan-vibe-workflow, etc.
+```
+
+Or check files directly:
+
+```bash
+ls ~/.config/opencode/command/
+ls ~/.config/opencode/agent/
 ```
 
 ## Troubleshooting
@@ -153,7 +230,7 @@ opencode
    ls ~/.config/opencode/command/
    ```
 
-2. Ensure files have `.md` extension
+2. Ensure files have `.md` extension and correct postfix
 
 3. Restart OpenCode
 

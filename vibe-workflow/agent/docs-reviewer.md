@@ -27,7 +27,6 @@ tools:
   skill: allow
   webfetch: allow
   websearch: allow
-
 model: anthropic/claude-opus-4-5-20251101
 mode: subagent
 ---
