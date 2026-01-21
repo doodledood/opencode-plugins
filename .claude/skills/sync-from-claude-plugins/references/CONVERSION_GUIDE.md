@@ -146,18 +146,32 @@ OpenCode discovers resources from **flat directories**, not nested plugin struct
 
 ## Skill Classification
 
-### User-Invocable vs Non-User-Invocable
+### Critical Distinction: Commands vs Skills in OpenCode
 
-Claude Code skills can be:
-- **User-invocable** (default): Appear in `/` menu, user invokes directly
-- **Non-user-invocable**: Only called via `Skill()` tool programmatically
+**OpenCode commands (`command/*.md`):**
+- Only invocable by **users** via `/command-name` in TUI
+- The model **CANNOT** call commands programmatically
+- Appear in autocomplete menu
 
-### Detection Rules
+**OpenCode skills (`skill/*/SKILL.md`):**
+- Loaded by the **model** via `skill({ name: "skill-name" })` tool
+- Users do NOT see these in the `/` menu
+- Used for programmatic/automated workflows
 
-A skill is **non-user-invocable** if ANY of:
-1. Has `user-invocable: false` in frontmatter (definitive)
-2. Description says "called by /X, not directly" or similar
-3. Is only referenced via `Skill("plugin:name")` calls (never directly by user)
+### Detection Rules: Skill → Command or Skill?
+
+A Claude Code skill becomes an **OpenCode skill** (NOT command) if ANY of:
+1. Has `user-invocable: false` in frontmatter
+2. Is referenced by any agent, skill, or command for programmatic invocation (e.g., `Skill("plugin:verify")`)
+3. Has more than just `SKILL.md` in its directory (e.g., has `references/`, scripts, etc.)
+4. Description indicates it's called by another command (e.g., "called by /do, not directly")
+
+A Claude Code skill becomes an **OpenCode command** if:
+1. It's user-invocable (default) AND
+2. It's NOT referenced for programmatic invocation by other resources AND
+3. It only contains `SKILL.md` (no supporting files)
+
+**Default**: If unsure, convert to **command** (user-invocable is the default).
 
 **Note**: Internal helpers like `chunk-implementor` in vibe-workflow are **agents**, not skills. Check if the file is in `skill/` or `agent/` directory.
 
@@ -165,8 +179,10 @@ A skill is **non-user-invocable** if ANY of:
 
 | Skill Type | → | OpenCode Target | Why |
 |------------|---|-----------------|-----|
-| User-invocable | → | `command/*.md` | Direct `/command` access |
-| Non-user-invocable | → | `skill/*/SKILL.md` | Agent loads via skill tool |
+| User-invocable only | → | `command/*.md` | User invokes via `/command` |
+| Referenced by other resources | → | `skill/*/SKILL.md` | Model loads via `skill()` tool |
+| Has supporting files | → | `skill/*/SKILL.md` | Preserves directory structure |
+| `user-invocable: false` | → | `skill/*/SKILL.md` | Explicit non-user-invocable |
 
 ---
 
@@ -807,12 +823,16 @@ OpenCode uses glob patterns that accept **both** singular and plural:
 ### Per Plugin
 
 - [ ] Create `package.json` from `plugin.json` (use singular paths!)
-- [ ] Identify user-invocable vs non-user-invocable skills
-- [ ] Convert user-invocable skills → `command/<name>.md`
-- [ ] Copy non-user-invocable skills → `skill/<name>/SKILL.md`
+- [ ] Classify each skill (see [Skill Classification](#skill-classification)):
+  - [ ] Check for `user-invocable: false` → skill
+  - [ ] Check if referenced by other resources via `Skill()` → skill
+  - [ ] Check if has supporting files (not just SKILL.md) → skill
+  - [ ] Otherwise → command (default)
+- [ ] Convert command-bound skills → `command/<name>.md`
+- [ ] Convert skill-bound skills → `skill/<name>/SKILL.md`
 - [ ] Convert agents → `agent/<name>.md`
 - [ ] Convert hooks → `plugin/hooks.ts` (see [Converting Hooks](#converting-hooks))
-- [ ] Update `Skill()` references: user-invocable → `/command`, non-user-invocable → `skill({ name: "..." })`
+- [ ] Update `Skill()` references: commands → `/command`, skills → `skill({ name: "..." })`
 - [ ] Update all model names to full IDs (see [Model Mapping](#model-mapping))
 - [ ] Update tool lists in agents to permission format
 - [ ] Create README for converted plugin
