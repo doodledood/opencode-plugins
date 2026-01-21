@@ -56,11 +56,13 @@ my-plugin/
 └── README.md
 ```
 
-### OpenCode Plugin Layout
+### OpenCode Plugin Layout (Source)
+
+This is the **source** layout for plugins in this repository:
 
 ```
 my-plugin/
-├── package.json             # npm manifest with opencode config
+├── package.json             # Plugin metadata (for npm publishing)
 ├── command/
 │   └── review.md            # User-invocable command
 ├── skill/
@@ -73,7 +75,29 @@ my-plugin/
 └── README.md
 ```
 
-**Directory Naming**: OpenCode supports **both singular and plural** via glob patterns (e.g., `{command,commands}/**/*.md`). Official docs use **plural** as convention. Singular works for backwards compatibility.
+### OpenCode Discovery (Installed)
+
+OpenCode discovers resources from **flat directories**, not nested plugin structures. After installation, files must be in:
+
+```
+~/.config/opencode/
+├── command/
+│   ├── review.md            # From any plugin
+│   ├── plan.md
+│   └── ...
+├── agent/
+│   ├── bug-fixer.md
+│   └── ...
+├── skill/
+│   └── chunk-impl/
+│       └── SKILL.md
+└── plugin/
+    └── hooks.ts             # Or my-plugin-hooks.ts
+```
+
+**Installation is required**: Use `install.sh` to copy plugin contents to the OpenCode config directory. OpenCode does NOT auto-discover nested plugin directories.
+
+**Directory Naming**: OpenCode supports **both singular and plural** via glob patterns (e.g., `{command,commands}/**/*.md`).
 
 ### Path Mapping
 
@@ -636,9 +660,9 @@ model: anthropic/claude-sonnet-4-5-20250929
 
 **Notes**:
 - Use `"type": "module"` for ESM format
-- The `opencode` field contains `type` and `hooks` array (not directory paths)
+- The `opencode` field describes the plugin type and hooks for npm registry metadata
 - Add `@opencode-ai/plugin` dependency for TypeScript types
-- Directory discovery is automatic via glob patterns
+- **Important**: This package.json is for npm publishing. OpenCode does NOT read it for discovery. Files must be installed to `~/.config/opencode/` directories
 
 ---
 

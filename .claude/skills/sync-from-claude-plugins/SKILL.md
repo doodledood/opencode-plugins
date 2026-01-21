@@ -61,9 +61,9 @@ export default async ({ project, client }) => {
       // handle...
     },
 
-    // PreToolUse → tool.execute.before (CANNOT BLOCK)
-    "tool.execute.before": async (event) => {
-      // Can only warn, cannot block tool execution
+    // PreToolUse → tool.execute.before (CAN BLOCK via output.abort)
+    "tool.execute.before": async (input, output) => {
+      // Block via: output.abort = "reason";
     },
 
     // Stop → session.idle (CANNOT BLOCK STOPPING)
@@ -80,7 +80,7 @@ export default async ({ project, client }) => {
 | SessionStart | session.created | N/A |
 | PostCompact | session.compacted | N/A |
 | PostToolUse | tool.execute.after | No |
-| PreToolUse | tool.execute.before | **No** |
+| PreToolUse | tool.execute.before | **Yes** (via `output.abort`) |
 | Stop | session.idle | **No** |
 
 ### 5. Create package.json (per plugin)
@@ -93,16 +93,20 @@ Read `.claude-plugin/plugin.json` and create `package.json`:
   "version": "<from plugin.json>",
   "description": "<from plugin.json>",
   "author": "<name> <<email>>",
+  "type": "module",
   "license": "MIT",
   "keywords": ["opencode", "opencode-plugin", ...],
   "opencode": {
-    "command": "./command",
-    "agent": "./agent",
-    "skill": "./skill",
-    "plugin": "./plugin"
+    "type": "plugin",
+    "hooks": ["session.created", "tool.execute.before"]
+  },
+  "dependencies": {
+    "@opencode-ai/plugin": "^1.0.162"
   }
 }
 ```
+
+**Note**: This package.json is for npm publishing metadata. OpenCode does NOT read it for discovery - files must be installed to `~/.config/opencode/` via `install.sh`.
 
 ### 6. Create README.md
 

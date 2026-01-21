@@ -4,31 +4,63 @@ OpenCode-compatible ports of Claude Code plugins from [doodledood/claude-code-pl
 
 ## Installation
 
-### Recommended: Clone to Global Plugins Directory
+OpenCode discovers commands, agents, skills, and plugins from flat directories:
+- `~/.config/opencode/command/*.md` - Slash commands
+- `~/.config/opencode/agent/*.md` - Subagents
+- `~/.config/opencode/skill/*/SKILL.md` - Non-user-invocable skills
+- `~/.config/opencode/plugin/*.ts` - Hook plugins
+
+This repo contains multiple plugins as subdirectories. The install script copies their contents to the appropriate locations.
+
+### Quick Install (All Plugins)
 
 ```bash
-# Install or update
-[ -d ~/.config/opencode/plugins/opencode-plugins ] && git -C ~/.config/opencode/plugins/opencode-plugins pull || git clone https://github.com/doodledood/opencode-plugins.git ~/.config/opencode/plugins/opencode-plugins
+# Clone and install all plugins
+git clone https://github.com/doodledood/opencode-plugins.git /tmp/opencode-plugins && \
+/tmp/opencode-plugins/install.sh
 ```
 
-OpenCode auto-discovers plugins from `~/.config/opencode/plugins/`. No config changes needed.
+### Install Specific Plugins
 
-### Alternative: Project-Level
-
-Clone to your project's `.opencode/plugins/`:
+Use the `OPENCODE_PLUGINS` environment variable to select which plugins to install:
 
 ```bash
-git clone https://github.com/doodledood/opencode-plugins.git .opencode/plugins/opencode-plugins
+# Install only vibe-workflow
+OPENCODE_PLUGINS="vibe-workflow" /tmp/opencode-plugins/install.sh
+
+# Install vibe-workflow and vibe-extras (no vibe-experimental)
+OPENCODE_PLUGINS="vibe-workflow vibe-extras" /tmp/opencode-plugins/install.sh
 ```
 
-### Alternative: npm Package (when published)
+### Update Existing Installation
 
-```json
-// ~/.config/opencode/opencode.json
-{
-  "plugin": ["opencode-vibe-workflow"]
-}
+```bash
+# Pull latest and reinstall
+cd /tmp/opencode-plugins && git pull && ./install.sh
+
+# Or one-liner:
+[ -d /tmp/opencode-plugins ] && git -C /tmp/opencode-plugins pull || \
+git clone https://github.com/doodledood/opencode-plugins.git /tmp/opencode-plugins && \
+/tmp/opencode-plugins/install.sh
 ```
+
+### Project-Level Installation
+
+Install to a specific project instead of globally:
+
+```bash
+OPENCODE_CONFIG_DIR=".opencode" /tmp/opencode-plugins/install.sh
+```
+
+### What the Install Script Does
+
+1. Creates directories if needed: `command/`, `agent/`, `skill/`, `plugin/`
+2. For each selected plugin, copies:
+   - `<plugin>/command/*.md` → `~/.config/opencode/command/`
+   - `<plugin>/agent/*.md` → `~/.config/opencode/agent/`
+   - `<plugin>/skill/*/` → `~/.config/opencode/skill/`
+   - `<plugin>/plugin/*.ts` → `~/.config/opencode/plugin/`
+3. Preserves existing files (no overwrites by default, use `FORCE=1` to overwrite)
 
 ## Available Plugins
 
@@ -76,7 +108,19 @@ git clone https://github.com/doodledood/opencode-plugins.git .opencode/plugins/o
 | `/define` | Define acceptance criteria for a task |
 | `/do` | Execute task with verification loop |
 
-## Converting Plugins
+## Uninstall
+
+To remove installed commands/agents, delete the files:
+
+```bash
+# Remove all vibe-workflow commands
+rm ~/.config/opencode/command/{review,plan,spec,implement,implement-inplace,explore-codebase,research-web,bugfix,review-*,fix-review-issues}.md
+
+# Or remove everything and reinstall fresh
+rm -rf ~/.config/opencode/{command,agent,skill,plugin}
+```
+
+## Converting Plugins (For Developers)
 
 This repo includes a Claude Code skill to automatically convert plugins:
 
@@ -101,9 +145,9 @@ See the comprehensive conversion specification:
 | Non-user-invocable skills | Skills | Skills | ✅ Full |
 | Agents/subagents | Agents | Agents | ✅ Full |
 | SessionStart hook | Python | TypeScript | ✅ Full |
-| PreToolUse hook | Python | TypeScript | ✅ Full |
+| PreToolUse hook | Python | TypeScript | ✅ Full (can block via `output.abort`) |
 | PostToolUse hook | Python | TypeScript | ✅ Full |
-| Stop hook (blocking) | Python | N/A | ❌ Cannot convert |
+| Stop hook (blocking) | Python | N/A | ❌ Cannot block stopping |
 | MCP servers | Yes | Yes | ✅ Full |
 | `$ARGUMENTS` | Yes | Yes | ✅ Full |
 | Positional args | No | `$1`, `$2` | ✅+ Better |
@@ -113,23 +157,25 @@ See the comprehensive conversion specification:
 ```
 opencode-plugins/
 ├── README.md                                    # This file
+├── install.sh                                   # Installation script
 ├── CLAUDE.md                                    # Project context
 ├── .claude/skills/sync-from-claude-plugins/    # Conversion skill
 │   ├── SKILL.md
 │   └── references/
 │       └── CONVERSION_GUIDE.md                  # Complete spec
-├── vibe-workflow/                               # Converted plugin
-│   ├── package.json
-│   ├── command/
-│   │   ├── review.md
-│   │   ├── plan.md
-│   │   └── ...
-│   ├── agent/
-│   │   ├── bug-fixer.md
-│   │   └── ...
-│   └── README.md
-├── vibe-extras/
-└── vibe-experimental/
+├── vibe-workflow/                               # Plugin: workflow tools
+│   ├── package.json                             # Plugin metadata
+│   ├── command/*.md                             # Slash commands
+│   ├── agent/*.md                               # Subagents
+│   └── plugin/hooks.ts                          # TypeScript hooks
+├── vibe-extras/                                 # Plugin: git utilities
+│   ├── command/*.md
+│   └── agent/*.md
+└── vibe-experimental/                           # Plugin: define/do/verify
+    ├── command/*.md
+    ├── agent/*.md
+    ├── skill/*/SKILL.md                         # Non-user-invocable skills
+    └── plugin/hooks.ts
 ```
 
 ## Verifying Installation
@@ -142,6 +188,13 @@ opencode
 
 # Type / to see available commands
 # You should see /review, /plan, etc.
+```
+
+Or check files directly:
+
+```bash
+ls ~/.config/opencode/command/
+ls ~/.config/opencode/agent/
 ```
 
 ## Troubleshooting

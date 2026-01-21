@@ -3,16 +3,19 @@
   "version": "2.13.2",
   "description": "Ship high-quality code faster with less back-and-forth",
   "author": "doodledood <aviram.kofman@gmail.com>",
-  "homepage": "https://github.com/doodledood/claude-code-plugins",
+  "type": "module",
+  "homepage": "https://github.com/doodledood/opencode-plugins",
   "repository": {
     "type": "git",
-    "url": "https://github.com/doodledood/claude-code-plugins"
+    "url": "https://github.com/doodledood/opencode-plugins"
   },
   "license": "MIT",
   "keywords": ["opencode", "opencode-plugin", "vibe-coding", "workflow", "autonomous", "quality-gates", "code-review", "maintainability", "planning", "implementation-plan"],
   "opencode": {
-    "command": "./command",
-    "agent": "./agent",
-    "plugin": "./plugin"
+    "type": "plugin",
+    "hooks": ["session.created", "tool.execute.after"]
+  },
+  "dependencies": {
+    "@opencode-ai/plugin": "^1.0.162"
   }
 }

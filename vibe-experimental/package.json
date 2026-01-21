@@ -3,17 +3,19 @@
   "version": "0.18.0",
   "description": "Manifest-driven workflows separating Deliverables (what to build) from Invariants (rules to follow). Two-level verification: Global Invariants (task-level rules) and Acceptance Criteria (per-deliverable).",
   "author": "doodledood <aviram.kofman@gmail.com>",
-  "homepage": "https://github.com/doodledood/claude-code-plugins",
+  "type": "module",
+  "homepage": "https://github.com/doodledood/opencode-plugins",
   "repository": {
     "type": "git",
-    "url": "https://github.com/doodledood/claude-code-plugins"
+    "url": "https://github.com/doodledood/opencode-plugins"
   },
   "license": "MIT",
   "keywords": ["opencode", "opencode-plugin", "experimental", "manifest", "define", "verification", "invariants", "deliverables", "acceptance-criteria", "autonomous", "do"],
   "opencode": {
-    "command": "./command",
-    "agent": "./agent",
-    "skill": "./skill",
-    "plugin": "./plugin"
+    "type": "plugin",
+    "hooks": ["session.created", "tool.execute.after"]
+  },
+  "dependencies": {
+    "@opencode-ai/plugin": "^1.0.162"
   }
 }
