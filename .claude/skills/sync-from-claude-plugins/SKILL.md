@@ -38,7 +38,52 @@ done
 python3 "${CLAUDE_SKILL_ROOT}/scripts/transform.py"
 ```
 
-### 4. Create package.json (per plugin)
+### 4. Convert Hooks to TypeScript
+
+If plugin.json has hooks, create `plugin/hooks.ts`:
+
+```typescript
+export default async ({ project, client }) => {
+  return {
+    // SessionStart → session.created
+    "session.created": async () => {
+      return { additionalContext: "<system-reminder>...</system-reminder>" };
+    },
+
+    // PostCompact → session.compacted
+    "session.compacted": async () => {
+      return { additionalContext: "..." };
+    },
+
+    // PostToolUse → tool.execute.after
+    "tool.execute.after": async (event) => {
+      if (event.tool !== "todo") return;
+      // handle...
+    },
+
+    // PreToolUse → tool.execute.before (CANNOT BLOCK)
+    "tool.execute.before": async (event) => {
+      // Can only warn, cannot block tool execution
+    },
+
+    // Stop → session.idle (CANNOT BLOCK STOPPING)
+    "session.idle": async () => {
+      // Cannot prevent stopping in OpenCode
+    },
+  };
+};
+```
+
+**Hook mapping:**
+| Claude Code | OpenCode | Can Block? |
+|-------------|----------|------------|
+| SessionStart | session.created | N/A |
+| PostCompact | session.compacted | N/A |
+| PostToolUse | tool.execute.after | No |
+| PreToolUse | tool.execute.before | **No** |
+| Stop | session.idle | **No** |
+
+### 5. Create package.json (per plugin)
 
 Read `.claude-plugin/plugin.json` and create `package.json`:
 
@@ -53,14 +98,15 @@ Read `.claude-plugin/plugin.json` and create `package.json`:
   "opencode": {
     "command": "./command",
     "agent": "./agent",
-    "skill": "./skill"
+    "skill": "./skill",
+    "plugin": "./plugin"
   }
 }
 ```
 
-### 5. Create README.md
+### 6. Create README.md
 
-List commands, agents, skills, and hook status.
+List commands, agents, skills.
 
 ## Reference
 
@@ -74,5 +120,6 @@ See `references/CONVERSION_GUIDE.md` for full specification.
 ├── README.md
 ├── command/*.md
 ├── agent/*.md
-└── skill/*/SKILL.md   (non-user-invocable only)
+├── skill/*/SKILL.md   (non-user-invocable only)
+└── plugin/hooks.ts    (if source has hooks)
 ```

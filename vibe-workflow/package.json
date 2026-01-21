@@ -12,6 +12,7 @@
   "keywords": ["opencode", "opencode-plugin", "vibe-coding", "workflow", "autonomous", "quality-gates", "code-review", "maintainability", "planning", "implementation-plan"],
   "opencode": {
     "command": "./command",
-    "agent": "./agent"
+    "agent": "./agent",
+    "plugin": "./plugin"
   }
 }
