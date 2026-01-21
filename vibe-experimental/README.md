@@ -4,20 +4,14 @@ Manifest-driven workflows separating Deliverables (what to build) from Invariant
 
 Converted from [claude-code-plugins](https://github.com/doodledood/claude-code-plugins).
 
-## Installation
-
-```bash
-# Clone this repo and add to your OpenCode config
-```
-
-## Commands (2)
+## Command (2)
 
 | Command | Description |
 |---------|-------------|
 | `/define` | Define deliverables and invariants in a manifest |
 | `/do` | Execute a manifest - satisfy all deliverables |
 
-## Skills (3, non-user-invocable)
+## Skill (3, non-user-invocable)
 
 These skills are called by `/do`, not directly by users:
 
@@ -27,7 +21,7 @@ These skills are called by `/do`, not directly by users:
 | `done` | Mark manifest execution complete |
 | `escalate` | Escalate to human review |
 
-## Agents (9)
+## Agent (9)
 
 | Agent | Description |
 |-------|-------------|
@@ -40,15 +34,6 @@ These skills are called by `/do`, not directly by users:
 | `type-safety-reviewer` | Review for type safety |
 | `docs-reviewer` | Review documentation |
 | `claude-md-adherence-reviewer` | Review CLAUDE.md compliance |
-
-## Hooks Status
-
-See [HOOKS_TODO.md](./HOOKS_TODO.md) for conversion status.
-
-| Hook | Status |
-|------|--------|
-| stop-do-hook | **Cannot convert** (blocking not supported) |
-| pretool-escalate-hook | Partial (cannot block tool execution) |
 
 ## License
 

@@ -21,10 +21,10 @@ fi
 echo "Copying $PLUGIN..."
 
 rm -rf "$DST"
-mkdir -p "$DST"/{commands,agents,skills}
+mkdir -p "$DST"/{command,agent,skill}
 
 # Copy agents
-cp "$SRC"/agents/*.md "$DST/agents/" 2>/dev/null && echo "  agents: $(ls "$DST/agents" | wc -l | tr -d ' ') files"
+cp "$SRC"/agents/*.md "$DST/agent/" 2>/dev/null && echo "  agent: $(ls "$DST/agent" | wc -l | tr -d ' ') files"
 
 # Copy skills → commands or skills based on user-invocable flag
 for skill_dir in "$SRC"/skills/*/; do
@@ -34,15 +34,15 @@ for skill_dir in "$SRC"/skills/*/; do
 
   if grep -q 'user-invocable: false' "$skill_file"; then
     # Non-user-invocable → keep as skill
-    mkdir -p "$DST/skills/$skill_name"
-    cp "$skill_file" "$DST/skills/$skill_name/SKILL.md"
-    [ -d "$skill_dir/references" ] && cp -r "$skill_dir/references" "$DST/skills/$skill_name/"
+    mkdir -p "$DST/skill/$skill_name"
+    cp "$skill_file" "$DST/skill/$skill_name/SKILL.md"
+    [ -d "$skill_dir/references" ] && cp -r "$skill_dir/references" "$DST/skill/$skill_name/"
   else
     # User-invocable → convert to command
-    cp "$skill_file" "$DST/commands/$skill_name.md"
+    cp "$skill_file" "$DST/command/$skill_name.md"
   fi
 done
 
-echo "  commands: $(ls "$DST/commands" 2>/dev/null | wc -l | tr -d ' ') files"
-echo "  skills: $(ls "$DST/skills" 2>/dev/null | wc -l | tr -d ' ') dirs"
+echo "  command: $(ls "$DST/command" 2>/dev/null | wc -l | tr -d ' ') files"
+echo "  skill: $(ls "$DST/skill" 2>/dev/null | wc -l | tr -d ' ') dirs"
 echo "Done: $PLUGIN"

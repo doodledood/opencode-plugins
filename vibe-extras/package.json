@@ -11,7 +11,7 @@
   "license": "MIT",
   "keywords": ["opencode", "opencode-plugin", "utilities", "git", "rebase", "documentation", "cleanup", "slop", "history-rewrite"],
   "opencode": {
-    "commands": "./commands",
-    "agents": "./agents"
+    "command": "./command",
+    "agent": "./agent"
   }
 }

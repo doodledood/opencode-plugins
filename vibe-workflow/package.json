@@ -11,7 +11,7 @@
   "license": "MIT",
   "keywords": ["opencode", "opencode-plugin", "vibe-coding", "workflow", "autonomous", "quality-gates", "code-review", "maintainability", "planning", "implementation-plan"],
   "opencode": {
-    "commands": "./commands",
-    "agents": "./agents"
+    "command": "./command",
+    "agent": "./agent"
   }
 }

@@ -4,13 +4,7 @@ Ship high-quality code faster with less back-and-forth.
 
 Converted from [claude-code-plugins](https://github.com/doodledood/claude-code-plugins).
 
-## Installation
-
-```bash
-# Clone this repo and add to your OpenCode config
-```
-
-## Commands (18)
+## Command (18)
 
 | Command | Description |
 |---------|-------------|
@@ -33,7 +27,7 @@ Converted from [claude-code-plugins](https://github.com/doodledood/claude-code-p
 | `/review-docs` | Audit documentation accuracy |
 | `/review-claude-md-adherence` | Verify CLAUDE.md compliance |
 
-## Agents (14)
+## Agent (14)
 
 | Agent | Description |
 |-------|-------------|
@@ -51,17 +45,6 @@ Converted from [claude-code-plugins](https://github.com/doodledood/claude-code-p
 | `type-safety-reviewer` | Review for type safety issues |
 | `docs-reviewer` | Review documentation accuracy |
 | `claude-md-adherence-reviewer` | Review CLAUDE.md compliance |
-
-## Hooks Status
-
-See [HOOKS_TODO.md](./HOOKS_TODO.md) for conversion status.
-
-| Hook | Status |
-|------|--------|
-| session-start-reminder | Needs TypeScript conversion |
-| post-compact-hook | Needs TypeScript conversion |
-| stop-todo-enforcement | **Cannot convert** (blocking not supported) |
-| post-todo-write-hook | Needs TypeScript conversion |
 
 ## License
 

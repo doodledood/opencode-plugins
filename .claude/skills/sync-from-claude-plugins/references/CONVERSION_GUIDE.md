@@ -43,12 +43,12 @@ Claude Code and OpenCode share similar concepts but with different implementatio
 my-plugin/
 ├── .claude-plugin/
 │   └── plugin.json          # Plugin manifest
-├── skills/
+├── skill/
 │   ├── review/
 │   │   └── SKILL.md         # User-invocable skill
 │   └── chunk-impl/
 │       └── SKILL.md         # Non-user-invocable skill
-├── agents/
+├── agent/
 │   └── bug-fixer.md         # Subagent definition
 ├── hooks/
 │   ├── pyproject.toml
@@ -61,12 +61,12 @@ my-plugin/
 ```
 my-plugin/
 ├── package.json             # npm manifest with opencode config
-├── commands/
+├── command/
 │   └── review.md            # User-invocable command
-├── skills/
+├── skill/
 │   └── chunk-impl/
 │       └── SKILL.md         # Non-user-invocable skill
-├── agents/
+├── agent/
 │   └── bug-fixer.md         # Subagent definition
 ├── plugins/
 │   └── hooks.ts             # TypeScript hooks (optional)
@@ -78,9 +78,9 @@ my-plugin/
 | Claude Code | OpenCode | Notes |
 |-------------|----------|-------|
 | `.claude-plugin/plugin.json` | `package.json` | npm package manifest |
-| `skills/<name>/SKILL.md` (user-invocable) | `commands/<name>.md` | Flat file, not directory |
-| `skills/<name>/SKILL.md` (non-user-invocable) | `skills/<name>/SKILL.md` | Same structure |
-| `agents/<name>.md` | `agents/<name>.md` | Same |
+| `skill/<name>/SKILL.md` (user-invocable) | `command/<name>.md` | Flat file, not directory |
+| `skill/<name>/SKILL.md` (non-user-invocable) | `skill/<name>/SKILL.md` | Same structure |
+| `agent/<name>.md` | `agent/<name>.md` | Same |
 | `hooks/*.py` | `plugins/<name>.ts` | Language change |
 
 ---
@@ -89,9 +89,9 @@ my-plugin/
 
 | Feature | Claude Code | OpenCode | Parity | Notes |
 |---------|-------------|----------|--------|-------|
-| User-invocable skills | `skills/*/SKILL.md` | `commands/*.md` | ✅ Full | Different path |
-| Non-user-invocable skills | `skills/*/SKILL.md` | `skills/*/SKILL.md` | ✅ Full | Same format |
-| Agents/subagents | `agents/*.md` | `agents/*.md` | ✅ Full | Different frontmatter |
+| User-invocable skills | `skill/*/SKILL.md` | `command/*.md` | ✅ Full | Different path |
+| Non-user-invocable skills | `skill/*/SKILL.md` | `skill/*/SKILL.md` | ✅ Full | Same format |
+| Agents/subagents | `agent/*.md` | `agent/*.md` | ✅ Full | Different frontmatter |
 | SessionStart hook | Python | TypeScript | ✅ Full | `session.created` |
 | PreToolUse hook | Python | TypeScript | ✅ Full | `tool.execute.before` |
 | PostToolUse hook | Python | TypeScript | ✅ Full | `tool.execute.after` |
@@ -121,14 +121,14 @@ A skill is **non-user-invocable** if ANY of:
 2. Description says "called by /X, not directly" or similar
 3. Is only referenced via `Skill("plugin:name")` calls (never directly by user)
 
-**Note**: Internal helpers like `chunk-implementor` in vibe-workflow are **agents**, not skills. Check if the file is in `skills/` or `agents/` directory.
+**Note**: Internal helpers like `chunk-implementor` in vibe-workflow are **agents**, not skills. Check if the file is in `skill/` or `agent/` directory.
 
 ### Conversion Strategy
 
 | Skill Type | → | OpenCode Target | Why |
 |------------|---|-----------------|-----|
-| User-invocable | → | `commands/*.md` | Direct `/command` access |
-| Non-user-invocable | → | `skills/*/SKILL.md` | Agent loads via skill tool |
+| User-invocable | → | `command/*.md` | Direct `/command` access |
+| Non-user-invocable | → | `skill/*/SKILL.md` | Agent loads via skill tool |
 
 ---
 
@@ -168,10 +168,10 @@ model: anthropic/claude-sonnet-4-5-20250929
 
 ```
 # Claude Code
-skills/review/SKILL.md
+skill/review/SKILL.md
 
 # OpenCode
-commands/review.md
+command/review.md
 ```
 
 Note: OpenCode commands are flat files, not directories.
@@ -207,15 +207,15 @@ description: 'Manifest verification runner. Called by /do, not directly by users
 |-------|-------------|----------|-------|
 | `name:` | Required | Required | **Keep it** for skills |
 | `user-invocable:` | `false` | (remove) | OpenCode skills are not in `/` menu by default |
-| Path | `skills/<name>/SKILL.md` | `skills/<name>/SKILL.md` | Same! |
+| Path | `skill/<name>/SKILL.md` | `skill/<name>/SKILL.md` | Same! |
 
 ### OpenCode Skill Discovery Paths
 
 OpenCode finds skills in (order of precedence):
-1. `.opencode/skills/<name>/SKILL.md` (project)
-2. `~/.config/opencode/skills/<name>/SKILL.md` (global)
-3. `.claude/skills/<name>/SKILL.md` (Claude-compatible!)
-4. `~/.claude/skills/<name>/SKILL.md` (Claude-compatible!)
+1. `.opencode/skill/<name>/SKILL.md` (project)
+2. `~/.config/opencode/skill/<name>/SKILL.md` (global)
+3. `.claude/skill/<name>/SKILL.md` (Claude-compatible!)
+4. `~/.claude/skill/<name>/SKILL.md` (Claude-compatible!)
 
 This means Claude Code skills can often work without modification.
 
@@ -415,7 +415,7 @@ Launch the bug-fixer agent using the Task tool with subagent_type="vibe-workflow
 
 **OpenCode:**
 ```markdown
-Use the bug-fixer agent (defined in agents/bug-fixer.md)
+Use the bug-fixer agent (defined in agent/bug-fixer.md)
 ```
 
 ### Model References
@@ -502,9 +502,9 @@ OpenCode supports multiple providers:
   "license": "MIT",
   "keywords": ["opencode", "opencode-plugin", "vibe-coding", "workflow"],
   "opencode": {
-    "commands": "./commands",
-    "agents": "./agents",
-    "skills": "./skills",
+    "command": "./commands",
+    "agent": "./agents",
+    "skill": "./skills",
     "plugins": "./plugins"
   }
 }
@@ -520,39 +520,39 @@ OpenCode supports multiple providers:
 
 | Skill | Type | → OpenCode |
 |-------|------|------------|
-| `review` | User-invocable | `commands/review.md` |
-| `plan` | User-invocable | `commands/plan.md` |
-| `spec` | User-invocable | `commands/spec.md` |
-| `implement` | User-invocable | `commands/implement.md` |
-| `implement-inplace` | User-invocable | `commands/implement-inplace.md` |
-| `explore-codebase` | User-invocable | `commands/explore-codebase.md` |
-| `research-web` | User-invocable | `commands/research-web.md` |
-| `bugfix` | User-invocable | `commands/bugfix.md` |
-| `fix-review-issues` | User-invocable | `commands/fix-review-issues.md` |
-| `review-*` (all) | User-invocable | `commands/review-*.md` |
+| `review` | User-invocable | `command/review.md` |
+| `plan` | User-invocable | `command/plan.md` |
+| `spec` | User-invocable | `command/spec.md` |
+| `implement` | User-invocable | `command/implement.md` |
+| `implement-inplace` | User-invocable | `command/implement-inplace.md` |
+| `explore-codebase` | User-invocable | `command/explore-codebase.md` |
+| `research-web` | User-invocable | `command/research-web.md` |
+| `bugfix` | User-invocable | `command/bugfix.md` |
+| `fix-review-issues` | User-invocable | `command/fix-review-issues.md` |
+| `review-*` (all) | User-invocable | `command/review-*.md` |
 
 | Agent | → OpenCode |
 |-------|------------|
-| `bug-fixer` | `agents/bug-fixer.md` |
-| `chunk-implementor` | `agents/chunk-implementor.md` |
-| `chunk-verifier` | `agents/chunk-verifier.md` |
-| `codebase-explorer` | `agents/codebase-explorer.md` |
-| `web-researcher` | `agents/web-researcher.md` |
-| `plan-verifier` | `agents/plan-verifier.md` |
-| `*-reviewer` (all) | `agents/*-reviewer.md` |
+| `bug-fixer` | `agent/bug-fixer.md` |
+| `chunk-implementor` | `agent/chunk-implementor.md` |
+| `chunk-verifier` | `agent/chunk-verifier.md` |
+| `codebase-explorer` | `agent/codebase-explorer.md` |
+| `web-researcher` | `agent/web-researcher.md` |
+| `plan-verifier` | `agent/plan-verifier.md` |
+| `*-reviewer` (all) | `agent/*-reviewer.md` |
 
 ### vibe-extras
 
 | Skill | Type | → OpenCode |
 |-------|------|------------|
-| `clean-slop` | User-invocable | `commands/clean-slop.md` |
-| `rebase-on-main` | User-invocable | `commands/rebase-on-main.md` |
-| `rewrite-history` | User-invocable | `commands/rewrite-history.md` |
-| `update-claude-md` | User-invocable | `commands/update-claude-md.md` |
+| `clean-slop` | User-invocable | `command/clean-slop.md` |
+| `rebase-on-main` | User-invocable | `command/rebase-on-main.md` |
+| `rewrite-history` | User-invocable | `command/rewrite-history.md` |
+| `update-claude-md` | User-invocable | `command/update-claude-md.md` |
 
 | Agent | → OpenCode |
 |-------|------------|
-| `slop-cleaner` | `agents/slop-cleaner.md` |
+| `slop-cleaner` | `agent/slop-cleaner.md` |
 
 ### vibe-experimental
 
@@ -560,16 +560,16 @@ OpenCode supports multiple providers:
 
 | Skill | Type | → OpenCode |
 |-------|------|------------|
-| `define` | User-invocable | `commands/define.md` |
-| `do` | User-invocable | `commands/do.md` |
-| `verify` | **Non-user-invocable** | `skills/verify/SKILL.md` |
-| `done` | **Non-user-invocable** | `skills/done/SKILL.md` |
-| `escalate` | **Non-user-invocable** | `skills/escalate/SKILL.md` |
+| `define` | User-invocable | `command/define.md` |
+| `do` | User-invocable | `command/do.md` |
+| `verify` | **Non-user-invocable** | `skill/verify/SKILL.md` |
+| `done` | **Non-user-invocable** | `skill/done/SKILL.md` |
+| `escalate` | **Non-user-invocable** | `skill/escalate/SKILL.md` |
 
 | Agent | → OpenCode |
 |-------|------------|
-| `criteria-checker` | `agents/criteria-checker.md` |
-| `*-reviewer` (all) | `agents/*-reviewer.md` |
+| `criteria-checker` | `agent/criteria-checker.md` |
+| `*-reviewer` (all) | `agent/*-reviewer.md` |
 
 ---
 
@@ -602,9 +602,9 @@ OpenCode supports multiple providers:
 
 - [ ] Create `package.json` from `plugin.json`
 - [ ] Identify user-invocable vs non-user-invocable skills
-- [ ] Convert user-invocable skills → `commands/*.md`
-- [ ] Copy non-user-invocable skills → `skills/*/SKILL.md`
-- [ ] Convert agents → `agents/*.md`
+- [ ] Convert user-invocable skills → `command/*.md`
+- [ ] Copy non-user-invocable skills → `skill/*/SKILL.md`
+- [ ] Convert agents → `agent/*.md`
 - [ ] Document hooks needing manual conversion
 - [ ] Update all `Skill()` references to `/command` format
 - [ ] Update all model names to full IDs

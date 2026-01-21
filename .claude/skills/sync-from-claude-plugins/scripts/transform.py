@@ -85,17 +85,17 @@ def main():
     pattern = sys.argv[1] if len(sys.argv) > 1 else './vibe-*'
 
     # Process commands
-    for f in glob.glob(f'{pattern}/commands/*.md'):
+    for f in glob.glob(f'{pattern}/command/*.md'):
         process_file(f, 'command')
         print(f'  command: {f}')
 
     # Process agents
-    for f in glob.glob(f'{pattern}/agents/*.md'):
+    for f in glob.glob(f'{pattern}/agent/*.md'):
         process_file(f, 'agent')
         print(f'  agent: {f}')
 
     # Process skills
-    for f in glob.glob(f'{pattern}/skills/*/SKILL.md'):
+    for f in glob.glob(f'{pattern}/skill/*/SKILL.md'):
         process_file(f, 'skill')
         print(f'  skill: {f}')
 

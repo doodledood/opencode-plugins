@@ -114,17 +114,17 @@ See the comprehensive conversion specification:
 opencode-plugins/
 ├── README.md                                    # This file
 ├── CLAUDE.md                                    # Project context
-├── .claude/skills/sync-from-claude-plugins/     # Conversion skill
+├── .claude/skills/sync-from-claude-plugins/    # Conversion skill
 │   ├── SKILL.md
 │   └── references/
 │       └── CONVERSION_GUIDE.md                  # Complete spec
 ├── vibe-workflow/                               # Converted plugin
 │   ├── package.json
-│   ├── commands/
+│   ├── command/
 │   │   ├── review.md
 │   │   ├── plan.md
 │   │   └── ...
-│   ├── agents/
+│   ├── agent/
 │   │   ├── bug-fixer.md
 │   │   └── ...
 │   └── README.md
@@ -150,7 +150,7 @@ opencode
 
 1. Check files are in correct location:
    ```bash
-   ls ~/.config/opencode/commands/
+   ls ~/.config/opencode/command/
    ```
 
 2. Ensure files have `.md` extension
@@ -161,7 +161,7 @@ opencode
 
 1. Verify agent files exist:
    ```bash
-   ls ~/.config/opencode/agents/
+   ls ~/.config/opencode/agent/
    ```
 
 2. Check frontmatter has `mode: subagent`

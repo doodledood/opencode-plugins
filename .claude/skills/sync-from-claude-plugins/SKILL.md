@@ -51,22 +51,14 @@ Read `.claude-plugin/plugin.json` and create `package.json`:
   "license": "MIT",
   "keywords": ["opencode", "opencode-plugin", ...],
   "opencode": {
-    "commands": "./commands",
-    "agents": "./agents",
-    "skills": "./skills"
+    "command": "./command",
+    "agent": "./agent",
+    "skill": "./skill"
   }
 }
 ```
 
-### 5. Create HOOKS_TODO.md (if hooks in plugin.json)
-
-Document hook conversion status:
-- SessionStart → session.created (needs TypeScript)
-- PreToolUse → tool.execute.before (needs TypeScript)
-- PostToolUse → tool.execute.after (needs TypeScript)
-- Stop (blocking) → **CANNOT CONVERT**
-
-### 6. Create README.md
+### 5. Create README.md
 
 List commands, agents, skills, and hook status.
 
@@ -80,8 +72,7 @@ See `references/CONVERSION_GUIDE.md` for full specification.
 <plugin>/
 ├── package.json
 ├── README.md
-├── HOOKS_TODO.md      (if hooks)
-├── commands/*.md
-├── agents/*.md
-└── skills/*/SKILL.md  (non-user-invocable only)
+├── command/*.md
+├── agent/*.md
+└── skill/*/SKILL.md   (non-user-invocable only)
 ```
