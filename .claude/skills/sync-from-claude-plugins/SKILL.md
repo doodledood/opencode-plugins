@@ -1,6 +1,6 @@
 ---
 name: sync-from-claude-plugins
-description: Fetch claude-code-plugins repo and convert specified plugins to OpenCode format. Usage: /sync-from-claude-plugins [plugin-names...] (default: vibe-workflow vibe-extras vibe-experimental)
+description: Fetch claude-code-plugins repo and convert plugins to OpenCode format. Usage: /sync-from-claude-plugins [plugin-names...] (default: all available plugins)
 ---
 
 # Sync Claude Code Plugins to OpenCode
@@ -9,7 +9,7 @@ Convert Claude Code plugins to OpenCode format.
 
 ## Arguments
 
-- `$ARGUMENTS`: Plugin names (space-separated), default: `vibe-workflow vibe-extras vibe-experimental`
+- `$ARGUMENTS`: Plugin names (comma or space-separated). If empty, discovers and converts ALL plugins from the source repo.
 
 ## Execution
 
@@ -23,22 +23,38 @@ done
 [ -z "$REPO" ] && git clone https://github.com/doodledood/claude-code-plugins.git /tmp/claude-code-plugins && REPO=/tmp/claude-code-plugins
 ```
 
-### 2. Bulk Copy (per plugin)
+### 2. Discover Plugins
+
+If no plugins specified, discover all available plugins:
+
+```bash
+# Find all directories with .claude-plugin/plugin.json
+PLUGINS=""
+for dir in "$REPO"/claude-plugins/*/; do
+  [ -d "$dir" ] || continue
+  [ -f "$dir/.claude-plugin/plugin.json" ] && PLUGINS="$PLUGINS $(basename "$dir")"
+done
+echo "Available plugins: $PLUGINS"
+```
+
+If `$ARGUMENTS` is provided, use those instead (normalize commas to spaces).
+
+### 3. Bulk Copy (per plugin)
 
 ```bash
 SCRIPTS="${CLAUDE_SKILL_ROOT}/scripts"
-for PLUGIN in vibe-workflow vibe-extras vibe-experimental; do
+for PLUGIN in $PLUGINS; do
   "$SCRIPTS/bulk_copy.sh" "$REPO" "$PLUGIN"
 done
 ```
 
-### 3. Transform Files
+### 4. Transform Files
 
 ```bash
 python3 "${CLAUDE_SKILL_ROOT}/scripts/transform.py"
 ```
 
-### 4. Convert Hooks to TypeScript
+### 5. Convert Hooks to TypeScript
 
 If plugin.json has hooks, create `plugin/hooks.ts`:
 
@@ -83,7 +99,7 @@ export default async ({ project, client }) => {
 | PreToolUse | tool.execute.before | **Yes** (via `output.abort`) |
 | Stop | session.idle | **No** |
 
-### 5. Create package.json (per plugin)
+### 6. Create package.json (per plugin)
 
 Read `.claude-plugin/plugin.json` and create `package.json`:
 
@@ -108,9 +124,9 @@ Read `.claude-plugin/plugin.json` and create `package.json`:
 
 **Note**: This package.json is for npm publishing metadata. OpenCode does NOT read it for discovery - files must be installed to `~/.config/opencode/` via `install.sh`.
 
-### 6. Create README.md
+### 7. Create README.md
 
-List commands, agents, skills.
+List commands, agents, skills for each plugin.
 
 ## Reference
 
@@ -127,3 +143,16 @@ See `references/CONVERSION_GUIDE.md` for full specification.
 ├── skill/*/SKILL.md   (non-user-invocable only)
 └── plugin/hooks.ts    (if source has hooks)
 ```
+
+## Installation
+
+After conversion, run the install script to copy to OpenCode config:
+
+```bash
+./install.sh                    # Install all plugins
+./install.sh vibe-workflow      # Install specific plugin
+./install.sh plugin1,plugin2    # Install multiple (comma-separated)
+```
+
+Files are postfixed with plugin name to avoid collisions:
+- `review.md` → `review-vibe-workflow.md` → `/review-vibe-workflow`
