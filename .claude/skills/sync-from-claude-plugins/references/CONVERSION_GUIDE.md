@@ -73,7 +73,7 @@ my-plugin/
 └── README.md
 ```
 
-**Important**: All directory names are **singular** (`command/`, `agent/`, `skill/`, `plugin/`).
+**Directory Naming**: OpenCode supports **both singular and plural** via glob patterns (e.g., `{command,commands}/**/*.md`). Official docs use **plural** as convention. Singular works for backwards compatibility.
 
 ### Path Mapping
 
@@ -151,7 +151,6 @@ model: sonnet
 ```yaml
 ---
 description: Run all code review agents in parallel
-agent: build
 model: anthropic/claude-sonnet-4-5-20250929
 ---
 ```
@@ -163,8 +162,10 @@ model: anthropic/claude-sonnet-4-5-20250929
 | `name:` | (filename) | **Remove** - filename is the command name |
 | `description:` | `description:` | Keep as-is |
 | `model:` | `model:` | Convert to full model ID |
-| N/A | `agent:` | **Add** - typically `build` |
-| N/A | `subtask:` | Add if should run as subagent |
+| N/A | `agent:` | Optional - references an agent name to execute the command |
+| N/A | `subtask:` | Add `true` if should run as subagent |
+
+**Note**: The `agent:` field references an **agent name** (e.g., `agent: reviewer`), not a mode. If omitted, the command runs with the default agent.
 
 ### File Path Change
 
@@ -310,93 +311,94 @@ tools:
 | `SessionStart` | `session.created` | N/A | Inject context on session start |
 | `PostCompact` | `session.compacted` | N/A | Re-inject context after compaction |
 | `PostToolUse` | `tool.execute.after` | No | React to tool completion |
-| `PreToolUse` | `tool.execute.before` | **No** | Can warn but cannot block |
+| `PreToolUse` | `tool.execute.before` | **Yes** | Use `output.abort` to block |
 | `Stop` | `session.idle` | **No** | Cannot prevent stopping |
 | `SubagentStop` | N/A | — | ❌ No equivalent |
 
-**Critical**: OpenCode hooks **cannot block** tool execution or stopping. Claude Code's `{"continue": false}` pattern does not translate.
+**Important**: OpenCode's `tool.execute.before` **CAN block** tool execution via `output.abort = "reason"`. This is different from Claude Code's `{"continue": false}` pattern but achieves the same result. However, `session.idle` (Stop) still cannot block.
 
 ### Complete TypeScript Hook Template
 
 Create `plugin/hooks.ts`:
 
 ```typescript
+import type { Plugin } from "@opencode-ai/plugin"
+
 /**
  * OpenCode hooks for <plugin-name> plugin.
  * Converted from Python hooks in claude-code-plugins.
  */
 
-function buildSystemReminder(content: string): string {
-  return `<system-reminder>${content}</system-reminder>`;
-}
-
-export default async ({ project, client }: { project: any; client: any }) => {
+export const MyPlugin: Plugin = async ({ project, client, $, directory, worktree }) => {
   return {
     /**
      * Session created - inject initial context
      * Converted from: SessionStart hook
      */
     "session.created": async () => {
-      client.app.log("info", "[plugin-name] Session started");
-      return {
-        additionalContext: buildSystemReminder("Your reminder text here"),
-      };
+      await client.app.log({
+        service: "my-plugin",
+        level: "info",
+        message: "Session started"
+      });
+      // Note: For context injection, use experimental.chat.system.transform instead
     },
 
     /**
-     * Session compacted - re-inject context after memory compaction
+     * System prompt transformation - inject context
+     * Use this to add custom context to the system prompt
+     */
+    "experimental.chat.system.transform": async (input, output) => {
+      output.system.push(`<system-reminder>Your reminder text here</system-reminder>`);
+    },
+
+    /**
+     * Session compacting - preserve context during compaction
      * Converted from: PostCompact hook
      */
-    "session.compacted": async () => {
-      client.app.log("info", "[plugin-name] Session compacted");
-      return {
-        additionalContext: [
-          buildSystemReminder("First reminder"),
-          buildSystemReminder("Recovery reminder for compacted sessions"),
-        ].join("\n"),
-      };
+    "experimental.session.compacting": async (input, output) => {
+      output.context.push(`<preserved-state>Recovery info for compacted sessions</preserved-state>`);
     },
 
     /**
-     * After tool execution - react to tool results
+     * After tool execution - react to tool results (CANNOT block)
      * Converted from: PostToolUse hook
      */
-    "tool.execute.after": async (event: { tool: string; args: any; result: any }) => {
+    "tool.execute.after": async (input) => {
       // Filter by tool name (OpenCode uses "todo" not "TodoWrite")
-      if (event.tool !== "todo") return;
+      if (input.call.name !== "todo") return;
 
-      const todos = event.args?.todos || [];
-      const hasCompleted = todos.some((t: any) => t?.status === "completed");
-
-      if (hasCompleted) {
-        client.app.log("info", "[plugin-name] Todo completed");
-        return {
-          additionalContext: buildSystemReminder("Reminder after todo completion"),
-        };
-      }
+      await client.app.log({
+        service: "my-plugin",
+        level: "info",
+        message: "Todo tool executed"
+      });
     },
 
     /**
-     * Before tool execution - can warn but CANNOT BLOCK
+     * Before tool execution - CAN BLOCK via output.abort
      * Converted from: PreToolUse hook
      *
-     * NOTE: In Claude Code, returning {"continue": false} blocks the tool.
-     * OpenCode does NOT support blocking - this can only inject warnings.
+     * Unlike Claude Code's {"continue": false}, use output.abort = "reason"
      */
-    "tool.execute.before": async (event: { tool: string; args: any }) => {
-      if (event.tool !== "skill") return;
+    "tool.execute.before": async (input, output) => {
+      const toolName = input.call.name;
+      const toolInput = input.call.input;
 
-      const skill = event.args?.skill || "";
-      if (!skill.includes("dangerous")) return;
+      // Example: Block reading .env files
+      if (toolName === "Read" && toolInput.file_path?.includes(".env")) {
+        output.abort = "Cannot read .env files for security reasons";
+        return;
+      }
 
-      // Log warning (cannot actually block)
-      client.app.log("warn", "[plugin-name] Dangerous skill called");
-
-      return {
-        additionalContext: buildSystemReminder(
-          "Warning: You're about to run a dangerous operation. Proceed with caution."
-        ),
-      };
+      // Example: Warn but don't block (just log)
+      if (toolName === "bash") {
+        await client.app.log({
+          service: "my-plugin",
+          level: "warn",
+          message: `Bash command: ${toolInput.command}`
+        });
+      }
     },
 
     /**
@@ -404,12 +406,31 @@ export default async ({ project, client }: { project: any; client: any }) => {
      * Converted from: Stop hook
      *
      * NOTE: Claude Code's Stop hook can return {"continue": false} to prevent
-     * the session from stopping. OpenCode does NOT support this - the session
-     * will stop regardless of what this hook returns.
+     * stopping. OpenCode does NOT support blocking here.
      */
     "session.idle": async () => {
-      // Cannot block stopping - informational only
-      client.app.log("debug", "[plugin-name] Session idle");
+      await client.app.log({
+        service: "my-plugin",
+        level: "debug",
+        message: "Session idle"
+      });
+    },
+  };
+};
+```
+
+### Alternative: Simple Default Export (for basic hooks)
+
+For simpler plugins without the full type system:
+
+```typescript
+export default async ({ project, client }) => {
+  return {
+    "tool.execute.before": async (input, output) => {
+      // Block dangerous commands
+      if (input.call.name === "bash" && input.call.input.command?.includes("rm -rf")) {
+        output.abort = "Blocked dangerous rm -rf command";
+      }
     },
   };
 };
@@ -451,20 +472,27 @@ return {
 
 | Feature | Why | Workaround |
 |---------|-----|------------|
-| Stop blocking | OpenCode cannot prevent stopping | Log warning, inject reminder |
-| Tool blocking | `tool.execute.before` cannot block | Log warning, inject reminder |
+| Stop blocking | `session.idle` cannot prevent stopping | Log warning |
 | SubagentStop | No equivalent event | None |
+| Subagent tool interception | Hooks don't intercept subagent tool calls | Design around this limitation |
+| MCP tool interception | MCP tool calls don't trigger hooks | Use MCP server-side logic |
 | Python dependencies | Different runtime | Find TypeScript alternatives |
+
+**Note**: `tool.execute.before` **CAN block** via `output.abort` - this is fully supported.
 
 ### Logging
 
-Use `client.app.log()` with severity levels:
+Use `client.app.log()` with structured format:
 ```typescript
-client.app.log("debug", "Debug message");
-client.app.log("info", "Info message");
-client.app.log("warn", "Warning message");
-client.app.log("error", "Error message");
+await client.app.log({
+  service: "my-plugin",
+  level: "info",     // debug | info | warn | error
+  message: "Description of what happened",
+  extra: { foo: "bar" }  // optional metadata
+});
 ```
+
+Enable verbose logging with `opencode --verbose`.
 
 ---
 
@@ -588,6 +616,7 @@ model: anthropic/claude-sonnet-4-5-20250929
   "version": "2.13.2",
   "description": "Ship high-quality code faster",
   "author": "doodledood <email@example.com>",
+  "type": "module",
   "homepage": "https://github.com/doodledood/opencode-plugins",
   "repository": {
     "type": "git",
@@ -596,16 +625,20 @@ model: anthropic/claude-sonnet-4-5-20250929
   "license": "MIT",
   "keywords": ["opencode", "opencode-plugin", "vibe-coding", "workflow"],
   "opencode": {
-    "command": "./command",
-    "agent": "./agent",
-    "skill": "./skill",
-    "plugin": "./plugin"
+    "type": "plugin",
+    "hooks": ["tool.execute.before", "session.created"]
+  },
+  "dependencies": {
+    "@opencode-ai/plugin": "^1.0.162"
   }
 }
 ```
 
-**Note**: All directory paths are **singular** (`./command`, `./agent`, `./skill`, `./plugin`).
-```
+**Notes**:
+- Use `"type": "module"` for ESM format
+- The `opencode` field contains `type` and `hooks` array (not directory paths)
+- Add `@opencode-ai/plugin` dependency for TypeScript types
+- Directory discovery is automatic via glob patterns
 
 ---
 
@@ -672,23 +705,27 @@ model: anthropic/claude-sonnet-4-5-20250929
 
 ## Edge Cases & Limitations
 
-### Critical: Directory Names Must Be Singular
+### Directory Naming
 
-OpenCode will **not discover** plugins with plural directory names:
+OpenCode uses glob patterns that accept **both** singular and plural:
+- `{command,commands}/**/*.md`
+- `{agent,agents}/**/*.md`
+- `{plugin,plugins}/**/*.{ts,js}`
 
-| ❌ Wrong | ✅ Correct |
-|----------|-----------|
-| `commands/` | `command/` |
-| `agents/` | `agent/` |
-| `skills/` | `skill/` |
-| `plugins/` | `plugin/` |
+**Convention**: Official docs use **plural** (`commands/`, `agents/`, `plugins/`). Singular works for backwards compatibility.
 
 ### Cannot Convert
 
-1. **Stop hooks that block**: Claude Code can prevent stopping; OpenCode cannot
+1. **Stop hooks that block**: `session.idle` cannot prevent stopping
 2. **SubagentStop hooks**: No equivalent event in OpenCode
-3. **Complex Python deps**: Must find TypeScript alternatives
-4. **Model auto-routing**: Claude Code uses Haiku for searches automatically
+3. **Subagent tool interception**: Hooks don't fire for subagent tool calls
+4. **MCP tool interception**: MCP tool calls don't trigger hooks
+5. **Complex Python deps**: Must find TypeScript alternatives
+6. **Model auto-routing**: Claude Code uses Haiku for searches automatically
+
+### CAN Convert (contrary to earlier belief)
+
+1. **PreToolUse blocking**: OpenCode's `tool.execute.before` **CAN block** via `output.abort`
 
 ### Requires Manual Work
 
@@ -722,7 +759,7 @@ OpenCode will **not discover** plugins with plural directory names:
 ### Per Skill/Command
 
 - [ ] Remove `name:` from frontmatter (commands only)
-- [ ] Add `agent: build` field (commands only)
+- [ ] Add `agent:` field if command should use specific agent (optional)
 - [ ] Convert `model:` to full ID
 - [ ] Replace `Skill()` calls in content
 - [ ] Replace `Task` tool references
@@ -737,13 +774,15 @@ OpenCode will **not discover** plugins with plural directory names:
 
 ### Per Hook (if source has `hooks/` directory)
 
-- [ ] Create `plugin/hooks.ts`
+- [ ] Create `plugin/hooks.ts` (or `plugins/hooks.ts`)
+- [ ] Add `@opencode-ai/plugin` dependency
 - [ ] Map `SessionStart` → `session.created`
-- [ ] Map `PostCompact` → `session.compacted`
+- [ ] Map `PostCompact` → `experimental.session.compacting`
 - [ ] Map `PostToolUse` → `tool.execute.after`
-- [ ] Map `PreToolUse` → `tool.execute.before` (cannot block!)
-- [ ] Document any `Stop` hooks that cannot be converted
+- [ ] Map `PreToolUse` → `tool.execute.before` (CAN block via `output.abort`)
+- [ ] Document any `Stop` hooks (blocking not supported)
 - [ ] Convert Python logic to TypeScript
+- [ ] Use `output.abort` pattern instead of `{"continue": false}`
 
 ### Testing
 
@@ -764,8 +803,9 @@ OpenCode will **not discover** plugins with plural directory names:
 ```yaml
 ---
 description: What it does
-agent: build
 model: <full-model-id>  # optional, see Model Mapping
+agent: <agent-name>     # optional, references an agent to execute the command
+subtask: true           # optional, run as subagent
 ---
 ```
 
@@ -799,13 +839,18 @@ tools:
 | `model: opus/sonnet/haiku` | See [Model Mapping](#model-mapping) |
 | `tools: Bash, Read, ...` | See [Tool Permission Mapping](#tool-permission-mapping) |
 
-### Directory Structure (All Singular!)
+### Directory Structure
+
+OpenCode supports both singular and plural via glob patterns. Convention uses plural:
 
 ```
 plugin-name/
 ├── package.json
-├── command/       # NOT commands/
-├── agent/         # NOT agents/
-├── skill/         # NOT skills/
-└── plugin/        # NOT plugins/
+├── commands/      # or command/ (both work)
+├── agents/        # or agent/ (both work)
+├── skills/        # folder-per-skill structure
+│   └── <name>/
+│       └── SKILL.md
+└── plugins/       # or plugin/ (both work)
+    └── hooks.ts
 ```
