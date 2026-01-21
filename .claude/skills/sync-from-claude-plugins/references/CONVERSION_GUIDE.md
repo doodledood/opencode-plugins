@@ -27,11 +27,14 @@ Claude Code and OpenCode share similar concepts but with different implementatio
 
 | Concept | Claude Code | OpenCode |
 |---------|-------------|----------|
-| User commands | Skills (user-invocable) | Commands |
-| Internal skills | Skills (non-user-invocable) | Skills |
-| Subagents | Agents | Agents |
-| Event hooks | Python hooks | TypeScript plugins |
+| User commands | Skills (user-invocable) | Commands (`command/*.md`) |
+| Internal skills | Skills (non-user-invocable) | Skills (`skill/*/SKILL.md`) |
+| Subagents | Agents | Agents (`agent/*.md`) |
+| Event hooks | Python hooks | Hooks (`plugin/*.ts`) |
+| Plugin bundles | Plugins (with plugin.json) | **No equivalent** - flat directories |
 | External tools | MCP servers | MCP servers + custom tools |
+
+**Terminology note**: OpenCode confusingly calls hooks "plugins" (stored in `plugin/` directory). There's no "plugin bundle" concept - OpenCode uses flat directories that are merged together. This repo organizes related resources into directories we call "plugins" for convenience.
 
 ---
 

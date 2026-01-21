@@ -2,15 +2,25 @@
 
 OpenCode-compatible ports of Claude Code plugins from [doodledood/claude-code-plugins](https://github.com/doodledood/claude-code-plugins).
 
+## Terminology
+
+**Important**: OpenCode doesn't have a "plugin bundle" concept like Claude Code. In OpenCode:
+- **Commands** (`command/*.md`) - Slash commands the user invokes
+- **Agents** (`agent/*.md`) - Subagents that can be spawned
+- **Skills** (`skill/*/SKILL.md`) - Non-user-invocable prompts loaded by agents
+- **Hooks** (`plugin/*.ts`) - TypeScript event handlers (confusingly called "plugins" in OpenCode)
+
+This repo organizes related commands/agents/skills/hooks into directories we call "plugins" for convenience, but they're just bundles that get installed to OpenCode's flat directory structure.
+
 ## Installation
 
-OpenCode discovers commands, agents, skills, and plugins from flat directories:
+OpenCode discovers resources from flat directories:
 - `~/.config/opencode/command/*.md` - Slash commands
 - `~/.config/opencode/agent/*.md` - Subagents
 - `~/.config/opencode/skill/*/SKILL.md` - Non-user-invocable skills
-- `~/.config/opencode/plugin/*.ts` - Hook plugins
+- `~/.config/opencode/plugin/*.ts` - Hooks (event handlers)
 
-This repo contains multiple plugins as subdirectories. The install script copies their contents to the appropriate locations.
+The install script copies contents from our bundled "plugins" to these locations.
 
 ### Quick Install (All Plugins)
 
