@@ -2,22 +2,40 @@
 
 OpenCode-compatible ports of Claude Code plugins.
 
-## Structure
+## Purpose
 
-- `vibe-workflow/` - Main workflow plugin (commands + agents)
-- `vibe-extras/` - Extra utilities
-- `vibe-experimental/` - Experimental features
-- `CONVERSION_GUIDE.md` - How to convert Claude Code → OpenCode
+This repo converts and hosts Claude Code plugins in OpenCode format.
+
+## Key Files
+
+- `README.md` - Installation and usage
+- `.claude/skills/sync-from-claude-plugins/SKILL.md` - Conversion skill
+- `.claude/skills/sync-from-claude-plugins/references/CONVERSION_GUIDE.md` - **Complete conversion specification**
 
 ## Commands
 
 ```bash
-# Sync/convert plugins from claude-code-plugins repo
-/sync-from-claude-plugins [plugin-names...]
+# Convert all default plugins (vibe-workflow, vibe-extras, vibe-experimental)
+/sync-from-claude-plugins
+
+# Convert specific plugins
+/sync-from-claude-plugins vibe-workflow consultant
+```
+
+## Structure After Conversion
+
+```
+<plugin>/
+├── package.json      # npm manifest
+├── commands/*.md     # User-invocable slash commands
+├── skills/*/SKILL.md # Non-user-invocable skills (if any)
+├── agents/*.md       # Subagent definitions
+└── README.md
 ```
 
 ## Conventions
 
-- Commands go in `<plugin>/commands/*.md`
-- Agents go in `<plugin>/agents/*.md`
-- Each plugin has its own `package.json`
+- User-invocable skills → `commands/` (flat `.md` files)
+- Non-user-invocable skills → `skills/` (directory with `SKILL.md`)
+- Agents → `agents/` (same as Claude Code)
+- Hooks → `plugins/` (TypeScript, manual conversion needed)
