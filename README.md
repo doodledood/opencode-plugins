@@ -84,51 +84,20 @@ This sync behavior ensures:
 
 ## Available Plugins
 
-| Plugin | Description | Commands | Agents |
-|--------|-------------|----------|--------|
-| `vibe-workflow` | Planning, implementation, and review workflows | 17 | 12 |
-| `vibe-extras` | Slop cleaning, git helpers, CLAUDE.md management | 4 | 1 |
-| `vibe-experimental` | Define/do/verify workflow | 2 commands + 3 skills | 9 |
+Each plugin directory contains a `README.md` with detailed documentation. Browse the directories in this repo or see below for a summary.
 
-### vibe-workflow Commands
+After installation, commands are available as `/<command>-<plugin>` (e.g., `/review-vibe-workflow`).
 
-After installation, commands are available as `/command-vibe-workflow`:
-
-| Command | Description |
-|---------|-------------|
-| `/review-vibe-workflow` | Run all code review agents in parallel |
-| `/plan-vibe-workflow` | Create implementation plans via iterative research |
-| `/spec-vibe-workflow` | Requirements discovery through structured interview |
-| `/implement-vibe-workflow` | Execute plans via subagents with verification |
-| `/implement-inplace-vibe-workflow` | Single-agent implementation without subagents |
-| `/explore-codebase-vibe-workflow` | Find files relevant to a query |
-| `/research-web-vibe-workflow` | Deep web research with parallel investigators |
-| `/bugfix-vibe-workflow` | Investigate and fix bugs systematically |
-| `/review-bugs-vibe-workflow` | Audit code for logical bugs |
-| `/review-coverage-vibe-workflow` | Verify test coverage for changes |
-| `/review-maintainability-vibe-workflow` | Audit for DRY violations, dead code |
-| `/review-simplicity-vibe-workflow` | Audit for over-engineering |
-| `/review-testability-vibe-workflow` | Audit for testability issues |
-| `/review-type-safety-vibe-workflow` | Audit TypeScript for type safety |
-| `/review-docs-vibe-workflow` | Audit documentation accuracy |
-| `/review-claude-md-adherence-vibe-workflow` | Check CLAUDE.md compliance |
-| `/fix-review-issues-vibe-workflow` | Fix issues found by /review |
-
-### vibe-extras Commands
-
-| Command | Description |
-|---------|-------------|
-| `/clean-slop-vibe-extras` | Remove AI-generated code slop |
-| `/rebase-on-main-vibe-extras` | Rebase current branch on main |
-| `/rewrite-history-vibe-extras` | Interactive git history rewriting |
-| `/update-claude-md-vibe-extras` | Update CLAUDE.md with project changes |
-
-### vibe-experimental Commands
-
-| Command | Description |
-|---------|-------------|
-| `/define-vibe-experimental` | Define acceptance criteria for a task |
-| `/do-vibe-experimental` | Execute task with verification loop |
+| Plugin | Description |
+|--------|-------------|
+| `vibe-workflow` | Planning, implementation, and review workflows |
+| `vibe-extras` | Slop cleaning, git helpers, CLAUDE.md management |
+| `vibe-experimental` | Define/do/verify workflow with acceptance criteria |
+| `consultant` | Expert consulting and code analysis |
+| `prompt-engineering` | Prompt optimization and review tools |
+| `solo-dev` | Brand, design, UX, and content tools for solo devs |
+| `frontend-design` | Frontend design patterns |
+| `life-ops` | Decision-making framework |
 
 ## Uninstall
 
@@ -187,19 +156,36 @@ opencode-plugins/
 │   ├── SKILL.md
 │   └── references/
 │       └── CONVERSION_GUIDE.md                  # Complete spec
-├── vibe-workflow/                               # Plugin: workflow tools
-│   ├── package.json                             # Plugin metadata
-│   ├── command/*.md                             # Slash commands
-│   ├── agent/*.md                               # Subagents
-│   └── plugin/hooks.ts                          # TypeScript hooks
-├── vibe-extras/                                 # Plugin: git utilities
-│   ├── command/*.md
-│   └── agent/*.md
-└── vibe-experimental/                           # Plugin: define/do/verify
-    ├── command/*.md
-    ├── agent/*.md
-    ├── skill/*/SKILL.md                         # Non-user-invocable skills
-    └── plugin/hooks.ts
+│
+└── <plugin>/                                    # Each plugin directory
+    ├── package.json                             # Plugin metadata
+    ├── README.md                                # Plugin documentation
+    ├── command/                                 # User-invocable commands
+    │   └── <command>.md
+    ├── agent/                                   # Subagent definitions (optional)
+    │   └── <agent>.md
+    ├── skill/                                   # Non-user-invocable skills (optional)
+    │   └── <skill>/
+    │       └── SKILL.md
+    └── plugin/                                  # TypeScript hooks (optional)
+        └── hooks.ts
+```
+
+### Installed Structure
+
+After running `install.sh`, files are copied to:
+
+```
+~/.config/opencode/
+├── command/
+│   └── <command>-<plugin>.md          # /command-plugin
+├── agent/
+│   └── <agent>-<plugin>.md
+├── skill/
+│   └── <skill>-<plugin>/
+│       └── SKILL.md
+└── plugin/
+    └── <plugin>-hooks.ts
 ```
 
 ## Verifying Installation
