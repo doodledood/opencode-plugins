@@ -1,16 +1,20 @@
 #!/bin/bash
-# Install OpenCode plugins by copying to ~/.config/opencode/
+# Install/sync OpenCode plugins by copying to ~/.config/opencode/
 #
 # Usage:
-#   ./install.sh                           # Install all plugins
-#   ./install.sh vibe-workflow             # Install specific plugin
-#   ./install.sh vibe-workflow,vibe-extras # Install multiple (comma-separated)
+#   ./install.sh                           # Sync all plugins
+#   ./install.sh vibe-workflow             # Sync specific plugin
+#   ./install.sh vibe-workflow,vibe-extras # Sync multiple (comma-separated)
 #
 # Environment variables:
 #   OPENCODE_PLUGINS    - Comma or space-separated list of plugins
 #                         Default: all available plugins in repo
 #   OPENCODE_CONFIG_DIR - Target directory (default: ~/.config/opencode)
-#   FORCE               - Set to 1 to overwrite existing files
+#
+# Sync behavior:
+#   - Removes all existing files for the plugin (detected by postfix)
+#   - Copies current files from source
+#   - This handles: additions, updates, AND deletions
 #
 # Files are postfixed with plugin name to avoid collisions:
 #   review.md -> review-vibe-workflow.md
@@ -21,7 +25,6 @@ set -e
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_DIR="${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}"
-FORCE="${FORCE:-0}"
 
 # Colors for output
 RED='\033[0;31m'
@@ -53,8 +56,40 @@ discover_plugins() {
 
 # Create target directories
 create_dirs() {
-    log_info "Creating directories in $CONFIG_DIR"
     mkdir -p "$CONFIG_DIR"/{command,agent,skill,plugin}
+}
+
+# Remove all files for a plugin (detected by postfix pattern)
+# This enables proper sync: deletions in source are reflected in target
+clean_plugin_files() {
+    local plugin="$1"
+    local removed=0
+
+    # Remove command files: *-<plugin>.md
+    shopt -s nullglob
+    for f in "$CONFIG_DIR/command/"*"-${plugin}.md"; do
+        [ -e "$f" ] && rm -f "$f" && removed=$((removed + 1))
+    done
+
+    # Remove agent files: *-<plugin>.md
+    for f in "$CONFIG_DIR/agent/"*"-${plugin}.md"; do
+        [ -e "$f" ] && rm -f "$f" && removed=$((removed + 1))
+    done
+
+    # Remove skill directories: *-<plugin>/
+    for d in "$CONFIG_DIR/skill/"*"-${plugin}"; do
+        [ -d "$d" ] && rm -rf "$d" && removed=$((removed + 1))
+    done
+
+    # Remove hook files: <plugin>-*.ts or <plugin>-*.js
+    for f in "$CONFIG_DIR/plugin/${plugin}-"*.ts "$CONFIG_DIR/plugin/${plugin}-"*.js; do
+        [ -e "$f" ] && rm -f "$f" && removed=$((removed + 1))
+    done
+    shopt -u nullglob
+
+    if [ $removed -gt 0 ]; then
+        log_info "  Cleaned $removed existing files"
+    fi
 }
 
 # Postfix filename with plugin name
@@ -78,7 +113,6 @@ update_name_field() {
     # Check if file has YAML frontmatter with name field
     if head -1 "$file" | grep -q '^---$'; then
         # Use sed to update name: field in frontmatter
-        # Match name: followed by any value, replace with new name
         if grep -q '^name:' "$file"; then
             sed -i "s/^name:.*$/name: $new_name/" "$file"
         fi
@@ -97,18 +131,12 @@ copy_files() {
     fi
 
     local count=0
-    local skipped=0
 
     for file in "$src"/*; do
         [ -e "$file" ] || continue
         local basename=$(basename "$file")
         local new_basename=$(postfix_filename "$basename" "$plugin")
         local target="$dst/$new_basename"
-
-        if [ -e "$target" ] && [ "$FORCE" != "1" ]; then
-            skipped=$((skipped + 1))
-            continue
-        fi
 
         cp -r "$file" "$target"
 
@@ -120,10 +148,7 @@ copy_files() {
     done
 
     if [ $count -gt 0 ]; then
-        log_success "  $type: $count files copied"
-    fi
-    if [ $skipped -gt 0 ]; then
-        log_warn "  $type: $skipped files skipped (already exist, use FORCE=1 to overwrite)"
+        log_success "  $type: $count files"
     fi
 }
 
@@ -138,18 +163,12 @@ copy_skills() {
     fi
 
     local count=0
-    local skipped=0
 
     for skill_dir in "$src"/*/; do
         [ -d "$skill_dir" ] || continue
         local skill_name=$(basename "$skill_dir")
         local new_skill_name="${skill_name}-${plugin}"
         local target="$dst/$new_skill_name"
-
-        if [ -d "$target" ] && [ "$FORCE" != "1" ]; then
-            skipped=$((skipped + 1))
-            continue
-        fi
 
         mkdir -p "$target"
         cp -r "$skill_dir"/* "$target/"
@@ -163,10 +182,7 @@ copy_skills() {
     done
 
     if [ $count -gt 0 ]; then
-        log_success "  skill: $count skills copied"
-    fi
-    if [ $skipped -gt 0 ]; then
-        log_warn "  skill: $skipped skills skipped (already exist)"
+        log_success "  skill: $count dirs"
     fi
 }
 
@@ -181,35 +197,25 @@ copy_hooks() {
     fi
 
     local count=0
-    local skipped=0
 
     for file in "$src"/*; do
         [ -e "$file" ] || continue
         local basename=$(basename "$file")
-        local ext="${basename##*.}"
         # hooks.ts -> vibe-workflow-hooks.ts
         local new_basename="${plugin}-${basename}"
         local target="$dst/$new_basename"
-
-        if [ -e "$target" ] && [ "$FORCE" != "1" ]; then
-            skipped=$((skipped + 1))
-            continue
-        fi
 
         cp -r "$file" "$target"
         count=$((count + 1))
     done
 
     if [ $count -gt 0 ]; then
-        log_success "  hooks: $count files copied"
-    fi
-    if [ $skipped -gt 0 ]; then
-        log_warn "  hooks: $skipped files skipped (already exist)"
+        log_success "  hooks: $count files"
     fi
 }
 
-# Install a single plugin
-install_plugin() {
+# Sync a single plugin (clean + copy)
+sync_plugin() {
     local plugin="$1"
     local plugin_dir="$SCRIPT_DIR/$plugin"
 
@@ -218,9 +224,12 @@ install_plugin() {
         return 1
     fi
 
-    log_info "Installing $plugin..."
+    log_info "Syncing $plugin..."
 
-    # Copy each resource type with plugin postfix
+    # First, remove all existing files for this plugin
+    clean_plugin_files "$plugin"
+
+    # Then copy fresh files
     copy_files "$plugin_dir/command" "$CONFIG_DIR/command" "command" "$plugin"
     copy_files "$plugin_dir/agent" "$CONFIG_DIR/agent" "agent" "$plugin"
     copy_skills "$plugin_dir/skill" "$CONFIG_DIR/skill" "$plugin"
@@ -260,12 +269,12 @@ main() {
 
     create_dirs
 
-    local installed=0
+    local synced=0
     local failed=0
 
     for plugin in $plugins; do
-        if install_plugin "$plugin"; then
-            installed=$((installed + 1))
+        if sync_plugin "$plugin"; then
+            synced=$((synced + 1))
         else
             failed=$((failed + 1))
         fi
@@ -274,9 +283,9 @@ main() {
 
     echo "=========================================="
     if [ $failed -eq 0 ]; then
-        log_success "Installed $installed plugin(s) successfully!"
+        log_success "Synced $synced plugin(s) successfully!"
     else
-        log_warn "Installed $installed plugin(s), $failed failed"
+        log_warn "Synced $synced plugin(s), $failed failed"
     fi
     echo ""
     echo "Verify installation:"

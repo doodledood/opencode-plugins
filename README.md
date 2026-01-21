@@ -68,13 +68,19 @@ OPENCODE_CONFIG_DIR=".opencode" /tmp/opencode-plugins/install.sh
 
 ### What the Install Script Does
 
-1. Discovers all available plugins (or uses specified list)
-2. Creates directories: `command/`, `agent/`, `skill/`, `plugin/`
-3. Copies files with plugin postfix to avoid collisions:
+The script performs a **full sync** for each plugin:
+
+1. **Cleans** existing files for the plugin (detected by `-<plugin>` postfix)
+2. **Copies** fresh files with plugin postfix:
    - `review.md` → `review-vibe-workflow.md`
    - `bug-fixer.md` → `bug-fixer-vibe-workflow.md`
-4. Updates `name:` fields in files to match new filenames
-5. Preserves existing files (use `FORCE=1` to overwrite)
+3. **Updates** `name:` fields in files to match new filenames
+
+This sync behavior ensures:
+- **Additions**: New files are copied
+- **Updates**: Changed files are replaced
+- **Deletions**: Removed files are cleaned up
+- **Isolation**: Each plugin's files are independent (syncing one doesn't affect others)
 
 ## Available Plugins
 
