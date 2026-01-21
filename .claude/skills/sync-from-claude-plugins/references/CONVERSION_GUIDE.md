@@ -536,21 +536,35 @@ Enable verbose logging with `opencode --verbose`.
 
 ### Skill/Command References
 
-**Claude Code:**
-```markdown
-Use the Skill tool: Skill("vibe-workflow:review-bugs")
+**User-invocable skills → Slash commands:**
 
-Or with arguments:
+Claude Code:
+```markdown
+Skill("vibe-workflow:review")
 Skill("vibe-workflow:explore-codebase", "authentication system")
 ```
 
-**OpenCode:**
+OpenCode:
 ```markdown
-Run the /review-bugs command
-
-Or with arguments:
+/review
 /explore-codebase authentication system
 ```
+
+**Non-user-invocable skills → Skill tool:**
+
+Claude Code:
+```markdown
+Skill("vibe-experimental:verify")
+Skill("vibe-experimental:done", "task completed")
+```
+
+OpenCode:
+```markdown
+Use the skill tool: skill({ name: "verify" })
+Use the skill tool with arguments: skill({ name: "done", arguments: "task completed" })
+```
+
+**Note**: The `skill()` tool is OpenCode's native way to programmatically load skill content into the conversation. It returns the SKILL.md content for the agent to use.
 
 ### Task Tool References
 
@@ -580,9 +594,20 @@ Use `model: anthropic/claude-opus-4-5-20251101` for complex analysis
 
 Apply these transformations to prompt content:
 
+**For user-invocable skills (→ commands):**
 | Pattern | Replacement | Notes |
 |---------|-------------|-------|
 | `Skill\("[\w-]+:([\w-]+)"(?:,\s*"([^"]*)")?\)` | `/$1 $2` | Skill calls → slash commands |
+
+**For non-user-invocable skills (→ skill tool):**
+| Pattern | Replacement | Notes |
+|---------|-------------|-------|
+| `Skill\("[\w-]+:([\w-]+)"\)` | `skill({ name: "$1" })` | Skill calls → skill tool |
+| `Skill\("[\w-]+:([\w-]+)",\s*"([^"]*)"\)` | `skill({ name: "$1", arguments: "$2" })` | With args |
+
+**Other replacements:**
+| Pattern | Replacement | Notes |
+|---------|-------------|-------|
 | `\bopus\b` (in model context) | See [Model Mapping](#model-mapping) | |
 | `\bsonnet\b` (in model context) | See [Model Mapping](#model-mapping) | |
 | `\bhaiku\b` (in model context) | See [Model Mapping](#model-mapping) | |
@@ -771,7 +796,7 @@ OpenCode uses glob patterns that accept **both** singular and plural:
 
 ### Known Issues
 
-1. **Skills calling skills**: May need adjustment for skill tool vs `/command`
+1. **Skills calling skills**: Use `skill({ name: "skill-name" })` tool for non-user-invocable skills, `/command` for user-invocable ones
 2. **Agent tool restrictions**: OpenCode tool permissions are more granular
 3. **Context fork**: Claude Code `context: fork` needs testing in OpenCode
 
@@ -787,7 +812,7 @@ OpenCode uses glob patterns that accept **both** singular and plural:
 - [ ] Copy non-user-invocable skills → `skill/<name>/SKILL.md`
 - [ ] Convert agents → `agent/<name>.md`
 - [ ] Convert hooks → `plugin/hooks.ts` (see [Converting Hooks](#converting-hooks))
-- [ ] Update all `Skill()` references to `/command` format
+- [ ] Update `Skill()` references: user-invocable → `/command`, non-user-invocable → `skill({ name: "..." })`
 - [ ] Update all model names to full IDs (see [Model Mapping](#model-mapping))
 - [ ] Update tool lists in agents to permission format
 - [ ] Create README for converted plugin
@@ -797,7 +822,7 @@ OpenCode uses glob patterns that accept **both** singular and plural:
 - [ ] Remove `name:` from frontmatter (commands only)
 - [ ] Add `agent:` field if command should use specific agent (optional)
 - [ ] Convert `model:` to full ID
-- [ ] Replace `Skill()` calls in content
+- [ ] Replace `Skill()` calls: → `/command` or → `skill({ name: "..." })`
 - [ ] Replace `Task` tool references
 
 ### Per Agent
@@ -868,14 +893,28 @@ tools:
 
 ### Content Transformations
 
+**User-invocable skills (become commands):**
+
 | Find | Replace (Source) | After Install |
 |------|------------------|---------------|
 | `Skill("plugin:foo")` | `/foo` | `/foo-<plugin>` |
 | `Skill("plugin:foo", "args")` | `/foo args` | `/foo-<plugin> args` |
-| `model: opus/sonnet/haiku` | See [Model Mapping](#model-mapping) | Same |
-| `tools: Bash, Read, ...` | See [Tool Permission Mapping](#tool-permission-mapping) | Same |
 
-**Note**: In source files, use short command names (`/foo`). The install script adds the `-<plugin>` postfix automatically.
+**Non-user-invocable skills (remain skills):**
+
+| Find | Replace |
+|------|---------|
+| `Skill("plugin:foo")` | `skill({ name: "foo" })` |
+| `Skill("plugin:foo", "args")` | `skill({ name: "foo", arguments: "args" })` |
+
+**Other transformations:**
+
+| Find | Replace |
+|------|---------|
+| `model: opus/sonnet/haiku` | See [Model Mapping](#model-mapping) |
+| `tools: Bash, Read, ...` | See [Tool Permission Mapping](#tool-permission-mapping) |
+
+**Note**: The install script adds `-<plugin>` postfix to command filenames. Skill directories also get postfixed (e.g., `skill/verify-<plugin>/SKILL.md`).
 
 ### Directory Structure
 
