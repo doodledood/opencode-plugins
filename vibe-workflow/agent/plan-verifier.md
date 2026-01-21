@@ -2,7 +2,6 @@
 description: Verifies implementation plans before execution. Checks plan skill rules, spec coverage, dependency consistency, and completeness. Read-only - does not modify plan. Used by /plan before presenting for approval.
 tools:
   read: allow
-
 model: anthropic/claude-opus-4-5-20251101
 mode: subagent
 ---

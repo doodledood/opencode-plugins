@@ -10,10 +10,25 @@
     "url": "https://github.com/doodledood/opencode-plugins"
   },
   "license": "MIT",
-  "keywords": ["opencode", "opencode-plugin", "vibe-coding", "workflow", "autonomous", "quality-gates", "code-review", "maintainability", "planning", "implementation-plan"],
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "vibe-coding",
+    "workflow",
+    "autonomous",
+    "quality-gates",
+    "code-review",
+    "maintainability",
+    "planning",
+    "implementation-plan"
+  ],
   "opencode": {
     "type": "plugin",
-    "hooks": ["session.created", "tool.execute.after"]
+    "hooks": [
+      "session.created",
+      "session.idle",
+      "tool.execute.after"
+    ]
   },
   "dependencies": {
     "@opencode-ai/plugin": "^1.0.162"

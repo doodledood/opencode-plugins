@@ -1,4 +1,5 @@
 ---
+name: escalate
 description: 'Structured escalation with evidence. Surfaces blocking issues for human decision, referencing the Manifest hierarchy.'
 ---
 

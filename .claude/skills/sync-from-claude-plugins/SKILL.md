@@ -128,6 +128,53 @@ Read `.claude-plugin/plugin.json` and create `package.json`:
 
 List commands, agents, skills for each plugin.
 
+### 8. Validate & Adapt Transformed Output
+
+**CRITICAL**: After automated transforms, methodically verify output matches CONVERSION_GUIDE expectations. Read sample files and adapt if needed.
+
+#### Validation Checklist
+
+For each plugin, verify:
+
+1. **Commands** (`command/*.md`):
+   - [ ] NO `name:` field in frontmatter
+   - [ ] Has `description:` field
+   - [ ] Has `agent: build` (or appropriate agent)
+   - [ ] Model converted to full ID (not `opus`, `sonnet`, `haiku`)
+   - [ ] `Skill()` calls for user-invocable targets → `/command` format
+
+2. **Agents** (`agent/*.md`):
+   - [ ] NO `name:` field in frontmatter
+   - [ ] Has `mode: subagent`
+   - [ ] `tools:` is YAML object with permissions (not comma list)
+   - [ ] Model converted to full ID
+
+3. **Skills** (`skill/*/SKILL.md`):
+   - [ ] HAS `name:` field (skills keep it!)
+   - [ ] NO `user-invocable:` field (removed)
+   - [ ] `Skill()` calls for non-user-invocable targets → `skill({ name: "..." })`
+
+4. **Cross-file references**:
+   - [ ] `Skill("plugin:user-invocable-skill")` → `/skill-name`
+   - [ ] `Skill("plugin:non-user-invocable-skill")` → `skill({ name: "skill-name" })`
+   - [ ] Task tool references → agent references
+
+#### Adaptation Process
+
+If validation finds issues:
+
+1. **Identify pattern**: What transformation rule was missed or incorrectly applied?
+2. **Fix directly**: Edit the file to correct the issue
+3. **Update transform.py**: If systematic, add the rule to scripts/transform.py
+4. **Re-verify**: Check other files for same issue
+
+#### Sample Verification (minimum)
+
+Read and verify at least these files per plugin:
+- One command with complex content (Skill() calls, model references)
+- One agent with tools list
+- One skill (if any exist)
+
 ## Reference
 
 See `references/CONVERSION_GUIDE.md` for full specification.

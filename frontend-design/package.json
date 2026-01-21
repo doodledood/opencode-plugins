@@ -1,0 +1,30 @@
+{
+  "name": "opencode-frontend-design",
+  "version": "1.1.0",
+  "description": "Frontend design patterns and implementation skills for distinctive, non-generic UI experiences",
+  "author": "doodledood <aviram.kofman@gmail.com>",
+  "type": "module",
+  "homepage": "https://github.com/doodledood/opencode-plugins",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/doodledood/opencode-plugins"
+  },
+  "license": "MIT",
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "frontend",
+    "design",
+    "ui",
+    "ux",
+    "animation",
+    "interactive"
+  ],
+  "opencode": {
+    "type": "plugin",
+    "hooks": []
+  },
+  "dependencies": {
+    "@opencode-ai/plugin": "^1.0.162"
+  }
+}

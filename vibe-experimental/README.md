@@ -1,39 +1,37 @@
-# OpenCode Vibe Experimental
+# opencode-vibe-experimental
 
-Manifest-driven workflows separating Deliverables (what to build) from Invariants (rules to follow).
+Manifest-driven workflows separating Deliverables (what to build) from Invariants (rules to follow). Two-level verification: Global Invariants (task-level rules) and Acceptance Criteria (per-deliverable).
 
-Converted from [claude-code-plugins](https://github.com/doodledood/claude-code-plugins).
+## Installation
 
-## Command (2)
+```bash
+./install.sh vibe-experimental
+```
 
-| Command | Description |
-|---------|-------------|
-| `/define` | Define deliverables and invariants in a manifest |
-| `/do` | Execute a manifest - satisfy all deliverables |
+## Commands
 
-## Skill (3, non-user-invocable)
+- `/define-vibe-experimental`
+- `/do-vibe-experimental`
 
-These skills are called by `/do`, not directly by users:
+## Agents
 
-| Skill | Description |
-|-------|-------------|
-| `verify` | Manifest verification runner |
-| `done` | Mark manifest execution complete |
-| `escalate` | Escalate to human review |
+- `claude-md-adherence-reviewer-vibe-experimental`
+- `code-bugs-reviewer-vibe-experimental`
+- `code-coverage-reviewer-vibe-experimental`
+- `code-maintainability-reviewer-vibe-experimental`
+- `code-simplicity-reviewer-vibe-experimental`
+- `code-testability-reviewer-vibe-experimental`
+- `criteria-checker-vibe-experimental`
+- `docs-reviewer-vibe-experimental`
+- `type-safety-reviewer-vibe-experimental`
 
-## Agent (9)
+## Skills (Non-User-Invocable)
 
-| Agent | Description |
-|-------|-------------|
-| `criteria-checker` | Check acceptance criteria |
-| `code-bugs-reviewer` | Review for logical bugs |
-| `code-coverage-reviewer` | Review test coverage |
-| `code-maintainability-reviewer` | Review for maintainability |
-| `code-simplicity-reviewer` | Review for over-engineering |
-| `code-testability-reviewer` | Review for testability |
-| `type-safety-reviewer` | Review for type safety |
-| `docs-reviewer` | Review documentation |
-| `claude-md-adherence-reviewer` | Review CLAUDE.md compliance |
+These are loaded by the model via `skill({ name: "..." })` tool, not user-invocable.
+
+- `done-vibe-experimental`
+- `escalate-vibe-experimental`
+- `verify-vibe-experimental`
 
 ## License
 

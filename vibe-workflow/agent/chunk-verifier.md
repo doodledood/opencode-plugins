@@ -4,7 +4,6 @@ tools:
   bash: allow
   edit: allow
   read: allow
-
 model: anthropic/claude-opus-4-5-20251101
 mode: subagent
 ---

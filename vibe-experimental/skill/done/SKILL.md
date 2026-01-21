@@ -1,4 +1,5 @@
 ---
+name: done
 description: 'Completion marker. Outputs hierarchical execution summary showing Global Invariants respected and all Deliverables completed.'
 ---
 

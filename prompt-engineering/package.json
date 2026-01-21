@@ -1,0 +1,31 @@
+{
+  "name": "opencode-prompt-engineering",
+  "version": "1.18.0",
+  "description": "Tools for reviewing, analyzing, refining, and optimizing LLM prompts for clarity, precision, goal effectiveness, and token efficiency",
+  "author": "doodledood <aviram.kofman@gmail.com>",
+  "type": "module",
+  "homepage": "https://github.com/doodledood/opencode-plugins",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/doodledood/opencode-plugins"
+  },
+  "license": "MIT",
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "prompt-engineering",
+    "prompts",
+    "llm",
+    "optimization",
+    "prompt-design",
+    "token-efficiency",
+    "compression"
+  ],
+  "opencode": {
+    "type": "plugin",
+    "hooks": []
+  },
+  "dependencies": {
+    "@opencode-ai/plugin": "^1.0.162"
+  }
+}
