@@ -1,0 +1,17 @@
+{
+  "name": "opencode-vibe-extras",
+  "version": "1.6.0",
+  "description": "Standalone utilities that complement the core development workflow",
+  "author": "doodledood <aviram.kofman@gmail.com>",
+  "homepage": "https://github.com/doodledood/claude-code-plugins",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/doodledood/claude-code-plugins"
+  },
+  "license": "MIT",
+  "keywords": ["opencode", "opencode-plugin", "utilities", "git", "rebase", "documentation", "cleanup", "slop", "history-rewrite"],
+  "opencode": {
+    "commands": "./commands",
+    "agents": "./agents"
+  }
+}
