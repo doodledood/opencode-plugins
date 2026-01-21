@@ -68,10 +68,12 @@ my-plugin/
 │       └── SKILL.md         # Non-user-invocable skill
 ├── agent/
 │   └── bug-fixer.md         # Subagent definition
-├── plugins/
+├── plugin/
 │   └── hooks.ts             # TypeScript hooks (optional)
 └── README.md
 ```
+
+**Important**: All directory names are **singular** (`command/`, `agent/`, `skill/`, `plugin/`).
 
 ### Path Mapping
 
@@ -81,7 +83,7 @@ my-plugin/
 | `skill/<name>/SKILL.md` (user-invocable) | `command/<name>.md` | Flat file, not directory |
 | `skill/<name>/SKILL.md` (non-user-invocable) | `skill/<name>/SKILL.md` | Same structure |
 | `agent/<name>.md` | `agent/<name>.md` | Same |
-| `hooks/*.py` | `plugins/<name>.ts` | Language change |
+| `hooks/*.py` | `plugin/hooks.ts` | Python → TypeScript |
 
 ---
 
@@ -303,86 +305,166 @@ tools:
 
 ### Event Mapping
 
-| Claude Code | OpenCode | Equivalent |
-|-------------|----------|------------|
-| `SessionStart` | `session.created` | ✅ Yes |
-| `PreToolUse` | `tool.execute.before` | ✅ Yes |
-| `PostToolUse` | `tool.execute.after` | ✅ Yes |
-| `Stop` | `session.idle` | ⚠️ Partial (can't block) |
-| `PreCompact` | `session.compacted` | ✅ Yes |
-| `SubagentStop` | N/A | ❌ No equivalent |
+| Claude Code | OpenCode | Can Block? | Notes |
+|-------------|----------|------------|-------|
+| `SessionStart` | `session.created` | N/A | Inject context on session start |
+| `PostCompact` | `session.compacted` | N/A | Re-inject context after compaction |
+| `PostToolUse` | `tool.execute.after` | No | React to tool completion |
+| `PreToolUse` | `tool.execute.before` | **No** | Can warn but cannot block |
+| `Stop` | `session.idle` | **No** | Cannot prevent stopping |
+| `SubagentStop` | N/A | — | ❌ No equivalent |
 
-### Python → TypeScript Conversion
+**Critical**: OpenCode hooks **cannot block** tool execution or stopping. Claude Code's `{"continue": false}` pattern does not translate.
 
-**Claude Code (Python):**
-```python
-# hooks/session_start.py
-import json
-import sys
+### Complete TypeScript Hook Template
 
-def main():
-    result = {
-        "continue": True,
-        "message": "Session started!"
-    }
-    print(json.dumps(result))
+Create `plugin/hooks.ts`:
 
-if __name__ == "__main__":
-    main()
-```
-
-**OpenCode (TypeScript):**
 ```typescript
-// plugins/hooks.ts
-export const SessionHooks = async ({ project, client }) => {
+/**
+ * OpenCode hooks for <plugin-name> plugin.
+ * Converted from Python hooks in claude-code-plugins.
+ */
+
+function buildSystemReminder(content: string): string {
+  return `<system-reminder>${content}</system-reminder>`;
+}
+
+export default async ({ project, client }: { project: any; client: any }) => {
   return {
-    "session.created": async (event) => {
-      client.app.log("info", "Session started!")
-      // Return value format differs
+    /**
+     * Session created - inject initial context
+     * Converted from: SessionStart hook
+     */
+    "session.created": async () => {
+      client.app.log("info", "[plugin-name] Session started");
+      return {
+        additionalContext: buildSystemReminder("Your reminder text here"),
+      };
     },
-  }
-}
+
+    /**
+     * Session compacted - re-inject context after memory compaction
+     * Converted from: PostCompact hook
+     */
+    "session.compacted": async () => {
+      client.app.log("info", "[plugin-name] Session compacted");
+      return {
+        additionalContext: [
+          buildSystemReminder("First reminder"),
+          buildSystemReminder("Recovery reminder for compacted sessions"),
+        ].join("\n"),
+      };
+    },
+
+    /**
+     * After tool execution - react to tool results
+     * Converted from: PostToolUse hook
+     */
+    "tool.execute.after": async (event: { tool: string; args: any; result: any }) => {
+      // Filter by tool name (OpenCode uses "todo" not "TodoWrite")
+      if (event.tool !== "todo") return;
+
+      const todos = event.args?.todos || [];
+      const hasCompleted = todos.some((t: any) => t?.status === "completed");
+
+      if (hasCompleted) {
+        client.app.log("info", "[plugin-name] Todo completed");
+        return {
+          additionalContext: buildSystemReminder("Reminder after todo completion"),
+        };
+      }
+    },
+
+    /**
+     * Before tool execution - can warn but CANNOT BLOCK
+     * Converted from: PreToolUse hook
+     *
+     * NOTE: In Claude Code, returning {"continue": false} blocks the tool.
+     * OpenCode does NOT support blocking - this can only inject warnings.
+     */
+    "tool.execute.before": async (event: { tool: string; args: any }) => {
+      if (event.tool !== "skill") return;
+
+      const skill = event.args?.skill || "";
+      if (!skill.includes("dangerous")) return;
+
+      // Log warning (cannot actually block)
+      client.app.log("warn", "[plugin-name] Dangerous skill called");
+
+      return {
+        additionalContext: buildSystemReminder(
+          "Warning: You're about to run a dangerous operation. Proceed with caution."
+        ),
+      };
+    },
+
+    /**
+     * Session idle - CANNOT prevent stopping
+     * Converted from: Stop hook
+     *
+     * NOTE: Claude Code's Stop hook can return {"continue": false} to prevent
+     * the session from stopping. OpenCode does NOT support this - the session
+     * will stop regardless of what this hook returns.
+     */
+    "session.idle": async () => {
+      // Cannot block stopping - informational only
+      client.app.log("debug", "[plugin-name] Session idle");
+    },
+  };
+};
 ```
 
-### Hook Context
+### Tool Name Mapping in Hooks
 
-**Claude Code** hooks receive context via environment variables:
-- `CLAUDE_TOOL_NAME`
-- `CLAUDE_TOOL_INPUT`
-- etc.
+| Claude Code Tool | OpenCode Tool Name |
+|-----------------|-------------------|
+| `TodoWrite` | `todo` |
+| `Bash` | `bash` |
+| `Read` | `read` |
+| `Edit` | `edit` |
+| `Write` | `edit` |
+| `Skill` | `skill` |
+| `Task` | `task` |
 
-**OpenCode** hooks receive context via event parameter:
+### Return Value Format
+
+Hooks can return `additionalContext` to inject text into the conversation:
+
 ```typescript
-"tool.execute.after": async (event) => {
-  const { tool, args, result } = event
-}
+return {
+  additionalContext: "<system-reminder>Your message</system-reminder>",
+};
 ```
 
-### Matchers
-
-**Claude Code** uses `matcher` field:
-```json
-{
-  "matcher": "TodoWrite",
-  "hooks": [...]
-}
-```
-
-**OpenCode** implements matching in code:
+Multiple reminders can be combined:
 ```typescript
-"tool.execute.after": async (event) => {
-  if (event.tool === "todo") {
-    // Handle TodoWrite
-  }
-}
+return {
+  additionalContext: [
+    buildSystemReminder("First"),
+    buildSystemReminder("Second"),
+  ].join("\n"),
+};
 ```
 
 ### What Cannot Be Converted
 
-1. **Stop blocking**: Claude Code can return `{"continue": false}` to prevent stopping; OpenCode cannot
-2. **SubagentStop**: No equivalent in OpenCode
-3. **Python-specific logic**: Must be rewritten in TypeScript
-4. **External Python deps**: Need TypeScript alternatives
+| Feature | Why | Workaround |
+|---------|-----|------------|
+| Stop blocking | OpenCode cannot prevent stopping | Log warning, inject reminder |
+| Tool blocking | `tool.execute.before` cannot block | Log warning, inject reminder |
+| SubagentStop | No equivalent event | None |
+| Python dependencies | Different runtime | Find TypeScript alternatives |
+
+### Logging
+
+Use `client.app.log()` with severity levels:
+```typescript
+client.app.log("debug", "Debug message");
+client.app.log("info", "Info message");
+client.app.log("warn", "Warning message");
+client.app.log("error", "Error message");
+```
 
 ---
 
@@ -437,22 +519,24 @@ Apply these transformations to prompt content:
 | Pattern | Replacement | Notes |
 |---------|-------------|-------|
 | `Skill\("[\w-]+:([\w-]+)"(?:,\s*"([^"]*)")?\)` | `/$1 $2` | Skill calls → slash commands |
-| `\bopus\b` (in model context) | `anthropic/claude-opus-4-5-20251101` | Model names |
-| `\bsonnet\b` (in model context) | `anthropic/claude-sonnet-4-5-20250929` | Model names |
-| `\bhaiku\b` (in model context) | `anthropic/claude-haiku-4-5-20251001` | Model names |
+| `\bopus\b` (in model context) | See [Model Mapping](#model-mapping) | |
+| `\bsonnet\b` (in model context) | See [Model Mapping](#model-mapping) | |
+| `\bhaiku\b` (in model context) | See [Model Mapping](#model-mapping) | |
 | `Task tool with subagent_type` | `the <agent> agent` | Agent references |
 
 ---
 
 ## Model Mapping
 
-### Full Model ID Reference
+This is the **canonical reference** for model ID conversion. All other sections reference this.
 
-| Claude Code | OpenCode Full ID | OpenCode Short |
-|-------------|------------------|----------------|
-| `opus` | `anthropic/claude-opus-4-5-20251101` | `claude-opus-4-5` |
-| `sonnet` | `anthropic/claude-sonnet-4-5-20250929` | `claude-sonnet-4-5` |
-| `haiku` | `anthropic/claude-haiku-4-5-20251001` | `claude-haiku-4-5` |
+### Claude Code → OpenCode Model IDs
+
+| Claude Code | OpenCode Full ID |
+|-------------|------------------|
+| `opus` | `anthropic/claude-opus-4-5-20251101` |
+| `sonnet` | `anthropic/claude-sonnet-4-5-20250929` |
+| `haiku` | `anthropic/claude-haiku-4-5-20251001` |
 
 ### Provider Prefixes
 
@@ -462,6 +546,16 @@ OpenCode supports multiple providers:
 - `google/` - Google Gemini
 - `bedrock/` - AWS Bedrock
 - `vertex/` - Google Vertex AI
+
+### Usage in Frontmatter
+
+```yaml
+# Claude Code
+model: sonnet
+
+# OpenCode
+model: anthropic/claude-sonnet-4-5-20250929
+```
 
 ---
 
@@ -502,12 +596,15 @@ OpenCode supports multiple providers:
   "license": "MIT",
   "keywords": ["opencode", "opencode-plugin", "vibe-coding", "workflow"],
   "opencode": {
-    "command": "./commands",
-    "agent": "./agents",
-    "skill": "./skills",
-    "plugins": "./plugins"
+    "command": "./command",
+    "agent": "./agent",
+    "skill": "./skill",
+    "plugin": "./plugin"
   }
 }
+```
+
+**Note**: All directory paths are **singular** (`./command`, `./agent`, `./skill`, `./plugin`).
 ```
 
 ---
@@ -575,6 +672,17 @@ OpenCode supports multiple providers:
 
 ## Edge Cases & Limitations
 
+### Critical: Directory Names Must Be Singular
+
+OpenCode will **not discover** plugins with plural directory names:
+
+| ❌ Wrong | ✅ Correct |
+|----------|-----------|
+| `commands/` | `command/` |
+| `agents/` | `agent/` |
+| `skills/` | `skill/` |
+| `plugins/` | `plugin/` |
+
 ### Cannot Convert
 
 1. **Stop hooks that block**: Claude Code can prevent stopping; OpenCode cannot
@@ -600,21 +708,21 @@ OpenCode supports multiple providers:
 
 ### Per Plugin
 
-- [ ] Create `package.json` from `plugin.json`
+- [ ] Create `package.json` from `plugin.json` (use singular paths!)
 - [ ] Identify user-invocable vs non-user-invocable skills
-- [ ] Convert user-invocable skills → `command/*.md`
-- [ ] Copy non-user-invocable skills → `skill/*/SKILL.md`
-- [ ] Convert agents → `agent/*.md`
-- [ ] Document hooks needing manual conversion
+- [ ] Convert user-invocable skills → `command/<name>.md`
+- [ ] Copy non-user-invocable skills → `skill/<name>/SKILL.md`
+- [ ] Convert agents → `agent/<name>.md`
+- [ ] Convert hooks → `plugin/hooks.ts` (see [Converting Hooks](#converting-hooks))
 - [ ] Update all `Skill()` references to `/command` format
-- [ ] Update all model names to full IDs
+- [ ] Update all model names to full IDs (see [Model Mapping](#model-mapping))
 - [ ] Update tool lists in agents to permission format
 - [ ] Create README for converted plugin
 
 ### Per Skill/Command
 
 - [ ] Remove `name:` from frontmatter (commands only)
-- [ ] Add `agent:` field (commands only)
+- [ ] Add `agent: build` field (commands only)
 - [ ] Convert `model:` to full ID
 - [ ] Replace `Skill()` calls in content
 - [ ] Replace `Task` tool references
@@ -627,12 +735,23 @@ OpenCode supports multiple providers:
 - [ ] Convert `model:` to full ID
 - [ ] Update prompt content references
 
+### Per Hook (if source has `hooks/` directory)
+
+- [ ] Create `plugin/hooks.ts`
+- [ ] Map `SessionStart` → `session.created`
+- [ ] Map `PostCompact` → `session.compacted`
+- [ ] Map `PostToolUse` → `tool.execute.after`
+- [ ] Map `PreToolUse` → `tool.execute.before` (cannot block!)
+- [ ] Document any `Stop` hooks that cannot be converted
+- [ ] Convert Python logic to TypeScript
+
 ### Testing
 
 - [ ] Test each command via `/command-name`
 - [ ] Verify agents spawn correctly
 - [ ] Check skill discovery works
 - [ ] Validate prompt transformations
+- [ ] Verify hooks fire correctly
 - [ ] Test with different OpenCode models
 
 ---
@@ -641,16 +760,16 @@ OpenCode supports multiple providers:
 
 ### Frontmatter Cheat Sheet
 
-**Command (user-invocable):**
+**Command** (user-invocable, `command/<name>.md`):
 ```yaml
 ---
 description: What it does
 agent: build
-model: anthropic/claude-sonnet-4-5-20250929  # optional
+model: <full-model-id>  # optional, see Model Mapping
 ---
 ```
 
-**Skill (non-user-invocable):**
+**Skill** (non-user-invocable, `skill/<name>/SKILL.md`):
 ```yaml
 ---
 name: skill-name
@@ -658,12 +777,12 @@ description: What it does
 ---
 ```
 
-**Agent:**
+**Agent** (`agent/<name>.md`):
 ```yaml
 ---
 description: What it does
 mode: subagent
-model: anthropic/claude-opus-4-5-20251101
+model: <full-model-id>  # see Model Mapping
 tools:
   read: allow
   edit: allow
@@ -677,6 +796,16 @@ tools:
 |------|---------|
 | `Skill("plugin:foo")` | `/foo` |
 | `Skill("plugin:foo", "args")` | `/foo args` |
-| `model: opus` | `model: anthropic/claude-opus-4-5-20251101` |
-| `model: sonnet` | `model: anthropic/claude-sonnet-4-5-20250929` |
-| `tools: Bash, Read` | `tools:\n  bash: allow\n  read: allow` |
+| `model: opus/sonnet/haiku` | See [Model Mapping](#model-mapping) |
+| `tools: Bash, Read, ...` | See [Tool Permission Mapping](#tool-permission-mapping) |
+
+### Directory Structure (All Singular!)
+
+```
+plugin-name/
+├── package.json
+├── command/       # NOT commands/
+├── agent/         # NOT agents/
+├── skill/         # NOT skills/
+└── plugin/        # NOT plugins/
+```
