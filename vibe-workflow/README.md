@@ -1,6 +1,44 @@
-# opencode-vibe-workflow
+# Vibe Workflow
 
-Ship high-quality code faster with less back-and-forth
+Ship high-quality code faster with less back-and-forth.
+
+## Commands
+
+- `/bugfix` - Fix bugs with structured analysis
+- `/explore-codebase` - Explore and understand the codebase
+- `/fix-review-issues` - Fix issues from code review
+- `/implement` - Implement a feature with planning
+- `/implement-inplace` - Implement changes in-place
+- `/plan` - Create an implementation plan
+- `/research-web` - Research topic on the web
+- `/review` - Run comprehensive code review
+- `/review-bugs` - Review code for bugs
+- `/review-claude-md-adherence` - Review CLAUDE.md adherence
+- `/review-coverage` - Review test coverage
+- `/review-docs` - Review documentation
+- `/review-maintainability` - Review code maintainability
+- `/review-simplicity` - Review code simplicity
+- `/review-testability` - Review code testability
+- `/review-type-safety` - Review type safety
+- `/spec` - Create a specification document
+- `/web-research` - Research topic on the web
+
+## Agents
+
+- `bug-fixer` - Fix bugs
+- `chunk-implementor` - Implement code chunks
+- `chunk-verifier` - Verify code chunks
+- `claude-md-adherence-reviewer` - Review CLAUDE.md adherence
+- `code-bugs-reviewer` - Review code for bugs
+- `code-coverage-reviewer` - Review test coverage
+- `code-maintainability-reviewer` - Review code maintainability
+- `code-simplicity-reviewer` - Review code simplicity
+- `code-testability-reviewer` - Review code testability
+- `codebase-explorer` - Explore the codebase
+- `docs-reviewer` - Review documentation
+- `plan-verifier` - Verify implementation plans
+- `type-safety-reviewer` - Review type safety
+- `web-researcher` - Research on the web
 
 ## Installation
 
@@ -8,44 +46,10 @@ Ship high-quality code faster with less back-and-forth
 ./install.sh vibe-workflow
 ```
 
-## Commands
+## Note
 
-- `/bugfix-vibe-workflow`
-- `/explore-codebase-vibe-workflow`
-- `/fix-review-issues-vibe-workflow`
-- `/implement-vibe-workflow`
-- `/implement-inplace-vibe-workflow`
-- `/plan-vibe-workflow`
-- `/research-web-vibe-workflow`
-- `/review-vibe-workflow`
-- `/review-bugs-vibe-workflow`
-- `/review-claude-md-adherence-vibe-workflow`
-- `/review-coverage-vibe-workflow`
-- `/review-docs-vibe-workflow`
-- `/review-maintainability-vibe-workflow`
-- `/review-simplicity-vibe-workflow`
-- `/review-testability-vibe-workflow`
-- `/review-type-safety-vibe-workflow`
-- `/spec-vibe-workflow`
-- `/web-research-vibe-workflow`
-
-## Agents
-
-- `bug-fixer-vibe-workflow`
-- `chunk-implementor-vibe-workflow`
-- `chunk-verifier-vibe-workflow`
-- `claude-md-adherence-reviewer-vibe-workflow`
-- `code-bugs-reviewer-vibe-workflow`
-- `code-coverage-reviewer-vibe-workflow`
-- `code-maintainability-reviewer-vibe-workflow`
-- `code-simplicity-reviewer-vibe-workflow`
-- `code-testability-reviewer-vibe-workflow`
-- `codebase-explorer-vibe-workflow`
-- `docs-reviewer-vibe-workflow`
-- `plan-verifier-vibe-workflow`
-- `type-safety-reviewer-vibe-workflow`
-- `web-researcher-vibe-workflow`
-
-## License
-
-MIT
+This plugin has hooks that require manual TypeScript conversion. The original Python hooks handle:
+- SessionStart hook: Inject session-start reminders
+- PostCompact hook: Re-anchor session after compaction
+- Stop hook: Prevent premature stops during /implement workflows
+- PostToolUse (TodoWrite): Remind to update progress files

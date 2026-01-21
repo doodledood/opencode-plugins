@@ -1,24 +1,20 @@
-# opencode-vibe-extras
+# Vibe Extras
 
-Standalone utilities that complement the core development workflow
+Standalone utilities that complement the core development workflow.
+
+## Commands
+
+- `/clean-slop` - Clean up sloppy code and formatting
+- `/rebase-on-main` - Rebase current branch on main
+- `/rewrite-history` - Rewrite git history (interactive)
+- `/update-claude-md` - Update CLAUDE.md documentation
+
+## Agents
+
+- `slop-cleaner` - Clean up sloppy code
 
 ## Installation
 
 ```bash
 ./install.sh vibe-extras
 ```
-
-## Commands
-
-- `/clean-slop-vibe-extras`
-- `/rebase-on-main-vibe-extras`
-- `/rewrite-history-vibe-extras`
-- `/update-claude-md-vibe-extras`
-
-## Agents
-
-- `slop-cleaner-vibe-extras`
-
-## License
-
-MIT
