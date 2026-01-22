@@ -5,8 +5,9 @@ tools:
   edit: true
   read: true
   skill: true
-model: anthropic/claude-opus-4-5-20251101
+model: openai/gpt-5.2
 mode: subagent
+reasoningEffort: xhigh
 ---
 
 You are a focused implementation agent. Your job is to implement a single chunk from an implementation plan, maintaining a log file for full traceability.

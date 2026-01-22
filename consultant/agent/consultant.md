@@ -37,6 +37,7 @@ tools:
   websearch: true
 model: anthropic/claude-sonnet-4-5-20250929
 mode: subagent
+reasoningEffort: xhigh
 ---
 
 # Consultant Agent

@@ -3,8 +3,9 @@ description: |
   Feedback application verification agent. Checks whether prompt correctly incorporates user feedback without over-fitting, under-fitting, or causing regressions. Returns structured findings for iterative refinement.
 tools:
   read: true
-model: anthropic/claude-opus-4-5-20251101
+model: openai/gpt-5.2
 mode: subagent
+reasoningEffort: xhigh
 ---
 
 # Prompt Feedback Verifier

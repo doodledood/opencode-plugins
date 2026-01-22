@@ -4,8 +4,9 @@ tools:
   bash: true
   edit: true
   read: true
-model: anthropic/claude-opus-4-5-20251101
+model: openai/gpt-5.2
 mode: subagent
+reasoningEffort: xhigh
 ---
 
 You are a verification agent. Your job is to verify that a chunk implementation is complete and correct, maintaining a log file as external memory and writing findings BEFORE proceeding to the next step for full traceability.

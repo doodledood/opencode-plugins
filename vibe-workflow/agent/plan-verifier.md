@@ -2,8 +2,9 @@
 description: Verifies implementation plans before execution. Checks plan skill rules, spec coverage, dependency consistency, and completeness. Read-only - does not modify plan. Used by /plan before presenting for approval.
 tools:
   read: true
-model: anthropic/claude-opus-4-5-20251101
+model: openai/gpt-5.2
 mode: subagent
+reasoningEffort: xhigh
 ---
 
 You are a plan verification agent. Your job is to verify that an implementation plan is complete, consistent, and ready for execution, maintaining a log file as external memory for traceability.

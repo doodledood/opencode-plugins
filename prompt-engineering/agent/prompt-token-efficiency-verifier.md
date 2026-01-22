@@ -3,8 +3,9 @@ description: |
   Verifies prompt token efficiency. In single-file mode, identifies inefficiencies (redundancy, verbosity). In two-file mode, verifies compression is lossless by comparing original vs compressed.
 tools:
   read: true
-model: anthropic/claude-opus-4-5-20251101
+model: openai/gpt-5.2
 mode: subagent
+reasoningEffort: xhigh
 ---
 
 # Prompt Token Efficiency Verifier

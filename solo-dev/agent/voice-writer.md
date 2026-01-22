@@ -18,6 +18,7 @@ tools:
   read: true
   skill: true
 mode: subagent
+reasoningEffort: xhigh
 ---
 
 # Voice Writer Agent

@@ -7,6 +7,7 @@ tools:
   skill: true
 model: anthropic/claude-haiku-4-5-20251001
 mode: subagent
+reasoningEffort: xhigh
 ---
 
 **User request**: $ARGUMENTS
