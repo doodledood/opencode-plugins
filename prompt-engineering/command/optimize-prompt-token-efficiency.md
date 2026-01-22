@@ -5,7 +5,7 @@ agent: build
 
 # Optimize Prompt Token Efficiency
 
-Iteratively optimize prompt token efficiency by maximizing information density through verification loops. Primary goal: reduce token consumption while preserving all semantic content for AI-consumed prompts (CLAUDE.md, skills, agent prompts, specs).
+Iteratively optimize prompt token efficiency by maximizing information density through verification loops. Primary goal: reduce token consumption while preserving all semantic content for AI-consumed prompts (AGENTS.md, skills, agent prompts, specs).
 
 ## Overview
 
@@ -221,8 +221,8 @@ Review the changes manually.
 ## Example Usage
 
 ```bash
-# Optimize a verbose CLAUDE.md
-/optimize-prompt-token-efficiency CLAUDE.md
+# Optimize a verbose AGENTS.md
+/optimize-prompt-token-efficiency AGENTS.md
 
 # Optimize a skill file
 /optimize-prompt-token-efficiency claude-plugins/my-plugin/skills/my-skill/SKILL.md

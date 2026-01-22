@@ -59,7 +59,7 @@ Both can cover **output** or **process**:
 
 For tasks involving code, ask users to **multi-select** which quality aspects they care about. Present both questions together.
 
-**Filter through project preferences**: CLAUDE.md is auto-loaded into context—check it for quality gate preferences. Users may have disabled certain default gates (e.g., "skip documentation checks") or added custom ones (e.g., "always run security scan"). Exclude disabled gates from the selection, and include any custom gates the user has defined.
+**Filter through project preferences**: AGENTS.md is auto-loaded into context—check it for quality gate preferences. Users may have disabled certain default gates (e.g., "skip documentation checks") or added custom ones (e.g., "always run security scan"). Exclude disabled gates from the selection, and include any custom gates the user has defined.
 
 ```
 questions: [
@@ -81,7 +81,7 @@ questions: [
       { label: "Test coverage", description: "New/changed code has adequate tests" },
       { label: "Testability", description: "Code structure allows easy testing (low mock count)" },
       { label: "Documentation", description: "Docs and comments match code" },
-      { label: "CLAUDE.md adherence", description: "Follows project-specific standards" }
+      { label: "AGENTS.md adherence", description: "Follows project-specific standards" }
     ],
     multiSelect: true
   }
@@ -99,7 +99,7 @@ questions: [
 | Test coverage | code-coverage-reviewer | no HIGH/CRITICAL |
 | Testability | code-testability-reviewer | no HIGH/CRITICAL |
 | Documentation | docs-reviewer | no MEDIUM+ (max severity is MEDIUM) |
-| CLAUDE.md adherence | claude-md-adherence-reviewer | no HIGH/CRITICAL |
+| AGENTS.md adherence | agents-md-adherence-reviewer | no HIGH/CRITICAL |
 
 Add selected quality gates as Global Invariants with subagent verification:
 ```yaml
@@ -109,13 +109,13 @@ verify:
   prompt: "Review for [quality aspect] issues in the changed files"
 ```
 
-### Project Gates (auto-detect from CLAUDE.md)
+### Project Gates (auto-detect from AGENTS.md)
 
-For coding tasks, read CLAUDE.md and extract verifiable commands (typecheck, lint, test, format). Add as Global Invariants with bash verification:
+For coding tasks, read AGENTS.md and extract verifiable commands (typecheck, lint, test, format). Add as Global Invariants with bash verification:
 ```yaml
 verify:
   method: bash
-  command: "[command from CLAUDE.md]"
+  command: "[command from AGENTS.md]"
 ```
 
 ## Question Format

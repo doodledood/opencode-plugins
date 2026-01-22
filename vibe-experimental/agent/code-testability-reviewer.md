@@ -1,11 +1,11 @@
 ---
 description: Use this agent to audit code for testability issues. Identifies code that requires excessive mocking to test, business logic that's hard to verify in isolation, and suggests ways to make code easier to test. Invoke after implementing features, during refactoring, or before PRs.\n\n<example>\nContext: User finished implementing a service with database and API calls.\nuser: "I just finished the order processing service, can you check if it's testable?"\nassistant: "I'll use the code-testability-reviewer agent to analyze your order processing service for testability issues."\n<Task tool invocation to launch code-testability-reviewer agent>\n</example>\n\n<example>\nContext: User is refactoring and wants to improve testability.\nuser: "This code is hard to test, can you review it?"\nassistant: "Let me launch the code-testability-reviewer agent to identify what's making the code hard to test."\n<Task tool invocation to launch code-testability-reviewer agent>\n</example>\n\n<example>\nContext: User wants comprehensive review before PR.\nuser: "Review my changes for testability issues"\nassistant: "I'll run the code-testability-reviewer agent to identify any testability concerns in your changes."\n<Task tool invocation to launch code-testability-reviewer agent>\n</example>
 tools:
-  bash: allow
-  read: allow
-  skill: allow
-  webfetch: allow
-  websearch: allow
+  bash: true
+  read: true
+  skill: true
+  webfetch: true
+  websearch: true
 model: anthropic/claude-opus-4-5-20251101
 mode: subagent
 ---
@@ -151,7 +151,7 @@ Do NOT report on (handled by other agents):
 - **Test coverage gaps** (missing tests) → code-coverage-reviewer
 - **Functional bugs** (runtime errors) → code-bugs-reviewer
 - **Documentation** (stale comments) → docs-reviewer
-- **CLAUDE.md compliance** → claude-md-adherence-reviewer
+- **AGENTS.md compliance** → agents-md-adherence-reviewer
 
 Focus exclusively on whether code is **designed** to be testable, not whether tests exist.
 

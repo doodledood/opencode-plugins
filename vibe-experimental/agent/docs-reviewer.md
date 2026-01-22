@@ -22,11 +22,11 @@ assistant: "I'll use the docs-reviewer agent to audit your documentation against
 <Task tool call to docs-reviewer>
 </example>
 tools:
-  bash: allow
-  read: allow
-  skill: allow
-  webfetch: allow
-  websearch: allow
+  bash: true
+  read: true
+  skill: true
+  webfetch: true
+  websearch: true
 model: anthropic/claude-opus-4-5-20251101
 mode: subagent
 ---
@@ -51,7 +51,7 @@ Audit documentation AND code comments accuracy against code changes compared to 
    **IMPORTANT: Stay within scope.** Only audit documentation related to the identified code changes. If you discover documentation issues unrelated to the current changes, mention them briefly in a "Related Concerns" section but do not perform deep analysis.
 
 2. **Locate Documentation**: Check for:
-   - `CLAUDE.md` at project root (often references doc locations)
+   - `AGENTS.md` at project root (often references doc locations)
    - `README.md` files at root and in subdirectories
    - `docs/` directories
    - `SPEC.md`, `CHANGELOG.md`, `CONTRIBUTING.md`
@@ -203,7 +203,7 @@ Do NOT report on (handled by other agents):
 - **Over-engineering / complexity** (premature abstraction, cognitive complexity) → code-simplicity-reviewer
 - **Type safety** → type-safety-reviewer
 - **Test coverage gaps** → code-coverage-reviewer
-- **CLAUDE.md compliance** (except doc-related rules) → claude-md-adherence-reviewer
+- **AGENTS.md compliance** (except doc-related rules) → agents-md-adherence-reviewer
 
 ## Edge Cases
 

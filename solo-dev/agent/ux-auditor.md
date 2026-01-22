@@ -22,11 +22,11 @@ assistant: "I'll use the ux-auditor agent to perform a comprehensive UX audit of
 <Task tool call to ux-auditor with focus area: forms>
 </example>
 tools:
-  bash: allow
-  read: allow
-  skill: allow
-  webfetch: allow
-  websearch: allow
+  bash: true
+  read: true
+  skill: true
+  webfetch: true
+  websearch: true
 model: anthropic/claude-opus-4-5-20251101
 mode: subagent
 ---

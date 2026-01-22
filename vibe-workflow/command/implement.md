@@ -450,9 +450,9 @@ Main agent NEVER:
 
 ## Gate Detection (Verifier Reference)
 
-**Priority**: CLAUDE.md → package.json scripts → Makefile → config detection
+**Priority**: AGENTS.md → package.json scripts → Makefile → config detection
 
-**Fallback** (if CLAUDE.md doesn't specify):
+**Fallback** (if AGENTS.md doesn't specify):
 - TS/JS: `tsconfig.json`→`tsc --noEmit`, `eslint.config.*`→`eslint .`, `jest/vitest.config.*`→`npm test`
 - Python: `pyproject.toml`→`mypy`/`ruff check`, pytest config→`pytest`
 - Other languages: check for standard config files (Makefile, build.gradle, Cargo.toml, etc.) and infer commands. If no recognizable config, verification passes based on acceptance criteria only (no gates).

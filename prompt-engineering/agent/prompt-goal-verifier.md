@@ -2,7 +2,7 @@
 description: |
   Post-optimization verification agent. Checks prompts for goal effectiveness issues - misalignment, misstep risks, inefficiencies, missing success criteria. Returns structured findings for iterative optimization.
 tools:
-  read: allow
+  read: true
 model: anthropic/claude-opus-4-5-20251101
 mode: subagent
 ---

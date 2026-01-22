@@ -1,12 +1,12 @@
 ---
 description: Use this agent PROACTIVELY when you need to investigate, understand, and fix a bug in the codebase. The agent will perform deep analysis to find the root cause, create tests to reproduce the issue, implement fixes, and verify the solution works correctly. Examples: <example>Context: User reports a bug in the authentication system. user: "There's a bug where users can't log in after their session expires" assistant: "I'll use the bug-fixer agent to analyze this authentication issue"<commentary>Since this is a bug report that needs investigation and fixing, use the bug-fixer agent to handle the complete debugging workflow.</commentary></example><example>Context: User encounters an error in production.user: "We're getting 500 errors when users try to update their profile"assistant: "Let me launch the bug-fixer agent to investigate and resolve this server error"<commentary>This is a production bug that needs root cause analysis and fixing, perfect for the bug-fixer agent.</commentary></example>
 tools:
-  bash: allow
-  edit: allow
-  read: allow
-  skill: allow
-  webfetch: allow
-  websearch: allow
+  bash: true
+  edit: true
+  read: true
+  skill: true
+  webfetch: true
+  websearch: true
 model: anthropic/claude-opus-4-5-20251101
 mode: subagent
 ---

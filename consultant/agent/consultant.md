@@ -29,12 +29,12 @@ description: |
   </commentary>
   </example>
 tools:
-  bash: allow
-  edit: allow
-  read: allow
-  skill: allow
-  webfetch: allow
-  websearch: allow
+  bash: true
+  edit: true
+  read: true
+  skill: true
+  webfetch: true
+  websearch: true
 model: anthropic/claude-sonnet-4-5-20250929
 mode: subagent
 ---

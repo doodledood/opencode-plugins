@@ -1,12 +1,12 @@
 ---
-description: Create or update CLAUDE.md with best practices - brevity, universal applicability, progressive disclosure
+description: Create or update AGENTS.md with best practices - brevity, universal applicability, progressive disclosure
 agent: build
 ---
 
-Update my CLAUDE.md based on: $ARGUMENTS
+Update my AGENTS.md based on: $ARGUMENTS
 
-Current CLAUDE.md:
-@CLAUDE.md
+Current AGENTS.md:
+@AGENTS.md
 
 ---
 
@@ -14,7 +14,7 @@ Make targeted updates based on my request. Only explore codebase if essential in
 
 If my request conflicts with best practices below, still make the update but note the tradeoff.
 
-**Best Practices** (CLAUDE.md is the highest-leverage config point):
+**Best Practices** (AGENTS.md is the highest-leverage config point):
 
 **Structure** - Cover these if creating/missing critical sections:
 - **WHAT**: Tech stack, project structure, key entry points (critical for monorepos)
@@ -28,7 +28,7 @@ If my request conflicts with best practices below, still make the update but not
 ```
 docs/testing.md, docs/architecture.md, docs/conventions.md
 ```
-Then in CLAUDE.md: "See docs/testing.md for test patterns"
+Then in AGENTS.md: "See docs/testing.md for test patterns"
 
 **Prefer pointers over copies** - Use `file:line` references instead of pasting code snippets (avoids staleness).
 

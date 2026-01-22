@@ -1,5 +1,5 @@
 ---
-description: Run all code review agents in parallel (bugs, coverage, maintainability, simplicity, type-safety if typed, CLAUDE.md adherence, docs). Respects CLAUDE.md reviewer configuration.
+description: Run all code review agents in parallel (bugs, coverage, maintainability, simplicity, type-safety if typed, AGENTS.md adherence, docs). Respects AGENTS.md reviewer configuration.
 agent: build
 ---
 
@@ -7,9 +7,9 @@ Run a comprehensive code review. First detect the codebase type, then launch app
 
 **Flags**: `--autonomous` → skip Step 5 user prompt, return report only (for programmatic invocation)
 
-## Step 1: Check CLAUDE.md for Reviewer Preferences
+## Step 1: Check AGENTS.md for Reviewer Preferences
 
-Check loaded CLAUDE.md content for any guidance about which reviewers to run or skip. CLAUDE.md files are auto-loaded—do NOT search for them.
+Check loaded AGENTS.md content for any guidance about which reviewers to run or skip. AGENTS.md files are auto-loaded—do NOT search for them.
 
 **Users can express preferences however they want.** Examples:
 - "Skip the docs reviewer, we don't have documentation requirements"
@@ -24,7 +24,7 @@ Check loaded CLAUDE.md content for any guidance about which reviewers to run or 
 - `code-maintainability-reviewer` - DRY, dead code, coupling
 - `code-simplicity-reviewer` - over-engineering, complexity
 - `code-testability-reviewer` - testability, mocking friction
-- `claude-md-adherence-reviewer` - CLAUDE.md compliance
+- `agents-md-adherence-reviewer` - AGENTS.md compliance
 - `docs-reviewer` - documentation accuracy
 - `type-safety-reviewer` - type safety (conditional by default)
 
@@ -34,7 +34,7 @@ Check loaded CLAUDE.md content for any guidance about which reviewers to run or 
 
 Unless `type-safety` is in `Skip Reviewers` or `Required Reviewers`, determine if this is a typed codebase.
 
-**Check loaded CLAUDE.md content first** (no commands needed):
+**Check loaded AGENTS.md content first** (no commands needed):
 - Development commands mention `tsc`, `mypy`, `pyright`, or type-checking
 - Tech stack mentions TypeScript, typed Python, Go, Rust, Java, etc.
 - File extensions mentioned (`.ts`, `.tsx`, `.go`, `.rs`, `.java`, etc.)
@@ -49,11 +49,11 @@ Unless `type-safety` is in `Skip Reviewers` or `Required Reviewers`, determine i
 - Untyped Python (no mypy/pyright)
 - Ruby, PHP, shell scripts
 
-If CLAUDE.md content doesn't make it clear, use your judgment based on files you've seen in context.
+If AGENTS.md content doesn't make it clear, use your judgment based on files you've seen in context.
 
 ## Step 3: Launch Agents
 
-**Build the agent list based on CLAUDE.md preferences (Steps 1-2):**
+**Build the agent list based on AGENTS.md preferences (Steps 1-2):**
 
 ### Core Agents (launch IN PARALLEL):
 
@@ -62,7 +62,7 @@ If CLAUDE.md content doesn't make it clear, use your judgment based on files you
 3. **code-maintainability-reviewer** - DRY violations, dead code, coupling
 4. **code-simplicity-reviewer** - Over-engineering, complexity
 5. **code-testability-reviewer** - Testability, mocking friction
-6. **claude-md-adherence-reviewer** - CLAUDE.md compliance
+6. **agents-md-adherence-reviewer** - AGENTS.md compliance
 7. **docs-reviewer** - Documentation accuracy
 
 ### Conditional:
@@ -159,7 +159,7 @@ options:
 
 ## Execution
 
-1. Check loaded CLAUDE.md content for reviewer configuration and typed language info (Steps 1-2)
+1. Check loaded AGENTS.md content for reviewer configuration and typed language info (Steps 1-2)
 2. Build final agent list: start with core agents, apply skip/required rules, add custom agents
 3. Launch all agents simultaneously in a single message (do NOT run sequentially)
 4. After all agents complete, launch the verification agent with all findings

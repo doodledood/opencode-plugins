@@ -28,11 +28,11 @@ The user needs design research specific to their customer segment. The design-re
 </commentary>
 </example>
 tools:
-  bash: allow
-  read: allow
-  skill: allow
-  webfetch: allow
-  websearch: allow
+  bash: true
+  read: true
+  skill: true
+  webfetch: true
+  websearch: true
 model: anthropic/claude-opus-4-5-20251101
 mode: subagent
 ---

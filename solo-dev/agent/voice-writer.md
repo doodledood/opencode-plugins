@@ -14,9 +14,9 @@ description: |
   assistant: "I'll use the voice-writer agent to write this in your style."
   </example>
 tools:
-  bash: allow
-  read: allow
-  skill: allow
+  bash: true
+  read: true
+  skill: true
 mode: subagent
 ---
 

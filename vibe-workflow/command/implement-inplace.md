@@ -69,8 +69,8 @@ Per chunk:
 **Run gates in order**: typecheck, then tests, then lint. Stop at first failure and iterate on that gate until it passes before proceeding to the next gate.
 
 **Gate command detection**:
-1. Check CLAUDE.md for explicit commands (look for sections labeled "Development Commands", "Scripts", or "Gates"; identify typecheck/test/lint by command names like `tsc`, `jest`, `eslint`, `mypy`, `pytest`, `ruff`)
-2. If CLAUDE.md commands fail with "command not found", "not recognized", or exit code 127 → fall back to config detection
+1. Check AGENTS.md for explicit commands (look for sections labeled "Development Commands", "Scripts", or "Gates"; identify typecheck/test/lint by command names like `tsc`, `jest`, `eslint`, `mypy`, `pytest`, `ruff`)
+2. If AGENTS.md commands fail with "command not found", "not recognized", or exit code 127 → fall back to config detection
 3. Use fallback detection (see Gate Detection section)
 
 **On failure—iterate**:
@@ -128,8 +128,8 @@ Skip if `--no-review` was set.
 | Inline task provided | Create ad-hoc single chunk, proceed normally |
 | No input + no recent plan | Ask user what they want to implement |
 | Interrupted | Todos reflect exact progress; on next invocation with same plan, agent resumes from first pending todo. If files were partially modified without git: read current state and complete remaining work rather than overwriting |
-| CLAUDE.md gate commands fail | Fall back to config-based detection (see Gate Detection) |
-| No CLAUDE.md or no matching sections | Skip to config-based detection |
+| AGENTS.md gate commands fail | Fall back to config-based detection (see Gate Detection) |
+| No AGENTS.md or no matching sections | Skip to config-based detection |
 | Circular dependencies | Error: "Circular dependency detected: [chunk A] ↔ [chunk B]". List cycle, abort. |
 | TodoWrite unavailable | Track progress via `/tmp/implement-progress.md` with checkbox format |
 | Spec file doesn't exist | Add to Notes: "Warning: Spec not found: [path]", continue without spec |
@@ -146,13 +146,13 @@ Skip if `--no-review` was set.
 
 ## Gate Detection
 
-**Priority**: CLAUDE.md → package.json scripts → Makefile → config detection
+**Priority**: AGENTS.md → package.json scripts → Makefile → config detection
 
 Skip any source that doesn't define relevant commands (test/lint/typecheck).
 
-**Fallback** (if CLAUDE.md doesn't specify or commands fail with exit code 127):
+**Fallback** (if AGENTS.md doesn't specify or commands fail with exit code 127):
 - TS/JS: `tsconfig.json`→`tsc --noEmit`, `eslint.config.*`→`eslint .`, `jest/vitest.config.*`→`npm test`
 - Python: `pyproject.toml`→`mypy`/`ruff check`, pytest config→`pytest`
 - Go: `go.mod`→`go build ./...`, `golangci.yml`→`golangci-lint run`
 - Rust: `Cargo.toml`→`cargo check`, `cargo test`
-- Other languages: Skip gates with warning "No gate commands detected for [language]; specify in CLAUDE.md"
+- Other languages: Skip gates with warning "No gate commands detected for [language]; specify in AGENTS.md"

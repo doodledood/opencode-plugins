@@ -2,7 +2,7 @@
 description: |
   Feedback application verification agent. Checks whether prompt correctly incorporates user feedback without over-fitting, under-fitting, or causing regressions. Returns structured findings for iterative refinement.
 tools:
-  read: allow
+  read: true
 model: anthropic/claude-opus-4-5-20251101
 mode: subagent
 ---

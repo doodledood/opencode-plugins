@@ -298,11 +298,11 @@ mode: subagent
 model: anthropic/claude-opus-4-5-20251101
 temperature: 0.3
 tools:
-  read: allow
-  edit: allow
-  bash: allow
-  webfetch: allow
-  websearch: allow
+  read: true
+  edit: true
+  bash: true
+  webfetch: true
+  websearch: true
 ---
 ```
 
@@ -323,34 +323,24 @@ tools:
 
 | Claude Code | OpenCode | Notes |
 |-------------|----------|-------|
-| `Bash` | `bash: allow` | |
-| `Read` | `read: allow` | |
-| `Edit` | `edit: allow` | |
-| `Write` | `edit: allow` | Same as edit in OpenCode |
+| `Bash` | `bash: true` | |
+| `Read` | `read: true` | |
+| `Edit` | `edit: true` | |
+| `Write` | `edit: true` | Same as edit in OpenCode |
 | `Glob` | (built-in) | No permission needed |
 | `Grep` | (built-in) | No permission needed |
-| `WebFetch` | `webfetch: allow` | |
-| `WebSearch` | `websearch: allow` | |
+| `WebFetch` | `webfetch: true` | |
+| `WebSearch` | `websearch: true` | |
 | `TodoWrite` | (built-in) | No permission needed |
-| `Task` | `task: allow` | For spawning subagents |
-| `Skill` | `skill: allow` | For loading skills |
-| `NotebookEdit` | `notebook: allow` | Jupyter notebooks |
+| `Task` | `task: true` | For spawning subagents |
+| `Skill` | `skill: true` | For loading skills |
+| `NotebookEdit` | `notebook: true` | Jupyter notebooks |
 
 ### Permission Values
 
-- `allow` - Always permitted
-- `ask` - Ask user each time
-- `deny` - Never permitted
-
-### Bash Glob Patterns
-
-OpenCode supports glob patterns for bash permissions:
-```yaml
-tools:
-  bash: allow
-  "bash(npm test*)": allow
-  "bash(rm -rf*)": deny
-```
+Tool permissions use **boolean values**:
+- `true` - Tool is permitted
+- `false` - Tool is denied (or simply omit the tool)
 
 ---
 
@@ -629,6 +619,45 @@ Apply these transformations to prompt content:
 | `\bhaiku\b` (in model context) | See [Model Mapping](#model-mapping) | |
 | `Task tool with subagent_type` | `the <agent> agent` | Agent references |
 
+### OpenCode Terminology (CLAUDE.md → AGENTS.md)
+
+OpenCode uses different terminology for project instruction files:
+
+| Claude Code | OpenCode | Notes |
+|-------------|----------|-------|
+| `CLAUDE.md` | `AGENTS.md` | Project-level AI instructions file |
+| `~/.claude/CLAUDE.md` | `~/.config/opencode/AGENTS.md` | Global user instructions |
+
+**Content transformations:**
+
+| Find | Replace |
+|------|---------|
+| `CLAUDE.md` | `AGENTS.md` |
+| `claude-md` (in names) | `agents-md` |
+| `.claude/` (directory) | `.opencode/` |
+| `~/.claude/` | `~/.config/opencode/` |
+
+**File renaming:**
+
+Files with "claude-md" in their name should be renamed to "agents-md":
+- `review-claude-md-adherence.md` → `review-agents-md-adherence.md`
+- `claude-md-adherence-reviewer.md` → `agents-md-adherence-reviewer.md`
+- `update-claude-md.md` → `update-agents-md.md`
+
+**Example content transformation:**
+
+Claude Code:
+```markdown
+Check CLAUDE.md for project conventions.
+Use the claude-md-adherence-reviewer agent.
+```
+
+OpenCode:
+```markdown
+Check AGENTS.md for project conventions.
+Use the agents-md-adherence-reviewer agent.
+```
+
 ---
 
 ## Model Mapping
@@ -834,7 +863,9 @@ OpenCode uses glob patterns that accept **both** singular and plural:
 - [ ] Convert hooks → `plugin/hooks.ts` (see [Converting Hooks](#converting-hooks))
 - [ ] Update `Skill()` references: commands → `/command`, skills → `skill({ name: "..." })`
 - [ ] Update all model names to full IDs (see [Model Mapping](#model-mapping))
-- [ ] Update tool lists in agents to permission format
+- [ ] Update tool lists in agents to boolean format (`true`/`false`)
+- [ ] **Rename files with "claude-md" → "agents-md"** (see [OpenCode Terminology](#opencode-terminology-claudemd--agentsmd))
+- [ ] **Replace CLAUDE.md → AGENTS.md in all content**
 - [ ] Create README for converted plugin
 
 ### Per Skill/Command
@@ -905,9 +936,9 @@ description: What it does
 mode: subagent
 model: <full-model-id>  # see Model Mapping
 tools:
-  read: allow
-  edit: allow
-  bash: allow
+  read: true
+  edit: true
+  bash: true
 ---
 ```
 

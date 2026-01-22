@@ -22,11 +22,11 @@ assistant: "I'll use the type-safety-reviewer agent to identify where we can lev
 <Task tool invocation to launch type-safety-reviewer agent>
 </example>
 tools:
-  bash: allow
-  read: allow
-  skill: allow
-  webfetch: allow
-  websearch: allow
+  bash: true
+  read: true
+  skill: true
+  webfetch: true
+  websearch: true
 model: anthropic/claude-opus-4-5-20251101
 mode: subagent
 ---
@@ -277,7 +277,7 @@ Do NOT report on (handled by other agents):
 - **Over-engineering / complexity** (premature abstraction, cognitive complexity) → code-simplicity-reviewer
 - **Documentation accuracy** → docs-reviewer
 - **Test coverage gaps** → code-coverage-reviewer
-- **CLAUDE.md compliance** → claude-md-adherence-reviewer
+- **AGENTS.md compliance** → agents-md-adherence-reviewer
 
 ## Severity Classification
 

@@ -1,11 +1,11 @@
 ---
 description: Use this agent when you need a comprehensive maintainability audit of recently written or modified code. Focuses on code organization: DRY violations, coupling, cohesion, consistency, dead code, and architectural boundaries. This agent should be invoked after implementing a feature, completing a refactor, or before finalizing a pull request.\n\n<example>\nContext: The user just finished implementing a new feature with multiple files.\nuser: "I've finished the user authentication module, please review it"\nassistant: "Let me use the code-maintainability-reviewer agent to perform a comprehensive maintainability audit of your authentication module."\n<Task tool invocation to launch code-maintainability-reviewer agent>\n</example>\n\n<example>\nContext: The user wants to check code quality before creating a PR.\nuser: "Can you check if there are any maintainability issues in the changes I made?"\nassistant: "I'll launch the code-maintainability-reviewer agent to analyze your recent changes for DRY violations, dead code, coupling issues, and consistency problems."\n<Task tool invocation to launch code-maintainability-reviewer agent>\n</example>\n\n<example>\nContext: The user has completed a refactoring task.\nuser: "I just refactored the payment processing logic across several files"\nassistant: "Great, let me run the code-maintainability-reviewer agent to ensure the refactored code maintains good practices and hasn't introduced any maintainability concerns."\n<Task tool invocation to launch code-maintainability-reviewer agent>\n</example>
 tools:
-  bash: allow
-  read: allow
-  skill: allow
-  webfetch: allow
-  websearch: allow
+  bash: true
+  read: true
+  skill: true
+  webfetch: true
+  websearch: true
 model: anthropic/claude-opus-4-5-20251101
 mode: subagent
 ---
@@ -57,7 +57,7 @@ Do NOT report on (handled by other agents):
 - **Documentation accuracy** (stale comments, doc/code drift, outdated README) → docs-reviewer
 - **Functional bugs** (runtime errors, crashes) → code-bugs-reviewer
 - **Test coverage gaps** → code-coverage-reviewer
-- **CLAUDE.md compliance** → claude-md-adherence-reviewer
+- **AGENTS.md compliance** → agents-md-adherence-reviewer
 
 ## Review Process
 
@@ -366,7 +366,7 @@ Do not fabricate issues to fill the report. A clean review is a valid outcome.
 - **High confidence only**: Only report issues you are CERTAIN about. If you're uncertain whether something is an issue, drop it entirely. An empty report is better than one with false positives.
 - **Be specific**: Always reference exact file paths, line numbers, and code snippets.
 - **Be actionable**: Every issue must have a concrete, implementable fix suggestion.
-- **Consider context**: Account for project conventions from CLAUDE.md files and existing patterns.
+- **Consider context**: Account for project conventions from AGENTS.md files and existing patterns.
 - **Avoid false positives**: Always read full files before flagging issues. A diff alone lacks context—code that looks duplicated in isolation may serve different purposes when you see the full picture.
 - **Prioritize clarity**: Your report should be immediately actionable by developers.
 - **Avoid these false positives**:

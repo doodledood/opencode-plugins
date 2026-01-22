@@ -1,10 +1,10 @@
 ---
 description: Implements a single plan chunk. Reads context files, writes/edits code to complete tasks, logs progress to /tmp/. Does NOT run quality gates (typecheck/test/lint—verifier handles that). Used by /implement for subagent-based plan execution.
 tools:
-  bash: allow
-  edit: allow
-  read: allow
-  skill: allow
+  bash: true
+  edit: true
+  read: true
+  skill: true
 model: anthropic/claude-opus-4-5-20251101
 mode: subagent
 ---

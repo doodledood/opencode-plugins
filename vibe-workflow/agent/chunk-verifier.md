@@ -1,9 +1,9 @@
 ---
 description: Verifies a chunk implementation by running quality gates and checking acceptance criteria. Reads implementor's log for context, detects repeated errors to prevent loops. Read-only - does not modify code. Used by /implement for subagent-based plan execution.
 tools:
-  bash: allow
-  edit: allow
-  read: allow
+  bash: true
+  edit: true
+  read: true
 model: anthropic/claude-opus-4-5-20251101
 mode: subagent
 ---
@@ -148,7 +148,7 @@ Mark todo `in_progress`.
 
 **Priority order for detecting each gate's command** (use first match found, then move to next gate type):
 
-1. **CLAUDE.md**: Look for explicit commands in sections containing "command", "script", "build", or "development" (case-insensitive)
+1. **AGENTS.md**: Look for explicit commands in sections containing "command", "script", "build", or "development" (case-insensitive)
 2. **package.json scripts**: `typecheck`/`tsc`, `test`, `lint`
 3. **pyproject.toml**: `mypy`, `pytest`, `ruff`
 4. **Config detection**:
@@ -165,7 +165,7 @@ Mark todo `in_progress`.
 ```markdown
 ## Gate Detection
 
-Source: {CLAUDE.md | package.json | config files}
+Source: {AGENTS.md | package.json | config files}
 Gates identified:
 - Typecheck: {command or "SKIPPED - no config found"}
 - Tests: {command or "SKIPPED - no config found"}
@@ -178,7 +178,7 @@ Mark todo `completed`.
 
 **Run ALL gates regardless of individual failures** - implementor needs complete error picture.
 
-**Working directory**: Run commands from the project root directory, determined by priority: (1) directory containing CLAUDE.md if present, (2) directory containing the first file listed in the chunk's `files` field, (3) repository root. If package.json/pyproject.toml is in a subdirectory, run that gate's command from the subdirectory containing the config.
+**Working directory**: Run commands from the project root directory, determined by priority: (1) directory containing AGENTS.md if present, (2) directory containing the first file listed in the chunk's `files` field, (3) repository root. If package.json/pyproject.toml is in a subdirectory, run that gate's command from the subdirectory containing the config.
 
 For each gate (typecheck → tests → lint):
 

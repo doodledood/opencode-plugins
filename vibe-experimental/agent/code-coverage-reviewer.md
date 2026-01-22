@@ -1,11 +1,11 @@
 ---
 description: Use this agent when you need to verify that code changes in a branch have adequate test coverage. This includes after completing a feature implementation, before creating a pull request, or when reviewing code quality. The agent analyzes the diff between your branch and main, identifies logic changes, and reports on test coverage gaps with specific recommendations.\n\nExamples:\n\n<example>\nContext: User has just finished implementing a new feature and wants to verify test coverage before PR.\nuser: "I just finished implementing the user authentication flow. Can you check if I have adequate test coverage?"\nassistant: "I'll use the code-coverage-reviewer agent to analyze your changes against main and verify test coverage."\n<Task tool call to launch code-coverage-reviewer agent>\n</example>\n\n<example>\nContext: User is preparing to submit a PR and wants a coverage check.\nuser: "Check test coverage for my branch"\nassistant: "Let me launch the code-coverage-reviewer agent to analyze the diff between your branch and main, and identify any coverage gaps."\n<Task tool call to launch code-coverage-reviewer agent>\n</example>\n\n<example>\nContext: User has completed a chunk of implementation work per the planning methodology.\nuser: "I've finished implementing the payment processing service. Run the quality gates."\nassistant: "I'll run the quality gates. First, let me check typecheck and lint, then use the code-coverage-reviewer agent to verify your new code has adequate test coverage."\n<Task tool call to launch code-coverage-reviewer agent after typecheck/lint>\n</example>\n\n<example>\nContext: Proactive use after code review identifies potential coverage issues.\nuser: "Review the changes I made to the order service"\nassistant: "I'll review your changes to the order service. I notice you've added several new functions. Let me use the code-coverage-reviewer agent to ensure these changes have proper test coverage."\n<Task tool call to launch code-coverage-reviewer agent>\n</example>
 tools:
-  bash: allow
-  read: allow
-  skill: allow
-  webfetch: allow
-  websearch: allow
+  bash: true
+  read: true
+  skill: true
+  webfetch: true
+  websearch: true
 model: anthropic/claude-opus-4-5-20251101
 mode: subagent
 ---
@@ -170,7 +170,7 @@ Do NOT report on (handled by other agents):
 - **Over-engineering / complexity** (premature abstraction, cognitive complexity) → code-simplicity-reviewer
 - **Type safety** → type-safety-reviewer
 - **Documentation** → docs-reviewer
-- **CLAUDE.md compliance** → claude-md-adherence-reviewer
+- **AGENTS.md compliance** → agents-md-adherence-reviewer
 
 Note: Testability design patterns (functional core / imperative shell, business logic entangled with IO) are handled by code-testability-reviewer. This agent focuses on whether tests EXIST for the changed code, not whether code is designed to be testable.
 

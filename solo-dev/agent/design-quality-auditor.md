@@ -19,11 +19,11 @@ user: "I've redefined our ICP in CUSTOMER.md. Do our design guidelines still mak
 assistant: "I'll use the design-quality-auditor agent to audit whether your existing design guidelines properly serve your newly defined ideal customer profile."
 </example>
 tools:
-  bash: allow
-  read: allow
-  skill: allow
-  webfetch: allow
-  websearch: allow
+  bash: true
+  read: true
+  skill: true
+  webfetch: true
+  websearch: true
 model: anthropic/claude-opus-4-5-20251101
 mode: subagent
 ---

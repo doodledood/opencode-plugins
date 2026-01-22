@@ -2,7 +2,7 @@
 description: |
   Verifies prompt compression quality. Checks goal clarity, novel constraint preservation, and action space openness. Flags over-specification and training-redundant content. Returns VERIFIED or ISSUES_FOUND.
 tools:
-  read: allow
+  read: true
 model: anthropic/claude-opus-4-5-20251101
 mode: subagent
 ---

@@ -22,11 +22,11 @@ assistant: "I'll use the code-simplicity-reviewer agent to identify any prematur
 <Task tool invocation to launch code-simplicity-reviewer agent>
 </example>
 tools:
-  bash: allow
-  read: allow
-  skill: allow
-  webfetch: allow
-  websearch: allow
+  bash: true
+  read: true
+  skill: true
+  webfetch: true
+  websearch: true
 model: anthropic/claude-opus-4-5-20251101
 mode: subagent
 ---
@@ -317,7 +317,7 @@ Do NOT report on (handled by other agents):
 - **Type safety** (any/unknown, invalid states) → type-safety-reviewer
 - **Documentation accuracy** → docs-reviewer
 - **Test coverage gaps** → code-coverage-reviewer
-- **CLAUDE.md compliance** → claude-md-adherence-reviewer
+- **AGENTS.md compliance** → agents-md-adherence-reviewer
 
 **Key distinction from maintainability:**
 - **Maintainability** asks: "Is this well-organized for future changes?" (DRY, coupling, cohesion, consistency, dead code)

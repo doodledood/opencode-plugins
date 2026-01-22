@@ -2,7 +2,7 @@
 description: |
   Post-refinement verification agent. Checks prompts for ambiguities, conflicts, undefined terms, underspecified rules, edge case gaps. Returns structured findings for iterative refinement.
 tools:
-  read: allow
+  read: true
 model: anthropic/claude-opus-4-5-20251101
 mode: subagent
 ---
