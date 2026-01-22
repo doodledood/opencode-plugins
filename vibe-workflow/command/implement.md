@@ -106,7 +106,7 @@ Build todos with 4 items per chunk, plus finalization:
 [ ] (Expand: fix review issues as findings emerge)
 ```
 
-All todos created at once via todo, status `pending`. Fix loop placeholder is marked completed and replaced with implement/verify pairs during Phase 3 (see 3.1).
+All todos created at once via todowrite, status `pending`. Fix loop placeholder is marked completed and replaced with implement/verify pairs during Phase 3 (see 3.1).
 
 ### 1.6 Handle Resume
 
@@ -118,7 +118,7 @@ If `--progress` argument provided:
 
 ## Phase 2: Execute Chunks (Subagent Orchestration)
 
-**Prerequisites**: todo tool, Task tool with subagent_type support, installed agents: `vibe-workflow:chunk-implementor`, `vibe-workflow:chunk-verifier`.
+**Prerequisites**: todowrite tool, Task tool with subagent_type support, installed agents: `vibe-workflow:chunk-implementor`, `vibe-workflow:chunk-verifier`.
 
 **CRITICAL**: Execute continuously without pauses.
 

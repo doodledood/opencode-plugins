@@ -22,11 +22,11 @@ This skill applies feedback through:
 - **Regression prevention**: Preserve everything feedback didn't mention
 - **Verifier validates**: Verifier catches over-fitting, under-fitting, and regressions
 
-**Required tools**: This skill requires Task tool to launch the verifier agent. If Task is unavailable, report error: "Task tool required for verification loop." This skill uses todo to track progress. If todo is unavailable, track progress internally.
+**Required tools**: This skill requires Task tool to launch the verifier agent. If Task is unavailable, report error: "Task tool required for verification loop." This skill uses todowrite to track progress. If todowrite is unavailable, track progress internally.
 
 ## Workflow
 
-### Phase 0: Create Todo List (todo immediately)
+### Phase 0: Create Todo List (todowrite immediately)
 
 Create todos tracking workflow phases:
 
@@ -264,7 +264,7 @@ Review the changes manually.
 | **Just-right application** | Address ALL feedback, ONLY feedback |
 | **Information density** | Minimal text to achieve the change; no bloat |
 | **Regression prevention** | Preserve everything feedback didn't mention |
-| **Track progress** | todo for phases; expand on iteration |
+| **Track progress** | todowrite for phases; expand on iteration |
 | **Atomic output** | Original untouched until application complete |
 
 ## Edge Cases

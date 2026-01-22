@@ -1,6 +1,6 @@
 # vibe-experimental
 
-Manifest-driven workflows separating Deliverables (what to build) from Invariants (rules to follow).
+Manifest-driven workflows separating Deliverables (what to build) from Invariants (rules to follow). Two-level verification: Global Invariants (task-level rules) and Acceptance Criteria (per-deliverable).
 
 ## Installation
 
@@ -12,48 +12,34 @@ Manifest-driven workflows separating Deliverables (what to build) from Invariant
 
 | Command | Description |
 |---------|-------------|
-| `/define` | Define deliverables and invariants for a task |
-| `/do` | Execute the defined manifest autonomously |
-
-## Skills (Internal)
-
-These skills are called programmatically by `/do`, not directly by users:
-
-| Skill | Description |
-|-------|-------------|
-| `verify` | Check acceptance criteria for deliverables |
-| `done` | Mark workflow as complete after verification |
-| `escalate` | Escalate when genuinely stuck (requires /verify first) |
+| `/define` | Define deliverables and invariants |
+| `/do` | Execute manifest-driven workflow |
 
 ## Agents
 
 | Agent | Description |
 |-------|-------------|
-| `agents-md-adherence-reviewer` | Verifies AGENTS.md compliance |
-| `code-bugs-reviewer` | Audits for logical bugs |
-| `code-coverage-reviewer` | Verifies test coverage |
-| `code-maintainability-reviewer` | Audits maintainability |
-| `code-simplicity-reviewer` | Audits for over-engineering |
-| `code-testability-reviewer` | Audits testability |
-| `criteria-checker` | Checks acceptance criteria |
-| `docs-reviewer` | Reviews documentation |
-| `type-safety-reviewer` | Audits type safety |
+| `agents-md-adherence-reviewer` | Verify AGENTS.md compliance |
+| `code-bugs-reviewer` | Audit code for bugs |
+| `code-coverage-reviewer` | Verify test coverage |
+| `code-maintainability-reviewer` | Audit maintainability |
+| `code-simplicity-reviewer` | Audit for over-engineering |
+| `code-testability-reviewer` | Audit testability |
+| `criteria-checker` | Check acceptance criteria |
+| `docs-reviewer` | Audit documentation |
+| `type-safety-reviewer` | Audit type safety |
+
+## Skills (non-user-invocable)
+
+| Skill | Description |
+|-------|-------------|
+| `done` | Signal completion (called by /verify) |
+| `escalate` | Escalate when stuck |
+| `verify` | Verify acceptance criteria |
 
 ## Hooks
 
-This plugin includes TypeScript hooks for:
-- **Pre tool use**: Gates `/escalate` calls - requires `/verify` first
-- **Session idle**: Logs incomplete workflows (cannot block in OpenCode)
-
-### Workflow Enforcement
-
-The hooks enforce the `/do` workflow:
-1. `/do` starts an execution workflow
-2. Work must be verified via `/verify` before completion
-3. `/escalate` is only allowed after `/verify` has been called
-4. `/done` marks successful completion
-
-**Note**: In OpenCode, the Stop hook cannot block session termination. The Python version blocks premature stops, but OpenCode can only log warnings.
+This plugin includes hooks for workflow enforcement (logging only - blocking not supported in OpenCode).
 
 ## License
 

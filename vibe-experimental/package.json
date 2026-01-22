@@ -2,6 +2,7 @@
   "name": "opencode-vibe-experimental",
   "version": "0.20.1",
   "description": "Manifest-driven workflows separating Deliverables (what to build) from Invariants (rules to follow). Two-level verification: Global Invariants (task-level rules) and Acceptance Criteria (per-deliverable).",
+  "author": "doodledood <aviram.kofman@gmail.com>",
   "type": "module",
   "homepage": "https://github.com/doodledood/opencode-plugins",
   "repository": {
@@ -9,25 +10,10 @@
     "url": "https://github.com/doodledood/opencode-plugins"
   },
   "license": "MIT",
-  "keywords": [
-    "opencode",
-    "opencode-plugin",
-    "experimental",
-    "manifest",
-    "define",
-    "verification",
-    "invariants",
-    "deliverables",
-    "acceptance-criteria",
-    "autonomous",
-    "do"
-  ],
+  "keywords": ["opencode", "opencode-plugin", "experimental", "manifest", "define", "verification", "invariants", "deliverables", "acceptance-criteria", "autonomous", "do"],
   "opencode": {
     "type": "plugin",
-    "hooks": [
-      "tool.execute.before",
-      "session.idle"
-    ]
+    "hooks": ["tool.execute.before", "event"]
   },
   "dependencies": {
     "@opencode-ai/plugin": "^1.0.162"

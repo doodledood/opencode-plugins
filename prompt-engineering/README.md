@@ -15,20 +15,20 @@ Tools for reviewing, analyzing, refining, and optimizing LLM prompts for clarity
 | `/apply-prompt-feedback` | Apply user feedback to prompts with precision |
 | `/compress-prompt` | Compress prompts into minimal goal-focused instructions |
 | `/optimize-prompt-goal` | Optimize prompts for goal effectiveness |
-| `/optimize-prompt-precision` | Eliminate ambiguities and resolve conflicts |
-| `/optimize-prompt-token-efficiency` | Optimize for token efficiency |
-| `/review-prompt` | Analyze prompts against 10-layer architecture |
+| `/optimize-prompt-precision` | Optimize prompts for precision and clarity |
+| `/optimize-prompt-token-efficiency` | Optimize prompts for token efficiency |
+| `/review-prompt` | Review and analyze LLM prompts |
 
 ## Agents
 
 | Agent | Description |
 |-------|-------------|
-| `prompt-compression-verifier` | Verifies compression quality |
-| `prompt-feedback-verifier` | Verifies feedback application |
-| `prompt-goal-verifier` | Verifies goal effectiveness |
-| `prompt-precision-verifier` | Verifies precision and clarity |
-| `prompt-reviewer` | Reviews prompts against architecture framework |
-| `prompt-token-efficiency-verifier` | Verifies token efficiency |
+| `prompt-compression-verifier` | Verify prompt compression quality |
+| `prompt-feedback-verifier` | Verify feedback application |
+| `prompt-goal-verifier` | Verify goal effectiveness |
+| `prompt-precision-verifier` | Verify prompt precision |
+| `prompt-reviewer` | Review prompts against architecture framework |
+| `prompt-token-efficiency-verifier` | Verify token efficiency |
 
 ## License
 

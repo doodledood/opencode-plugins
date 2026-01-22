@@ -5,9 +5,10 @@ tools:
   edit: true
   glob: true
   grep: true
+  question: false
   read: true
   skill: true
-  todo: true
+  todowrite: true
   webfetch: true
   websearch: true
 model: openai/gpt-5.2
@@ -66,7 +67,7 @@ Check for "YOUR ASSIGNED SCOPE:" and "DO NOT RESEARCH:" sections:
 
 ## Phase 1: Initial Setup
 
-### 1.1 Establish current date & create todo list (todo immediately)
+### 1.1 Establish current date & create todo list (todowrite immediately)
 
 Run `date '+%Y-%m-%d %H%M%S'` to get today's date and timestamp (use the 6-digit time portion as HHMMSS throughout). This is critical because:
 - You need accurate "recency" judgments when evaluating sources

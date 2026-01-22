@@ -47,7 +47,7 @@ This skill guides you through:
 
 ## Workflow
 
-### Initial Setup (todo immediately)
+### Initial Setup (todowrite immediately)
 
 **Create todo list** - areas to research/validate, not fixed steps.
 

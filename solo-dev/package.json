@@ -10,25 +10,5 @@
     "url": "https://github.com/doodledood/opencode-plugins"
   },
   "license": "MIT",
-  "keywords": [
-    "opencode",
-    "opencode-plugin",
-    "solo-dev",
-    "indie-hacker",
-    "solopreneur",
-    "author-voice",
-    "customer-profile",
-    "brand-guidelines",
-    "design-guidelines",
-    "design-system",
-    "ux-audit",
-    "icp",
-    "productivity",
-    "business",
-    "seo",
-    "seo-strategy",
-    "x-strategy",
-    "twitter-growth",
-    "social-media"
-  ]
+  "keywords": ["opencode", "opencode-plugin", "solo-dev", "indie-hacker", "solopreneur", "author-voice", "customer-profile", "brand-guidelines", "design-guidelines", "design-system", "ux-audit", "icp", "productivity", "business", "seo", "geo", "seo-strategy", "ai-citations", "x-strategy", "twitter-growth", "social-media"]
 }

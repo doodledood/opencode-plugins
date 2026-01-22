@@ -10,15 +10,5 @@
     "url": "https://github.com/doodledood/opencode-plugins"
   },
   "license": "MIT",
-  "keywords": [
-    "opencode",
-    "opencode-plugin",
-    "prompt-engineering",
-    "prompts",
-    "llm",
-    "optimization",
-    "prompt-design",
-    "token-efficiency",
-    "compression"
-  ]
+  "keywords": ["opencode", "opencode-plugin", "prompt-engineering", "prompts", "llm", "optimization", "prompt-design", "token-efficiency", "compression"]
 }

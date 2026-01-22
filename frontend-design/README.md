@@ -12,7 +12,7 @@ Frontend design patterns and implementation skills for distinctive, non-generic 
 
 | Command | Description |
 |---------|-------------|
-| `/scrollytelling` | Create scroll-driven interactive experiences |
+| `/scrollytelling` | Create scrollytelling experiences |
 
 ## License
 

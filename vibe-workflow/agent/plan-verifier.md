@@ -3,8 +3,9 @@ description: Verifies implementation plans before execution. Checks plan skill r
 tools:
   glob: true
   grep: true
+  question: false
   read: true
-  todo: true
+  todowrite: true
 model: openai/gpt-5.2
 reasoningEffort: xhigh
 mode: subagent

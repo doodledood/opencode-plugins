@@ -2,6 +2,7 @@
 description: |
   Post-optimization verification agent. Checks prompts for goal effectiveness issues - misalignment, misstep risks, inefficiencies, missing success criteria. Returns structured findings for iterative optimization.
 tools:
+  question: false
   read: true
 model: openai/gpt-5.2
 reasoningEffort: xhigh

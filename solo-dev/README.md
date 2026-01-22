@@ -1,6 +1,6 @@
 # solo-dev
 
-Toolkit for solo developers to build, manage, and grow their business.
+Toolkit for solo developers to build, manage, and grow their business - customer profiling, brand guidelines, design system, SEO strategy, X/Twitter growth strategy, content creation, and more.
 
 ## Installation
 
@@ -12,24 +12,24 @@ Toolkit for solo developers to build, manage, and grow their business.
 
 | Command | Description |
 |---------|-------------|
-| `/audit-ux` | Audit user experience |
-| `/craft-author-voice` | Define your authentic writing voice |
-| `/define-brand-guidelines` | Create brand guidelines |
-| `/define-customer-profile` | Define ideal customer profile (ICP) |
-| `/define-design-guidelines` | Create design system guidelines |
+| `/audit-ux` | UX audit for your application |
+| `/craft-author-voice` | Create your author voice document |
+| `/define-brand-guidelines` | Define brand guidelines |
+| `/define-customer-profile` | Define ideal customer profile |
+| `/define-design-guidelines` | Define design system guidelines |
 | `/define-seo-strategy` | Define SEO strategy |
 | `/define-x-strategy` | Define X/Twitter growth strategy |
-| `/write-as-me` | Generate content in your voice |
+| `/write-as-me` | Write content in your voice |
 
 ## Agents
 
 | Agent | Description |
 |-------|-------------|
-| `design-quality-auditor` | Audits design quality |
-| `design-research` | Researches design patterns |
-| `seo-researcher` | Researches SEO opportunities |
-| `ux-auditor` | Audits user experience |
-| `voice-writer` | Writes in author's voice |
+| `design-quality-auditor` | Audit design quality |
+| `design-research` | Design research agent |
+| `seo-researcher` | SEO research agent |
+| `ux-auditor` | UX audit agent |
+| `voice-writer` | Write in author's voice |
 
 ## License
 

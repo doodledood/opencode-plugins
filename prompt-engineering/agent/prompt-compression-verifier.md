@@ -4,6 +4,7 @@ description: |
 tools:
   glob: true
   grep: true
+  question: false
   read: true
 model: openai/gpt-5.2
 reasoningEffort: xhigh

@@ -17,9 +17,10 @@ tools:
   bash: true
   glob: true
   grep: true
+  question: false
   read: true
   skill: true
-  todo: true
+  todowrite: true
 mode: subagent
 ---
 

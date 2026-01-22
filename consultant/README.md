@@ -1,6 +1,6 @@
 # consultant
 
-Flexible multi-provider LLM consultations using Python/LiteLLM for deep AI-powered code analysis across 100+ models.
+Flexible multi-provider LLM consultations using Python/LiteLLM - includes consultant agent, review/bug-investigation commands, and consultant skill for deep AI-powered code analysis across 100+ models.
 
 ## Installation
 
@@ -12,18 +12,18 @@ Flexible multi-provider LLM consultations using Python/LiteLLM for deep AI-power
 
 | Command | Description |
 |---------|-------------|
-| `/analyze-code` | Deep code analysis for technical debt and risks |
-| `/ask-council` | Multi-model ensemble consultation (3 models in parallel) |
+| `/analyze-code` | Deep code analysis using consultant agent |
 | `/ask` | Single-model consultation |
-| `/consultant` | Full consultant workflow with session management |
-| `/investigate-bug` | Deep bug investigation with root cause analysis |
-| `/review` | Production-level PR review (10-category framework) |
+| `/ask-council` | Multi-model ensemble consultation |
+| `/consultant` | Consults external AI models for complex analysis |
+| `/investigate-bug` | Deep bug investigation using consultant agent |
+| `/review` | Production-level PR review using consultant agent |
 
 ## Agents
 
 | Agent | Description |
 |-------|-------------|
-| `consultant` | Consults external LLM models for complex analysis |
+| `consultant` | Consults external AI models via LiteLLM |
 
 ## License
 

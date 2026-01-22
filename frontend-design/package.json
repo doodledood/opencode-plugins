@@ -10,14 +10,5 @@
     "url": "https://github.com/doodledood/opencode-plugins"
   },
   "license": "MIT",
-  "keywords": [
-    "opencode",
-    "opencode-plugin",
-    "frontend",
-    "design",
-    "ui",
-    "ux",
-    "animation",
-    "interactive"
-  ]
+  "keywords": ["opencode", "opencode-plugin", "frontend", "design", "ui", "ux", "animation", "interactive"]
 }

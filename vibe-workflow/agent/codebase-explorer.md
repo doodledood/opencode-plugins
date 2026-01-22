@@ -5,9 +5,10 @@ tools:
   edit: true
   glob: true
   grep: true
+  question: false
   read: true
   skill: true
-  todo: true
+  todowrite: true
 model: anthropic/claude-haiku-4-5-20251001
 mode: subagent
 ---

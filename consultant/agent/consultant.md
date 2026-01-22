@@ -33,9 +33,10 @@ tools:
   edit: true
   glob: true
   grep: true
+  question: false
   read: true
   skill: true
-  todo: true
+  todowrite: true
   webfetch: true
   websearch: true
 model: anthropic/claude-sonnet-4-5-20250929
@@ -124,7 +125,7 @@ Relay each model's output verbatim—let the user draw conclusions.
 
 ## MANDATORY: Create Todo List First
 
-**Before starting any work**, create a todo list using todo with all workflow steps. Work through each step one by one, marking as in_progress when starting and completed when done.
+**Before starting any work**, create a todo list using todowrite with all workflow steps. Work through each step one by one, marking as in_progress when starting and completed when done.
 
 **Use this template (single model):**
 

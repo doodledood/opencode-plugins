@@ -10,13 +10,5 @@
     "url": "https://github.com/doodledood/opencode-plugins"
   },
   "license": "MIT",
-  "keywords": [
-    "opencode",
-    "opencode-plugin",
-    "decisions",
-    "life",
-    "personal",
-    "advisor",
-    "research"
-  ]
+  "keywords": ["opencode", "opencode-plugin", "decisions", "life", "personal", "advisor", "research"]
 }

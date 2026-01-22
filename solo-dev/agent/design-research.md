@@ -31,9 +31,10 @@ tools:
   bash: true
   glob: true
   grep: true
+  question: false
   read: true
   skill: true
-  todo: true
+  todowrite: true
   webfetch: true
   websearch: true
 model: openai/gpt-5.2

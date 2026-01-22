@@ -12,51 +12,50 @@ Ship high-quality code faster with less back-and-forth.
 
 | Command | Description |
 |---------|-------------|
-| `/bugfix` | Debug and fix bugs systematically |
-| `/explore-codebase` | Find relevant files for a task |
+| `/bugfix` | Investigate and fix bugs systematically |
+| `/explore-codebase` | Find relevant files for a query |
 | `/fix-review-issues` | Fix issues found by /review |
-| `/implement-inplace` | Single-agent implementation without subagents |
 | `/implement` | Execute implementation plans via subagents |
-| `/plan` | Create implementation plans from specs |
+| `/implement-inplace` | Single-agent implementation |
+| `/plan` | Create implementation plans |
 | `/research-web` | Deep web research with parallel investigators |
-| `/review-agents-md-adherence` | Verify code follows AGENTS.md rules |
-| `/review-bugs` | Audit code for logical bugs |
-| `/review-coverage` | Verify test coverage for changes |
-| `/review-docs` | Audit documentation accuracy |
-| `/review-maintainability` | Audit code for DRY, dead code, complexity |
+| `/review` | Run all code review agents in parallel |
+| `/review-agents-md-adherence` | Verify AGENTS.md compliance |
+| `/review-bugs` | Audit code for bugs |
+| `/review-coverage` | Verify test coverage |
+| `/review-docs` | Audit documentation |
+| `/review-maintainability` | Audit maintainability |
 | `/review-simplicity` | Audit for over-engineering |
-| `/review-testability` | Audit code for testability issues |
-| `/review-type-safety` | Audit TypeScript for type safety |
-| `/review` | Run all review agents in parallel |
+| `/review-testability` | Audit testability |
+| `/review-type-safety` | Audit type safety |
 | `/spec` | Requirements discovery through interview |
-| `/web-research` | Research topics via web search |
+| `/web-research` | Web research with hypothesis tracking |
 
 ## Agents
 
 | Agent | Description |
 |-------|-------------|
-| `agents-md-adherence-reviewer` | Verifies AGENTS.md compliance |
-| `bug-fixer` | Investigates and fixes bugs |
-| `chunk-implementor` | Implements plan chunks |
-| `chunk-verifier` | Verifies chunk implementations |
-| `code-bugs-reviewer` | Audits for logical bugs |
-| `code-coverage-reviewer` | Verifies test coverage |
-| `code-maintainability-reviewer` | Audits maintainability |
-| `code-simplicity-reviewer` | Audits for over-engineering |
-| `code-testability-reviewer` | Audits testability |
-| `codebase-explorer` | Explores codebase structure |
-| `docs-reviewer` | Reviews documentation |
-| `plan-verifier` | Verifies implementation plans |
-| `type-safety-reviewer` | Audits type safety |
-| `web-researcher` | Researches topics via web |
+| `agents-md-adherence-reviewer` | Verify AGENTS.md compliance |
+| `bug-fixer` | Investigate and fix bugs |
+| `chunk-implementor` | Implement plan chunks |
+| `chunk-verifier` | Verify chunk implementation |
+| `code-bugs-reviewer` | Audit code for bugs |
+| `code-coverage-reviewer` | Verify test coverage |
+| `code-maintainability-reviewer` | Audit maintainability |
+| `code-simplicity-reviewer` | Audit for over-engineering |
+| `code-testability-reviewer` | Audit testability |
+| `codebase-explorer` | Explore codebase structure |
+| `docs-reviewer` | Audit documentation |
+| `plan-verifier` | Verify implementation plans |
+| `type-safety-reviewer` | Audit type safety |
+| `web-researcher` | Web research agent |
 
 ## Hooks
 
-This plugin includes TypeScript hooks for:
-- **Session start**: Injects reminders about explore-codebase and research-web
-- **Session compacting**: Re-injects context after compaction
-- **Post tool use**: Reminds to update log files after todo completion
-- **Session idle**: Logs when session stops (cannot block in OpenCode)
+This plugin includes hooks for:
+- Session start reminders (explore-codebase, research-web preferences)
+- Session compacting recovery (implement workflow state)
+- Todo tracking (logging)
 
 ## License
 

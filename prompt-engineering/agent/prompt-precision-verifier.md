@@ -2,6 +2,7 @@
 description: |
   Post-refinement verification agent. Checks prompts for ambiguities, conflicts, undefined terms, underspecified rules, edge case gaps. Returns structured findings for iterative refinement.
 tools:
+  question: false
   read: true
 model: openai/gpt-5.2
 reasoningEffort: xhigh

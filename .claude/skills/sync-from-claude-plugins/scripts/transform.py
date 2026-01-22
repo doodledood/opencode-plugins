@@ -17,10 +17,13 @@ import os
 
 # Model mappings - update these when new models release
 MODEL_MAP = {
-    'opus': 'anthropic/claude-opus-4-5-20251101',
+    'opus': 'openai/gpt-5.2',
     'sonnet': 'anthropic/claude-sonnet-4-5-20250929',
     'haiku': 'anthropic/claude-haiku-4-5-20251001',
 }
+
+# Models that should get reasoningEffort: xhigh
+REASONING_MODELS = {'openai/gpt-5.2'}
 
 # Tool permission mappings (Claude Code tool → OpenCode permission key)
 TOOL_MAP = {
@@ -98,9 +101,12 @@ def transform_frontmatter(content: str, file_type: str) -> str:
     # Remove user-invocable: line (all file types)
     frontmatter = re.sub(r'^user-invocable: (true|false)\n', '', frontmatter, flags=re.MULTILINE)
 
-    # Convert model names
+    # Convert model names and add reasoningEffort for reasoning models
     for short, full in MODEL_MAP.items():
-        frontmatter = re.sub(rf'^model: {short}$', f'model: {full}', frontmatter, flags=re.MULTILINE)
+        if full in REASONING_MODELS and file_type == 'agent':
+            frontmatter = re.sub(rf'^model: {short}$', f'model: {full}\nreasoningEffort: xhigh', frontmatter, flags=re.MULTILINE)
+        else:
+            frontmatter = re.sub(rf'^model: {short}$', f'model: {full}', frontmatter, flags=re.MULTILINE)
 
     if file_type == 'agent' and 'mode:' not in frontmatter:
         frontmatter = frontmatter.rstrip() + '\nmode: subagent\n'
@@ -115,8 +121,9 @@ def transform_tools(content: str) -> str:
     If no tools specified in source, just add the disabled interactive tools.
     """
     # Check for single-line tools format (Claude Code style): tools: Bash, Read, Edit
-    match = re.search(r'^tools: (.+)$', content, re.MULTILINE)
-    if match and ',' in match.group(1):  # Comma-separated = Claude Code format
+    # Also matches single tool like "tools: Read"
+    match = re.search(r'^tools: ([A-Z][A-Za-z, ]+)$', content, re.MULTILINE)
+    if match:  # Single-line with capitalized tool names = Claude Code format
         tools = [t.strip() for t in match.group(1).split(',')]
         perms = sorted(set(TOOL_MAP[t] for t in tools if t in TOOL_MAP))
         # Build YAML with true for allowed tools, false for interactive tools

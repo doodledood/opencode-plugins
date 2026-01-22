@@ -3,6 +3,8 @@ description: 'Read-only verification agent. Runs automatable checks (bash comman
 model: openai/gpt-5.2
 reasoningEffort: xhigh
 mode: subagent
+tools:
+  question: false
 ---
 
 # Criteria Checker Agent

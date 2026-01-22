@@ -5,8 +5,9 @@ tools:
   edit: true
   glob: true
   grep: true
+  question: false
   read: true
-  todo: true
+  todowrite: true
 model: openai/gpt-5.2
 reasoningEffort: xhigh
 mode: subagent
@@ -97,7 +98,7 @@ Implementor log: {path}
 (populated if retry with previous errors)
 ```
 
-**1.2 Create todo list (todo)**
+**1.2 Create todo list (todowrite)**
 
 ```
 [ ] Read implementor log file

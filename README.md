@@ -248,7 +248,7 @@ ls ~/.config/opencode/agent/
 ### Model errors
 
 OpenCode requires full model IDs. If you see model errors, ensure the converted files use:
-- `anthropic/claude-opus-4-5-20251101` (not `opus`)
+- `openai/gpt-5.2` (not `opus`)
 - `anthropic/claude-sonnet-4-5-20250929` (not `sonnet`)
 
 ## Contributing

@@ -2,6 +2,7 @@
 description: |
   Feedback application verification agent. Checks whether prompt correctly incorporates user feedback without over-fitting, under-fitting, or causing regressions. Returns structured findings for iterative refinement.
 tools:
+  question: false
   read: true
 model: openai/gpt-5.2
 reasoningEffort: xhigh

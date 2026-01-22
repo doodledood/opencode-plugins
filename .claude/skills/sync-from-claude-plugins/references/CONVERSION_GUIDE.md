@@ -298,7 +298,7 @@ model: opus
 ---
 description: Expert bug investigator and fixer
 mode: subagent
-model: anthropic/claude-opus-4-5-20251101
+model: openai/gpt-5.2
 temperature: 0.3
 tools:
   read: true
@@ -740,7 +740,7 @@ Use `model: opus` for complex analysis
 
 **OpenCode:**
 ```markdown
-Use `model: anthropic/claude-opus-4-5-20251101` for complex analysis
+Use `model: openai/gpt-5.2` for complex analysis
 ```
 
 ### Regex Replacements
@@ -822,7 +822,7 @@ This is the **canonical reference** for model ID conversion. All other sections 
 
 | Claude Code | OpenCode Full ID |
 |-------------|------------------|
-| `opus` | `anthropic/claude-opus-4-5-20251101` |
+| `opus` | `openai/gpt-5.2` |
 | `sonnet` | `anthropic/claude-sonnet-4-5-20250929` |
 | `haiku` | `anthropic/claude-haiku-4-5-20251001` |
 

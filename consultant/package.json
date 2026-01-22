@@ -10,17 +10,5 @@
     "url": "https://github.com/doodledood/opencode-plugins"
   },
   "license": "MIT",
-  "keywords": [
-    "opencode",
-    "opencode-plugin",
-    "consultant",
-    "code-review",
-    "code-analysis",
-    "analysis",
-    "architecture",
-    "bug-investigation",
-    "ai-analysis",
-    "litellm",
-    "multi-provider"
-  ]
+  "keywords": ["opencode", "opencode-plugin", "consultant", "code-review", "code-analysis", "analysis", "architecture", "bug-investigation", "ai-analysis", "litellm", "multi-provider"]
 }
