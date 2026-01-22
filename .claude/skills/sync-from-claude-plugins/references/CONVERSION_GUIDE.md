@@ -133,9 +133,10 @@ OpenCode discovers resources from **flat directories**, not nested plugin struct
 | Agents/subagents | `agent/*.md` | `agent/*.md` | ✅ Full | Different frontmatter |
 | SessionStart hook | Python | TypeScript | ✅ Full | Use `event` + `experimental.chat.system.transform` |
 | PreToolUse hook (observe) | Python | TypeScript | ✅ Full | `tool.execute.before` - observe/modify |
-| PreToolUse hook (block) | Python | N/A | ❌ None | Cannot block in OpenCode |
+| PreToolUse hook (block) | Python | TypeScript | ⚠️ Partial | Use `permission.ask` hook instead |
 | PostToolUse hook | Python | TypeScript | ⚠️ Partial | `tool.execute.after` - no additionalContext |
 | Stop hook (blocking) | Python | N/A | ❌ None | Cannot block in OpenCode |
+| Permission control | N/A | TypeScript | ✅+ Better | `permission.ask` hook can allow/deny/ask |
 | MCP servers | `.mcp.json` | `opencode.json` | ✅ Full | Different config location |
 | Custom tools | Via MCP only | `tools/*.ts` | ✅+ Better | OpenCode has native tools |
 | Model routing | Auto Haiku | Manual | ⚠️ Partial | No auto-routing |
@@ -386,6 +387,65 @@ Tool permissions use **boolean values**:
 
 **IMPORTANT**: OpenCode's `tool.execute.before` **CANNOT block** execution. There is no `output.abort` field. It can only modify `output.args`. For gating logic, log warnings instead of blocking.
 
+### Complete Hooks Interface (Reference)
+
+From `@opencode-ai/plugin` (source: github.com/sst/opencode):
+
+```typescript
+export interface Hooks {
+  // Event handler for ALL lifecycle events (session, file, message, etc.)
+  event?: (input: { event: Event }) => Promise<void>
+
+  // Configuration hook
+  config?: (input: Config) => Promise<void>
+
+  // Custom tools definition
+  tool?: { [key: string]: ToolDefinition }
+
+  // Authentication hook
+  auth?: AuthHook
+
+  // Chat manipulation hooks
+  "chat.message"?: (input: { sessionID: string; agent?: string; ... }, output: { message: UserMessage; parts: Part[] }) => Promise<void>
+  "chat.params"?: (input: { sessionID: string; agent: string; model: Model; ... }, output: { temperature: number; topP: number; topK: number; options: Record<string, any> }) => Promise<void>
+  "chat.headers"?: (input: { sessionID: string; ... }, output: { headers: Record<string, string> }) => Promise<void>
+
+  // Permission hook - can control allow/deny/ask
+  "permission.ask"?: (input: Permission, output: { status: "ask" | "deny" | "allow" }) => Promise<void>
+
+  // Command execution hook
+  "command.execute.before"?: (input: { command: string; sessionID: string; arguments: string }, output: { parts: Part[] }) => Promise<void>
+
+  // Tool execution hooks
+  "tool.execute.before"?: (input: { tool: string; sessionID: string; callID: string }, output: { args: any }) => Promise<void>
+  "tool.execute.after"?: (input: { tool: string; sessionID: string; callID: string }, output: { title: string; output: string; metadata: any }) => Promise<void>
+
+  // Experimental hooks
+  "experimental.chat.messages.transform"?: (input: {}, output: { messages: { info: Message; parts: Part[] }[] }) => Promise<void>
+  "experimental.chat.system.transform"?: (input: { sessionID: string }, output: { system: string[] }) => Promise<void>
+  "experimental.session.compacting"?: (input: { sessionID: string }, output: { context: string[]; prompt?: string }) => Promise<void>
+  "experimental.text.complete"?: (input: { sessionID: string; messageID: string; partID: string }, output: { text: string }) => Promise<void>
+}
+```
+
+### Event Types (via `event` hook)
+
+The `event` hook receives events with `event.type` set to one of:
+
+| Category | Event Types |
+|----------|-------------|
+| Session | `session.created`, `session.updated`, `session.deleted`, `session.idle`, `session.error`, `session.compacted`, `session.diff`, `session.status` |
+| Message | `message.updated`, `message.removed`, `message.part.updated`, `message.part.removed` |
+| File | `file.edited`, `file.watcher.updated` |
+| Permission | `permission.updated`, `permission.replied` |
+| Command | `command.executed` |
+| Tool | `tool.execute.before`, `tool.execute.after` |
+| Todo | `todo.updated` |
+| Installation | `installation.updated` |
+| LSP | `lsp.client.diagnostics`, `lsp.updated` |
+| Server | `server.connected` |
+| TUI | `tui.prompt.append`, `tui.command.execute`, `tui.toast.show` |
+
 ### Complete TypeScript Hook Template
 
 Create `plugin/hooks.ts`:
@@ -397,6 +457,14 @@ import type { Plugin } from "@opencode-ai/plugin"
  * OpenCode hooks for <plugin-name> plugin.
  * Converted from Python hooks in claude-code-plugins.
  *
+ * PluginInput parameters:
+ * - client: OpenCode SDK client for logging and AI interactions
+ * - project: Current project information
+ * - directory: Current working directory
+ * - worktree: Git worktree path
+ * - serverUrl: OpenCode server URL
+ * - $: Bun shell API for executing commands
+ *
  * CRITICAL API NOTES:
  * - Session events (session.created, session.idle) go through the `event` hook
  * - tool.execute.before/after use `input.tool` (NOT input.call.name)
@@ -404,7 +472,7 @@ import type { Plugin } from "@opencode-ai/plugin"
  * - No additionalContext return is supported
  */
 
-export const MyPlugin: Plugin = async ({ project, client, $, directory, worktree }) => {
+export const MyPlugin: Plugin = async ({ project, client, $, directory, worktree, serverUrl }) => {
   return {
     /**
      * Event handler for session lifecycle events
@@ -557,7 +625,7 @@ export default MyPlugin;
 | Feature | Why | Workaround |
 |---------|-----|------------|
 | Stop blocking | `session.idle` cannot prevent stopping | Log warning |
-| **PreToolUse blocking** | `tool.execute.before` has no `output.abort` | Log warning, modify args only |
+| **PreToolUse blocking** | `tool.execute.before` has no `output.abort` | Use `permission.ask` hook OR log warning |
 | SubagentStop | No equivalent event | None |
 | Subagent tool interception | Hooks don't intercept subagent tool calls | Design around this limitation |
 | MCP tool interception | MCP tool calls don't trigger hooks | Use MCP server-side logic |
@@ -565,6 +633,16 @@ export default MyPlugin;
 | additionalContext returns | Hooks cannot return additionalContext | Use system transform hooks |
 
 **IMPORTANT**: Unlike Claude Code, OpenCode's `tool.execute.before` **CANNOT block** execution - there is no `output.abort` field. It can only modify `output.args` or log warnings.
+
+**Alternative for blocking**: Use the `permission.ask` hook to control whether tools are allowed:
+```typescript
+"permission.ask": async (input, output) => {
+  // Can set output.status to "allow", "deny", or "ask" (prompt user)
+  if (shouldBlock(input)) {
+    output.status = "deny";
+  }
+}
+```
 
 ### Logging
 
