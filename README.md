@@ -26,16 +26,15 @@ The install script copies contents to these locations, **postfixing filenames wi
 ### Quick Install (Default Plugins)
 
 ```bash
-# Clone and install default plugins (vibe-workflow, vibe-extras)
-git clone https://github.com/doodledood/opencode-plugins.git /tmp/opencode-plugins && \
-/tmp/opencode-plugins/install.sh
+# Clone/pull and install default plugins (vibe-workflow, vibe-extras)
+([ -d /tmp/opencode-plugins ] && git -C /tmp/opencode-plugins pull || git clone https://github.com/doodledood/opencode-plugins.git /tmp/opencode-plugins) && /tmp/opencode-plugins/install.sh
 ```
 
 ### Install All Plugins
 
 ```bash
-# Install all available plugins
-OPENCODE_PLUGINS=all /tmp/opencode-plugins/install.sh
+# Clone/pull and install all available plugins
+([ -d /tmp/opencode-plugins ] && git -C /tmp/opencode-plugins pull || git clone https://github.com/doodledood/opencode-plugins.git /tmp/opencode-plugins) && OPENCODE_PLUGINS=all /tmp/opencode-plugins/install.sh
 ```
 
 ### Install Specific Plugins
@@ -72,9 +71,7 @@ alias opencode-sync-all='([ -d /tmp/opencode-plugins ] && git -C /tmp/opencode-p
 cd /tmp/opencode-plugins && git pull && ./install.sh
 
 # Or one-liner (all plugins):
-[ -d /tmp/opencode-plugins ] && git -C /tmp/opencode-plugins pull || \
-git clone https://github.com/doodledood/opencode-plugins.git /tmp/opencode-plugins && \
-OPENCODE_PLUGINS=all /tmp/opencode-plugins/install.sh
+([ -d /tmp/opencode-plugins ] && git -C /tmp/opencode-plugins pull || git clone https://github.com/doodledood/opencode-plugins.git /tmp/opencode-plugins) && OPENCODE_PLUGINS=all /tmp/opencode-plugins/install.sh
 ```
 
 ### Project-Level Installation
