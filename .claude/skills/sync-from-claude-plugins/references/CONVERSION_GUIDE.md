@@ -318,6 +318,29 @@ tools:
 | N/A | `temperature:` | Optional, add if needed |
 | N/A | `maxSteps:` | Optional iteration limit |
 | N/A | `hidden:` | Optional, hide from autocomplete |
+| N/A | `reasoningEffort:` | Optional, see [Reasoning Effort](#reasoning-effort) |
+
+### Reasoning Effort
+
+OpenCode supports `reasoningEffort` in agent frontmatter to control thinking depth for supported models (OpenAI reasoning models, Claude with extended thinking).
+
+**Default behavior**: Do NOT include `reasoningEffort` in converted agents. Claude Code agents don't have this setting, so we preserve that behavior by default.
+
+**When requested**: If the user explicitly requests reasoning effort via the sync skill (e.g., `/sync-from-claude-plugins --reasoning-effort`), add to all agents:
+
+```yaml
+reasoningEffort: medium
+```
+
+Valid values: `low`, `medium`, `high`, `xhigh`
+
+For Claude models, you can alternatively use `thinking.budgetTokens`:
+
+```yaml
+thinking:
+  type: enabled
+  budgetTokens: 16000
+```
 
 ### Tool Permission Mapping
 
@@ -882,6 +905,7 @@ OpenCode uses glob patterns that accept **both** singular and plural:
 - [ ] Add `mode: subagent`
 - [ ] Convert `tools:` to permission object
 - [ ] Convert `model:` to full ID
+- [ ] Add `reasoningEffort:` if requested via sync skill (see [Reasoning Effort](#reasoning-effort))
 - [ ] Update prompt content references
 
 ### Per Hook (if source has `hooks/` directory)
@@ -935,6 +959,7 @@ description: What it does
 description: What it does
 mode: subagent
 model: <full-model-id>  # see Model Mapping
+reasoningEffort: medium  # optional, only if requested via sync skill
 tools:
   read: true
   edit: true

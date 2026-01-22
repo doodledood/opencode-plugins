@@ -9,7 +9,14 @@ Convert Claude Code plugins to OpenCode format. **All conversion rules are in `r
 
 ## Arguments
 
-- `$ARGUMENTS`: Plugin names (comma or space-separated). If empty, discovers and converts ALL plugins from the source repo.
+- `$ARGUMENTS`: Plugin names and flags (space-separated). If no plugins specified, discovers and converts ALL plugins from the source repo.
+
+### Flags
+
+- `--reasoning-effort[=LEVEL]`: Add `reasoningEffort` to all agent frontmatter. By default, agents don't include this field (matching Claude Code behavior). Use this flag when you want OpenCode agents to have explicit reasoning effort settings.
+  - Values: `low`, `medium`, `high`, `xhigh`
+  - Default (if no value): `medium`
+  - Examples: `--reasoning-effort`, `--reasoning-effort=high`, `--reasoning-effort xhigh`
 
 ## Execution
 
@@ -63,6 +70,16 @@ done
 ```bash
 python3 "${CLAUDE_SKILL_ROOT}/scripts/transform.py" "./*"
 ```
+
+### 5b. Apply Reasoning Effort (if --reasoning-effort flag)
+
+If `--reasoning-effort` was specified in arguments, add to ALL agent files (`agent/*.md`):
+
+```yaml
+reasoningEffort: <level>  # low, medium, high, or xhigh
+```
+
+Insert after `mode:` line in frontmatter. Default level is `medium` if no value specified.
 
 ### 6. Convert Hooks (if source has hooks/)
 
