@@ -131,9 +131,10 @@ OpenCode discovers resources from **flat directories**, not nested plugin struct
 | User-invocable skills | `skill/*/SKILL.md` | `command/*.md` | ✅ Full | Different path |
 | Non-user-invocable skills | `skill/*/SKILL.md` | `skill/*/SKILL.md` | ✅ Full | Same format |
 | Agents/subagents | `agent/*.md` | `agent/*.md` | ✅ Full | Different frontmatter |
-| SessionStart hook | Python | TypeScript | ✅ Full | `session.created` |
-| PreToolUse hook | Python | TypeScript | ✅ Full | `tool.execute.before` |
-| PostToolUse hook | Python | TypeScript | ✅ Full | `tool.execute.after` |
+| SessionStart hook | Python | TypeScript | ✅ Full | Use `event` + `experimental.chat.system.transform` |
+| PreToolUse hook (observe) | Python | TypeScript | ✅ Full | `tool.execute.before` - observe/modify |
+| PreToolUse hook (block) | Python | N/A | ❌ None | Cannot block in OpenCode |
+| PostToolUse hook | Python | TypeScript | ⚠️ Partial | `tool.execute.after` - no additionalContext |
 | Stop hook (blocking) | Python | N/A | ❌ None | Cannot block in OpenCode |
 | MCP servers | `.mcp.json` | `opencode.json` | ✅ Full | Different config location |
 | Custom tools | Via MCP only | `tools/*.ts` | ✅+ Better | OpenCode has native tools |
@@ -372,16 +373,18 @@ Tool permissions use **boolean values**:
 
 ### Event Mapping
 
-| Claude Code | OpenCode | Can Block? | Notes |
-|-------------|----------|------------|-------|
-| `SessionStart` | `session.created` | N/A | Inject context on session start |
-| `PostCompact` | `session.compacted` | N/A | Re-inject context after compaction |
+| Claude Code | OpenCode Hook | Can Block? | Notes |
+|-------------|---------------|------------|-------|
+| `SessionStart` | `event` + `experimental.chat.system.transform` | N/A | See below |
+| `PostCompact` | `experimental.session.compacting` | N/A | Re-inject context after compaction |
 | `PostToolUse` | `tool.execute.after` | No | React to tool completion |
-| `PreToolUse` | `tool.execute.before` | **Yes** | Use `output.abort` to block |
-| `Stop` | `session.idle` | **No** | Cannot prevent stopping |
+| `PreToolUse` | `tool.execute.before` | **No** | Can modify args but NOT block |
+| `Stop` | `event` (session.idle) | **No** | Cannot prevent stopping |
 | `SubagentStop` | N/A | — | ❌ No equivalent |
 
-**Important**: OpenCode's `tool.execute.before` **CAN block** tool execution via `output.abort = "reason"`. This is different from Claude Code's `{"continue": false}` pattern but achieves the same result. However, `session.idle` (Stop) still cannot block.
+**CRITICAL**: Session lifecycle events (`session.created`, `session.idle`) are caught via the **`event`** hook, NOT as direct hook keys. The `event` hook receives `{ event: Event }` where `event.type` can be `"session.created"`, `"session.idle"`, etc.
+
+**IMPORTANT**: OpenCode's `tool.execute.before` **CANNOT block** execution. There is no `output.abort` field. It can only modify `output.args`. For gating logic, log warnings instead of blocking.
 
 ### Complete TypeScript Hook Template
 
@@ -393,26 +396,44 @@ import type { Plugin } from "@opencode-ai/plugin"
 /**
  * OpenCode hooks for <plugin-name> plugin.
  * Converted from Python hooks in claude-code-plugins.
+ *
+ * CRITICAL API NOTES:
+ * - Session events (session.created, session.idle) go through the `event` hook
+ * - tool.execute.before/after use `input.tool` (NOT input.call.name)
+ * - tool.execute.before CANNOT block - can only modify output.args
+ * - No additionalContext return is supported
  */
 
 export const MyPlugin: Plugin = async ({ project, client, $, directory, worktree }) => {
   return {
     /**
-     * Session created - inject initial context
-     * Converted from: SessionStart hook
+     * Event handler for session lifecycle events
+     * Catches session.created, session.idle, etc.
+     * Converted from: SessionStart and Stop hooks
      */
-    "session.created": async () => {
-      await client.app.log({
-        service: "my-plugin",
-        level: "info",
-        message: "Session started"
-      });
-      // Note: For context injection, use experimental.chat.system.transform instead
+    event: async ({ event }) => {
+      if (event.type === "session.created") {
+        await client.app.log({
+          service: "my-plugin",
+          level: "info",
+          message: "Session started"
+        });
+      }
+
+      if (event.type === "session.idle") {
+        // LIMITATION: Cannot block stopping in OpenCode
+        await client.app.log({
+          service: "my-plugin",
+          level: "debug",
+          message: "Session idle"
+        });
+      }
     },
 
     /**
      * System prompt transformation - inject context
-     * Use this to add custom context to the system prompt
+     * This is the main way to add context at session start.
+     * Converted from: SessionStart hook (additionalContext)
      */
     "experimental.chat.system.transform": async (input, output) => {
       output.system.push(`<system-reminder>Your reminder text here</system-reminder>`);
@@ -420,19 +441,21 @@ export const MyPlugin: Plugin = async ({ project, client, $, directory, worktree
 
     /**
      * Session compacting - preserve context during compaction
-     * Converted from: PostCompact hook
+     * Converted from: PostCompact / SessionStart with "compact" matcher
      */
     "experimental.session.compacting": async (input, output) => {
       output.context.push(`<preserved-state>Recovery info for compacted sessions</preserved-state>`);
     },
 
     /**
-     * After tool execution - react to tool results (CANNOT block)
+     * After tool execution - react to tool results
      * Converted from: PostToolUse hook
+     *
+     * NOTE: CANNOT return additionalContext - just log or modify output
      */
-    "tool.execute.after": async (input) => {
-      // Filter by tool name (OpenCode uses "todo" not "TodoWrite")
-      if (input.call.name !== "todo") return;
+    "tool.execute.after": async (input, output) => {
+      // Filter by tool name using input.tool (NOT input.call.name)
+      if (input.tool !== "todo") return;
 
       await client.app.log({
         service: "my-plugin",
@@ -442,64 +465,60 @@ export const MyPlugin: Plugin = async ({ project, client, $, directory, worktree
     },
 
     /**
-     * Before tool execution - CAN BLOCK via output.abort
+     * Before tool execution - modify args or log warnings
      * Converted from: PreToolUse hook
      *
-     * Unlike Claude Code's {"continue": false}, use output.abort = "reason"
+     * LIMITATION: CANNOT block execution. No output.abort exists.
+     * Can only modify output.args or log warnings.
      */
     "tool.execute.before": async (input, output) => {
-      const toolName = input.call.name;
-      const toolInput = input.call.input;
+      // Use input.tool (NOT input.call.name)
+      if (input.tool !== "skill") return;
 
-      // Example: Block reading .env files
-      if (toolName === "Read" && toolInput.file_path?.includes(".env")) {
-        output.abort = "Cannot read .env files for security reasons";
-        return;
-      }
+      // Access args via output.args (can read and modify)
+      const args = output.args as { name?: string } | undefined;
 
-      // Example: Warn but don't block (just log)
-      if (toolName === "bash") {
+      // Example: Log a warning (cannot block)
+      if (args?.name === "dangerous-skill") {
         await client.app.log({
           service: "my-plugin",
           level: "warn",
-          message: `Bash command: ${toolInput.command}`
+          message: "Warning: dangerous-skill invoked"
+        });
+      }
+    },
+  };
+};
+
+export default MyPlugin;
+```
+
+### Alternative: Simple Default Export
+
+For simpler plugins:
+
+```typescript
+import type { Plugin } from "@opencode-ai/plugin"
+
+const MyPlugin: Plugin = async ({ client }) => {
+  return {
+    event: async ({ event }) => {
+      if (event.type === "session.created") {
+        await client.app.log({
+          service: "my-plugin",
+          level: "info",
+          message: "Session started"
         });
       }
     },
 
-    /**
-     * Session idle - CANNOT prevent stopping
-     * Converted from: Stop hook
-     *
-     * NOTE: Claude Code's Stop hook can return {"continue": false} to prevent
-     * stopping. OpenCode does NOT support blocking here.
-     */
-    "session.idle": async () => {
-      await client.app.log({
-        service: "my-plugin",
-        level: "debug",
-        message: "Session idle"
-      });
+    "experimental.chat.system.transform": async (input, output) => {
+      output.system.push("<system-reminder>Your context here</system-reminder>");
     },
   };
 };
-```
 
-### Alternative: Simple Default Export (for basic hooks)
-
-For simpler plugins without the full type system:
-
-```typescript
-export default async ({ project, client }) => {
-  return {
-    "tool.execute.before": async (input, output) => {
-      // Block dangerous commands
-      if (input.call.name === "bash" && input.call.input.command?.includes("rm -rf")) {
-        output.abort = "Blocked dangerous rm -rf command";
-      }
-    },
-  };
-};
+export default MyPlugin;
 ```
 
 ### Tool Name Mapping in Hooks
@@ -515,37 +534,37 @@ export default async ({ project, client }) => {
 | `Task` | `task` |
 | `AskUserQuestion` | `question` |
 
-### Return Value Format
+### Context Injection
 
-Hooks can return `additionalContext` to inject text into the conversation:
-
+**At session start**: Use `experimental.chat.system.transform` to push to `output.system`:
 ```typescript
-return {
-  additionalContext: "<system-reminder>Your message</system-reminder>",
-};
+"experimental.chat.system.transform": async (input, output) => {
+  output.system.push("<system-reminder>Your message</system-reminder>");
+}
 ```
 
-Multiple reminders can be combined:
+**During compaction**: Use `experimental.session.compacting` to push to `output.context`:
 ```typescript
-return {
-  additionalContext: [
-    buildSystemReminder("First"),
-    buildSystemReminder("Second"),
-  ].join("\n"),
-};
+"experimental.session.compacting": async (input, output) => {
+  output.context.push("<system-reminder>Recovery context</system-reminder>");
+}
 ```
+
+**NOTE**: Unlike Claude Code, OpenCode hooks **CANNOT return additionalContext** from `tool.execute.after` or other hooks. Use the system transform hooks above instead.
 
 ### What Cannot Be Converted
 
 | Feature | Why | Workaround |
 |---------|-----|------------|
 | Stop blocking | `session.idle` cannot prevent stopping | Log warning |
+| **PreToolUse blocking** | `tool.execute.before` has no `output.abort` | Log warning, modify args only |
 | SubagentStop | No equivalent event | None |
 | Subagent tool interception | Hooks don't intercept subagent tool calls | Design around this limitation |
 | MCP tool interception | MCP tool calls don't trigger hooks | Use MCP server-side logic |
 | Python dependencies | Different runtime | Find TypeScript alternatives |
+| additionalContext returns | Hooks cannot return additionalContext | Use system transform hooks |
 
-**Note**: `tool.execute.before` **CAN block** via `output.abort` - this is fully supported.
+**IMPORTANT**: Unlike Claude Code, OpenCode's `tool.execute.before` **CANNOT block** execution - there is no `output.abort` field. It can only modify `output.args` or log warnings.
 
 ### Logging
 
@@ -860,10 +879,6 @@ OpenCode uses glob patterns that accept **both** singular and plural:
 5. **Complex Python deps**: Must find TypeScript alternatives
 6. **Model auto-routing**: Claude Code uses Haiku for searches automatically
 
-### CAN Convert (contrary to earlier belief)
-
-1. **PreToolUse blocking**: OpenCode's `tool.execute.before` **CAN block** via `output.abort`
-
 ### Requires Manual Work
 
 1. **Hook logic**: Python → TypeScript rewrite required
@@ -920,13 +935,14 @@ OpenCode uses glob patterns that accept **both** singular and plural:
 
 - [ ] Create `plugin/hooks.ts` (or `plugins/hooks.ts`)
 - [ ] Add `@opencode-ai/plugin` dependency
-- [ ] Map `SessionStart` → `session.created`
+- [ ] Use `event` hook for session lifecycle (session.created, session.idle)
+- [ ] Use `experimental.chat.system.transform` for context injection at start
 - [ ] Map `PostCompact` → `experimental.session.compacting`
-- [ ] Map `PostToolUse` → `tool.execute.after`
-- [ ] Map `PreToolUse` → `tool.execute.before` (CAN block via `output.abort`)
+- [ ] Map `PostToolUse` → `tool.execute.after` (use `input.tool` not `input.call.name`)
+- [ ] Map `PreToolUse` → `tool.execute.before` (CANNOT block - log warnings only)
 - [ ] Document any `Stop` hooks (blocking not supported)
+- [ ] Document any `PreToolUse` blocking (not supported - use logging)
 - [ ] Convert Python logic to TypeScript
-- [ ] Use `output.abort` pattern instead of `{"continue": false}`
 
 ### Testing
 

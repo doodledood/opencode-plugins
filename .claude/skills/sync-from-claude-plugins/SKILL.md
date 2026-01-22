@@ -113,17 +113,23 @@ For each hook defined in plugin.json:
 #### 6c. Generate TypeScript Plugin
 
 Create `plugin/hooks.ts` with equivalent functionality. See CONVERSION_GUIDE.md "Converting Hooks" for:
-- Event mapping table (SessionStart → session.created, etc.)
+- Event mapping table
 - TypeScript template with proper types
 - Tool name mapping (TodoWrite → todo, etc.)
-- Blocking via `output.abort` for PreToolUse
+
+**CRITICAL API RULES:**
+- Session events (`session.created`, `session.idle`) go through the `event` hook with `event.type` checks
+- Context injection at session start uses `experimental.chat.system.transform` with `output.system.push()`
+- `tool.execute.before`/`after` use `input.tool` (NOT `input.call.name`)
+- `tool.execute.before` **CANNOT block** - no `output.abort` exists, can only modify `output.args`
+- Hooks **CANNOT return additionalContext** - use system transform hooks instead
 
 **Key transformations:**
-- `SessionStart` → `session.created` or `experimental.chat.system.transform`
+- `SessionStart` → `event` hook (check `event.type === "session.created"`) + `experimental.chat.system.transform`
 - `PostCompact` (matcher: "compact") → `experimental.session.compacting`
-- `PostToolUse` → `tool.execute.after`
-- `PreToolUse` → `tool.execute.before` (CAN block via `output.abort`)
-- `Stop` → `session.idle` (**CANNOT block** - log warning only)
+- `PostToolUse` → `tool.execute.after` (use `input.tool`)
+- `PreToolUse` → `tool.execute.before` (**CANNOT block** - log warning only, modify args)
+- `Stop` → `event` hook (check `event.type === "session.idle"`) (**CANNOT block** - log warning only)
 
 **For transcript parsing:** If Python hook uses `parse_transcript()` to detect workflow state, replicate the logic in TypeScript or document the limitation.
 
@@ -191,10 +197,14 @@ For EACH file in the converted plugin (do not sample - check ALL):
 - [ ] Same content transformations as commands
 
 **Hooks/Plugins** (`plugin/hooks.ts`):
-- [ ] All events from source plugin.json have corresponding handlers
-- [ ] Event names use OpenCode format (session.created, tool.execute.before, etc.)
+- [ ] Uses `event` hook for session lifecycle events (NOT direct `"session.created"` keys)
+- [ ] Session events checked via `event.type === "session.created"` etc.
+- [ ] Uses `experimental.chat.system.transform` for context injection
+- [ ] Uses `input.tool` (NOT `input.call.name`) in tool.execute hooks
+- [ ] No `output.abort` usage (doesn't exist - log warnings instead)
+- [ ] No `additionalContext` returns (not supported)
 - [ ] Tool names use OpenCode format (todo, question, etc.)
-- [ ] Stop blocking hooks have limitation comments
+- [ ] Stop and PreToolUse blocking hooks have limitation comments
 - [ ] Proper TypeScript types from @opencode-ai/plugin
 
 #### 9c. Fix Issues Found
