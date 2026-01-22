@@ -81,12 +81,10 @@ List commands, agents, skills for each plugin.
 
 ### 9. Final Validation
 
-Re-read CONVERSION_GUIDE.md, then validate ALL files against:
-- Frontmatter rules (commands, agents, skills)
-- Content transformations (Skill calls, tool names, CLAUDE.md→AGENTS.md)
-- Hook API patterns (see "Converting Hooks" section)
-
-Fix any issues found.
+Validate **ALL files** (do not sample) against `references/CONVERSION_GUIDE.md`:
+- Use the "Migration Checklist" section as your checklist
+- Check every command, agent, skill, and hooks.ts file
+- Fix any issues found
 
 ## Output
 
