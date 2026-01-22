@@ -2,10 +2,12 @@
 description: |
   Verifies prompt token efficiency. In single-file mode, identifies inefficiencies (redundancy, verbosity). In two-file mode, verifies compression is lossless by comparing original vs compressed.
 tools:
+  glob: true
+  grep: true
   read: true
 model: openai/gpt-5.2
-mode: subagent
 reasoningEffort: xhigh
+mode: subagent
 ---
 
 # Prompt Token Efficiency Verifier

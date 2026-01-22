@@ -15,10 +15,12 @@ description: |
   </example>
 tools:
   bash: true
+  glob: true
+  grep: true
   read: true
   skill: true
+  todo: true
 mode: subagent
-reasoningEffort: xhigh
 ---
 
 # Voice Writer Agent

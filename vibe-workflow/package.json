@@ -1,0 +1,38 @@
+{
+  "name": "opencode-vibe-workflow",
+  "version": "2.17.0",
+  "description": "Ship high-quality code faster with less back-and-forth",
+  "author": "doodledood <aviram.kofman@gmail.com>",
+  "type": "module",
+  "homepage": "https://github.com/doodledood/opencode-plugins",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/doodledood/opencode-plugins"
+  },
+  "license": "MIT",
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "vibe-coding",
+    "workflow",
+    "autonomous",
+    "quality-gates",
+    "code-review",
+    "maintainability",
+    "planning",
+    "implementation-plan"
+  ],
+  "opencode": {
+    "type": "plugin",
+    "hooks": [
+      "session.created",
+      "experimental.chat.system.transform",
+      "experimental.session.compacting",
+      "tool.execute.after",
+      "session.idle"
+    ]
+  },
+  "dependencies": {
+    "@opencode-ai/plugin": "^1.0.162"
+  }
+}

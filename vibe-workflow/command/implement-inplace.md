@@ -48,7 +48,7 @@ Autonomously execute implementation in-place. Supports plan files, inline tasks,
 [ ] Run review on implemented changes
 [ ] (Expand: fix review issues as findings emerge)
 ```
-All todos created at once via TodoWrite (status `pending`). If TodoWrite unavailable, use `/tmp/implement-progress.md` with markdown checkboxes: `- [ ] pending`, `- [~] in progress`, `- [x] completed`, with timestamp prefix `[HH:MM:SS]`.
+All todos created at once via todo (status `pending`). If todo unavailable, use `/tmp/implement-progress.md` with markdown checkboxes: `- [ ] pending`, `- [~] in progress`, `- [x] completed`, with timestamp prefix `[HH:MM:SS]`.
 
 **Spec file** (`--spec <path>`): Read before implementation for requirements/acceptance criteria. If path doesn't exist, add to Notes: "Warning: Spec not found: [path]" and continue. Spec is only used when explicitly provided via --spec.
 
@@ -130,7 +130,7 @@ Skip if `--no-review` was set.
 | AGENTS.md gate commands fail | Fall back to config-based detection (see Gate Detection) |
 | No AGENTS.md or no matching sections | Skip to config-based detection |
 | Circular dependencies | Error: "Circular dependency detected: [chunk A] ↔ [chunk B]". List cycle, abort. |
-| TodoWrite unavailable | Track progress via `/tmp/implement-progress.md` with checkbox format |
+| todo unavailable | Track progress via `/tmp/implement-progress.md` with checkbox format |
 | Spec file doesn't exist | Add to Notes: "Warning: Spec not found: [path]", continue without spec |
 
 ## Principles

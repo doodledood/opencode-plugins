@@ -4,8 +4,8 @@ description: |
 tools:
   read: true
 model: openai/gpt-5.2
-mode: subagent
 reasoningEffort: xhigh
+mode: subagent
 ---
 
 # Prompt Feedback Verifier

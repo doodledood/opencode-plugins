@@ -20,7 +20,7 @@ Build requirements spec through structured discovery interview. Defines WHAT and
 
 ## Phase 1: Initial Setup
 
-### 1.1 Create todo list (TodoWrite immediately)
+### 1.1 Create todo list (todo immediately)
 
 Todos = **areas to discover**, not interview steps. Each todo reminds you what conceptual area needs resolution. List continuously expands as user answers reveal new areas. "Finalize spec" is fixed anchor; all others are dynamic.
 

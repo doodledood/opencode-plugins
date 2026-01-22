@@ -3,11 +3,13 @@ description: Context-gathering agent for finding files to read (not analysis). M
 tools:
   bash: true
   edit: true
+  glob: true
+  grep: true
   read: true
   skill: true
+  todo: true
 model: anthropic/claude-haiku-4-5-20251001
 mode: subagent
-reasoningEffort: xhigh
 ---
 
 **User request**: $ARGUMENTS

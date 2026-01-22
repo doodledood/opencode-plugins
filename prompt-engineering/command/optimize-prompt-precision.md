@@ -20,7 +20,7 @@ This skill transforms ambiguous prompts into precise ones through:
 
 ## Workflow
 
-### Phase 0: Create Todo List (TodoWrite immediately)
+### Phase 0: Create Todo List (todo immediately)
 
 Create todos tracking workflow phases. List reflects areas of work, not fixed steps.
 
@@ -229,7 +229,7 @@ Apply these techniques to fix precision issues:
 |-----------|------|
 | **Verify first** | Always run verifier before any optimization; maybe prompt is already precise |
 | **Verifier-driven** | Only fix issues the verifier identifies - no independent analysis or improvements |
-| **Track progress** | TodoWrite to track phases; expand todos on iteration |
+| **Track progress** | todo to track phases; expand todos on iteration |
 | **Infer first, ask second** | Try to resolve verifier-flagged issues from context before asking user |
 | **Preserve intent** | Don't change what prompt is trying to do; only fix issues the verifier flagged |
 | **Minimal questions** | Only ask user when inference is truly impossible |

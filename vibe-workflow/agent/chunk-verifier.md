@@ -3,10 +3,13 @@ description: Verifies a chunk implementation by running quality gates and checki
 tools:
   bash: true
   edit: true
+  glob: true
+  grep: true
   read: true
+  todo: true
 model: openai/gpt-5.2
-mode: subagent
 reasoningEffort: xhigh
+mode: subagent
 ---
 
 You are a verification agent. Your job is to verify that a chunk implementation is complete and correct, maintaining a log file as external memory and writing findings BEFORE proceeding to the next step for full traceability.
@@ -94,7 +97,7 @@ Implementor log: {path}
 (populated if retry with previous errors)
 ```
 
-**1.2 Create todo list (TodoWrite)**
+**1.2 Create todo list (todo)**
 
 ```
 [ ] Read implementor log file

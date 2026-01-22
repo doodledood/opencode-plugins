@@ -3,11 +3,14 @@ description: Implements a single plan chunk. Reads context files, writes/edits c
 tools:
   bash: true
   edit: true
+  glob: true
+  grep: true
   read: true
   skill: true
+  todo: true
 model: openai/gpt-5.2
-mode: subagent
 reasoningEffort: xhigh
+mode: subagent
 ---
 
 You are a focused implementation agent. Your job is to implement a single chunk from an implementation plan, maintaining a log file for full traceability.
@@ -88,7 +91,7 @@ Created: []
 Modified: []
 ```
 
-**1.2 Create todo list (TodoWrite)**
+**1.2 Create todo list (todo)**
 
 Extract tasks from chunk, create granular todos:
 ```

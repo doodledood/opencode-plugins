@@ -21,10 +21,17 @@ fi
 echo "Copying $PLUGIN..."
 
 rm -rf "$DST"
-mkdir -p "$DST"/{command,agent,skill}
+mkdir -p "$DST"/{command,agent,skill,plugin}
 
 # Copy agents
 cp "$SRC"/agents/*.md "$DST/agent/" 2>/dev/null && echo "  agent: $(ls "$DST/agent" | wc -l | tr -d ' ') files"
+
+# Copy hooks as reference (for manual TypeScript conversion)
+if [ -d "$SRC/hooks" ]; then
+  cp -r "$SRC/hooks" "$DST/.hooks-reference/"
+  cp "$SRC/.claude-plugin/plugin.json" "$DST/.hooks-reference/" 2>/dev/null
+  echo "  hooks: copied to .hooks-reference/ for conversion"
+fi
 
 # Copy skills → commands or skills based on user-invocable flag
 for skill_dir in "$SRC"/skills/*/; do

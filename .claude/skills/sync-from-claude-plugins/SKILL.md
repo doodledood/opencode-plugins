@@ -81,14 +81,65 @@ reasoningEffort: <level>  # low, medium, high, or xhigh
 
 Insert after `mode:` line in frontmatter. Default level is `medium` if no value specified.
 
-### 6. Convert Hooks (if source has hooks/)
+### 6. Convert Hooks (if .hooks-reference/ exists)
 
-See CONVERSION_GUIDE.md section "Converting Hooks" for:
-- Event mapping table
-- TypeScript template
-- Blocking behavior differences
+The bulk_copy.sh script copies hooks to `.hooks-reference/` for conversion. For each plugin with this directory:
 
-Create `plugin/hooks.ts` following the guide's template.
+#### 6a. Read Hook Configuration
+
+Read `.hooks-reference/plugin.json` (copied from source) to understand hook structure:
+```json
+{
+  "hooks": {
+    "SessionStart": [{ "matcher": "...", "description": "...", "hooks": [...] }],
+    "PostToolUse": [{ "matcher": "TodoWrite", ... }],
+    "PreToolUse": [{ "matcher": "Skill", ... }],
+    "Stop": [{ "matcher": "*", ... }]
+  }
+}
+```
+
+#### 6b. Analyze Python Hook Implementations
+
+For each hook defined in plugin.json:
+1. Read the corresponding Python file in `.hooks-reference/`
+2. Read `.hooks-reference/hook_utils.py` for shared utilities
+3. Understand the hook's purpose:
+   - What event does it respond to?
+   - Does it inject context? (additionalContext)
+   - Does it block execution? (decision: block)
+   - Does it parse transcript for workflow state?
+
+#### 6c. Generate TypeScript Plugin
+
+Create `plugin/hooks.ts` with equivalent functionality. See CONVERSION_GUIDE.md "Converting Hooks" for:
+- Event mapping table (SessionStart → session.created, etc.)
+- TypeScript template with proper types
+- Tool name mapping (TodoWrite → todo, etc.)
+- Blocking via `output.abort` for PreToolUse
+
+**Key transformations:**
+- `SessionStart` → `session.created` or `experimental.chat.system.transform`
+- `PostCompact` (matcher: "compact") → `experimental.session.compacting`
+- `PostToolUse` → `tool.execute.after`
+- `PreToolUse` → `tool.execute.before` (CAN block via `output.abort`)
+- `Stop` → `session.idle` (**CANNOT block** - log warning only)
+
+**For transcript parsing:** If Python hook uses `parse_transcript()` to detect workflow state, replicate the logic in TypeScript or document the limitation.
+
+#### 6d. Document Limitations
+
+Add comments in generated hooks.ts for:
+- Stop hooks that block in Claude Code but cannot in OpenCode
+- Any transcript-dependent logic that may behave differently
+- SubagentStop (no equivalent in OpenCode)
+
+#### 6e. Cleanup
+
+After generating `plugin/hooks.ts`, remove the reference directory:
+```bash
+rm -rf "$PLUGIN/.hooks-reference"
+```
 
 ### 7. Create package.json (per plugin)
 
@@ -98,50 +149,67 @@ See CONVERSION_GUIDE.md section "Plugin Manifest Conversion" for format.
 
 List commands, agents, skills for each plugin.
 
-### 9. Validate EVERY File Against Conversion Guide
+### 9. Final Validation Pass - Review ALL Files
 
-**CRITICAL**: Verify ALL transformed files match CONVERSION_GUIDE expectations. Do not sample - check everything.
+**CRITICAL**: The automated scripts (bulk_copy.sh, transform.py) may miss edge cases. This step ensures complete conversion.
 
-#### For Each Plugin, Verify:
+#### 9a. Re-read the Conversion Guide
 
-**Read the CONVERSION_GUIDE sections** for expected format, then check:
+Before validating, re-read `references/CONVERSION_GUIDE.md` sections:
+- Frontmatter Field Mapping tables
+- Model Mapping
+- Tool Permission Mapping
+- Prompt Content Transformations
+- OpenCode Terminology (CLAUDE.md → AGENTS.md)
 
-1. **EVERY command** (`command/*.md`):
-   - Compare against "Converting User-Invocable Skills → Commands"
-   - Check "Frontmatter Field Mapping" table
-   - Check "Model Mapping" section
-   - Check "Prompt Content Transformations" for Skill() calls
+#### 9b. Validate Every File
 
-2. **EVERY agent** (`agent/*.md`):
-   - Compare against "Converting Agents"
-   - Check "Frontmatter Field Mapping" table
-   - Check "Tool Permission Mapping" table
-   - Check "Model Mapping" section
+For EACH file in the converted plugin (do not sample - check ALL):
 
-3. **EVERY skill** (`skill/*/SKILL.md`):
-   - Compare against "Converting Non-User-Invocable Skills → Skills"
-   - Verify `name:` is KEPT (unlike commands/agents)
-   - Check "Prompt Content Transformations" for Skill() calls
+**Commands** (`command/*.md`):
+- [ ] `name:` field removed (filename is the name)
+- [ ] `model:` uses full ID (anthropic/claude-sonnet-4-5-20250929, not "sonnet")
+- [ ] `user-invocable:` field removed
+- [ ] `Skill("plugin:name")` → `/name` for user-invocable targets
+- [ ] `Skill("plugin:name")` → `skill({ name: "name" })` for non-user-invocable
+- [ ] `AskUserQuestion` → `question` in content
+- [ ] `TodoWrite` → `todo` in content
+- [ ] `CLAUDE.md` → `AGENTS.md` in content
+- [ ] `.claude/` → `.opencode/` in paths
+- [ ] Files with "claude-md" renamed to "agents-md"
 
-4. **Cross-references in ALL files**:
-   - Check "Skill/Command References" section
-   - User-invocable targets → `/command`
-   - Non-user-invocable targets → `skill({ name: "..." })`
-   - Task tool references → agent references
+**Agents** (`agent/*.md`):
+- [ ] `name:` field removed
+- [ ] `mode: subagent` added
+- [ ] `tools:` converted from comma list to YAML object with booleans
+- [ ] `model:` uses full ID
+- [ ] Same content transformations as commands
 
-5. **Hooks** (if any):
-   - Compare against "Converting Hooks" section
-   - Verify event names match mapping table
-   - Check blocking behavior notes
+**Skills** (`skill/*/SKILL.md`):
+- [ ] `name:` field KEPT (required for skills)
+- [ ] `user-invocable: false` removed
+- [ ] Same content transformations as commands
 
-#### Adaptation Process
+**Hooks/Plugins** (`plugin/hooks.ts`):
+- [ ] All events from source plugin.json have corresponding handlers
+- [ ] Event names use OpenCode format (session.created, tool.execute.before, etc.)
+- [ ] Tool names use OpenCode format (todo, question, etc.)
+- [ ] Stop blocking hooks have limitation comments
+- [ ] Proper TypeScript types from @opencode-ai/plugin
 
-If validation finds issues:
+#### 9c. Fix Issues Found
 
-1. **Consult CONVERSION_GUIDE**: Which rule was violated?
-2. **Fix the file**: Edit to match guide specification
-3. **Update transform.py**: If systematic issue, add the rule
-4. **Re-verify**: Check all files for same issue
+For each issue:
+1. Edit the file to match CONVERSION_GUIDE specification
+2. If systematic (same issue in multiple files), consider updating transform.py
+3. Re-check the fix
+
+#### 9d. Cross-Reference Validation
+
+Check that internal references are consistent:
+- Commands referencing agents use correct agent filenames
+- Skills referencing other skills use correct names
+- Agent descriptions match their actual capabilities
 
 ## Reference
 

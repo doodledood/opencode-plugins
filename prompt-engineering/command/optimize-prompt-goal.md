@@ -18,11 +18,11 @@ This skill transforms goal-misaligned prompts into effective ones through:
 
 **Key principle**: Don't try to optimize in one pass. The verifier drives all changes - if it finds no issues, the prompt is already optimal.
 
-**Required tools**: This skill requires Task tool to launch the verifier agent. If Task is unavailable, report error: "Task tool required for verification loop." This skill uses TodoWrite to track progress. If TodoWrite is unavailable, track progress internally and proceed without external todo tracking.
+**Required tools**: This skill requires Task tool to launch the verifier agent. If Task is unavailable, report error: "Task tool required for verification loop." This skill uses todo to track progress. If todo is unavailable, track progress internally and proceed without external todo tracking.
 
 ## Workflow
 
-### Phase 0: Create Todo List (TodoWrite immediately)
+### Phase 0: Create Todo List (todo immediately)
 
 Create todos tracking workflow phases. Todos represent areas of work that may expand during execution.
 
@@ -241,7 +241,7 @@ Inferred Goal: {goal statement}
 |-----------|------|
 | **Verify first** | Always run verifier before any optimization; maybe prompt is already optimal |
 | **Verifier-driven** | Only fix issues the verifier identifies - no independent analysis or improvements |
-| **Track progress** | TodoWrite to track phases; expand todos on iteration |
+| **Track progress** | todo to track phases; expand todos on iteration |
 | **Preserve intent** | Don't change what prompt is trying to do; only fix issues the verifier flagged |
 | **Verification required** | Never output without verifier checking |
 | **Atomic output** | Original untouched until optimization complete. For file input, original is replaced with optimized content after all iterations (even if warnings remain). |

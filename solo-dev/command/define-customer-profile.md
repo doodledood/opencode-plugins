@@ -36,7 +36,7 @@ The discovery questions give you a solid starting point, but **the real magic ha
 
 ## Workflow
 
-### Initial Setup (TodoWrite immediately)
+### Initial Setup (todo immediately)
 
 **Create todo list** - areas to discover, not steps. List expands as user answers reveal new areas.
 

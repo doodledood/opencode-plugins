@@ -2,10 +2,12 @@
 description: |
   Verifies prompt compression quality. Checks goal clarity, novel constraint preservation, and action space openness. Flags over-specification and training-redundant content. Returns VERIFIED or ISSUES_FOUND.
 tools:
+  glob: true
+  grep: true
   read: true
 model: openai/gpt-5.2
-mode: subagent
 reasoningEffort: xhigh
+mode: subagent
 ---
 
 # Prompt Compression Verifier

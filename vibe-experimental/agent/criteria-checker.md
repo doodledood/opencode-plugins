@@ -1,8 +1,8 @@
 ---
 description: 'Read-only verification agent. Runs automatable checks (bash commands, codebase patterns) for a single criterion. Returns structured PASS/FAIL results.'
 model: openai/gpt-5.2
-mode: subagent
 reasoningEffort: xhigh
+mode: subagent
 ---
 
 # Criteria Checker Agent

@@ -23,9 +23,9 @@ Build implementation plan through structured discovery. Takes spec (from `/spec`
 
 ## Phase 1: Initial Setup
 
-### 1.1 Create todos (TodoWrite immediately)
+### 1.1 Create todos (todo immediately)
 
-If TodoWrite unavailable: use research log `## Todos` section with markdown checkboxes.
+If todo unavailable: use research log `## Todos` section with markdown checkboxes.
 
 Todos = **areas to research/decide**, not steps. Expand when research reveals: (a) files/modules beyond current todos, (b) 2+ valid patterns with trade-offs, (c) unanalyzed dependencies, (d) questions blocking existing todos.
 
