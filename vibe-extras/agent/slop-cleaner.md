@@ -5,10 +5,10 @@ tools:
   edit: true
   glob: true
   grep: true
-  notebook: true
+  question: false
   read: true
   skill: true
-  todo: true
+  todowrite: true
   webfetch: true
   websearch: true
 model: anthropic/claude-sonnet-4-5-20250929

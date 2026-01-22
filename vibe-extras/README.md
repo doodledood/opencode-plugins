@@ -12,16 +12,16 @@ Standalone utilities that complement the core development workflow.
 
 | Command | Description |
 |---------|-------------|
-| `/clean-slop` | Find and remove AI-generated code slop |
-| `/rebase-on-main` | Safely rebase branch on main |
-| `/rewrite-history` | Rewrite git history |
-| `/update-agents-md` | Update AGENTS.md documentation |
+| `/clean-slop` | Find and remove AI-generated slop (useless comments, verbose patterns, unnecessary abstractions) |
+| `/rebase-on-main` | Update main/master from origin, rebase current branch on it, resolve conflicts, and push |
+| `/rewrite-history` | Rewrite branch into clean, narrative-quality commits |
+| `/update-agents-md` | Create or update AGENTS.md with best practices |
 
 ## Agents
 
 | Agent | Description |
 |-------|-------------|
-| `slop-cleaner` | Removes AI-generated patterns from code |
+| `slop-cleaner` | Expert code quality specialist for finding and removing AI-generated slop |
 
 ## License
 

@@ -22,20 +22,24 @@ MODEL_MAP = {
     'haiku': 'anthropic/claude-haiku-4-5-20251001',
 }
 
-# Tool permission mappings
+# Tool permission mappings (Claude Code tool → OpenCode permission key)
 TOOL_MAP = {
     'Bash': 'bash', 'BashOutput': 'bash',
     'Read': 'read', 'Glob': 'glob', 'Grep': 'grep',
-    'Edit': 'edit', 'Write': 'edit',
+    'Edit': 'edit', 'Write': 'edit', 'NotebookEdit': 'edit',
     'WebFetch': 'webfetch', 'WebSearch': 'websearch',
-    'Task': 'task', 'Skill': 'skill', 'NotebookEdit': 'notebook',
-    'TodoWrite': 'todo', 'AskUserQuestion': 'question',
+    'Task': 'task', 'Skill': 'skill', 'SlashCommand': 'skill',
+    'TodoWrite': 'todowrite', 'TodoRead': 'todoread',
 }
 
+# Interactive tools to exclude from subagents (they run autonomously)
+EXCLUDED_SUBAGENT_TOOLS = {'question'}
+
 # Tool name replacements in prompt content (Claude Code → OpenCode)
+# Note: AskUserQuestion → question is for prose references only
 TOOL_NAME_REPLACEMENTS = {
     'AskUserQuestion': 'question',
-    'TodoWrite': 'todo',
+    'TodoWrite': 'todowrite',
 }
 
 # Track non-user-invocable skills globally (populated during discovery)
@@ -105,13 +109,40 @@ def transform_frontmatter(content: str, file_type: str) -> str:
 
 
 def transform_tools(content: str) -> str:
-    """Convert tools: comma list to YAML permission object."""
+    """Convert tools: comma list to YAML permission object.
+
+    Interactive tools (e.g., question) are explicitly set to false since subagents run autonomously.
+    If no tools specified in source, just add the disabled interactive tools.
+    """
+    # Check for single-line tools format (Claude Code style): tools: Bash, Read, Edit
     match = re.search(r'^tools: (.+)$', content, re.MULTILINE)
-    if match:
+    if match and ',' in match.group(1):  # Comma-separated = Claude Code format
         tools = [t.strip() for t in match.group(1).split(',')]
         perms = sorted(set(TOOL_MAP[t] for t in tools if t in TOOL_MAP))
-        yaml = 'tools:\n' + ''.join(f'  {p}: true\n' for p in perms)
+        # Build YAML with true for allowed tools, false for interactive tools
+        lines = []
+        for p in perms:
+            if p in EXCLUDED_SUBAGENT_TOOLS:
+                lines.append(f'  {p}: false\n')
+            else:
+                lines.append(f'  {p}: true\n')
+        # Also explicitly disable interactive tools even if not in source
+        for excluded in sorted(EXCLUDED_SUBAGENT_TOOLS):
+            if excluded not in perms:
+                lines.append(f'  {excluded}: false\n')
+        yaml = 'tools:\n' + ''.join(sorted(lines))
         content = re.sub(r'^tools: .+$', yaml.rstrip(), content, flags=re.MULTILINE)
+    elif re.search(r'^tools:\s*$', content, re.MULTILINE):
+        # Already in YAML format - skip (already converted)
+        pass
+    else:
+        # No tools section at all - add disabled interactive tools
+        disabled = 'tools:\n' + ''.join(f'  {t}: false\n' for t in sorted(EXCLUDED_SUBAGENT_TOOLS))
+        # Insert after mode: subagent line (or after frontmatter start)
+        if 'mode: subagent' in content:
+            content = content.replace('mode: subagent\n', f'mode: subagent\n{disabled}', 1)
+        elif content.startswith('---\n'):
+            content = content.replace('---\n', f'---\n{disabled}', 1)
     return content
 
 

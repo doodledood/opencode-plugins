@@ -351,16 +351,36 @@ thinking:
 |-------------|----------|-------|
 | `Bash` | `bash: true` | |
 | `Read` | `read: true` | |
-| `Edit` | `edit: true` | |
+| `Edit` | `edit: true` | Covers write, patch, multiedit |
 | `Write` | `edit: true` | Same as edit in OpenCode |
-| `Glob` | (built-in) | No permission needed |
-| `Grep` | (built-in) | No permission needed |
+| `Glob` | `glob: true` | |
+| `Grep` | `grep: true` | |
 | `WebFetch` | `webfetch: true` | |
 | `WebSearch` | `websearch: true` | |
-| `TodoWrite` | (built-in) | No permission needed |
+| `TodoWrite` | `todowrite: true` | |
+| `TodoRead` | `todoread: true` | |
 | `Task` | `task: true` | For spawning subagents |
 | `Skill` | `skill: true` | For loading skills |
-| `NotebookEdit` | `notebook: true` | Jupyter notebooks |
+| `SlashCommand` | `skill: true` | Same as Skill in OpenCode |
+| `NotebookEdit` | `edit: true` | No separate notebook permission |
+
+**Additional OpenCode permissions** (no Claude Code equivalent):
+- `list: true` — directory listing
+- `lsp: true` — LSP queries
+- `codesearch: true` — code search
+- `external_directory: true` — paths outside project
+- `doom_loop: true` — repeated identical calls
+
+All tools are **enabled by default** in OpenCode. Specifying them explicitly in agent frontmatter ensures the agent has access even if global config restricts them.
+
+**IMPORTANT**: Explicitly set interactive tools to `false` for all subagents since they run autonomously:
+- `question: false` - subagents should not prompt users for input
+
+If a Claude Code agent has no `tools:` line, add a minimal tools section with just the disabled interactive tools:
+```yaml
+tools:
+  question: false
+```
 
 ### Permission Values
 
@@ -591,9 +611,12 @@ export default MyPlugin;
 
 ### Tool Name Mapping in Hooks
 
+These are the tool names seen in `input.tool` within hook callbacks.
+
 | Claude Code Tool | OpenCode Tool Name |
 |-----------------|-------------------|
-| `TodoWrite` | `todo` |
+| `TodoWrite` | `todowrite` |
+| `TodoRead` | `todoread` |
 | `Bash` | `bash` |
 | `Read` | `read` |
 | `Edit` | `edit` |
@@ -601,6 +624,8 @@ export default MyPlugin;
 | `Skill` | `skill` |
 | `Task` | `task` |
 | `AskUserQuestion` | `question` |
+
+**Note**: There is no single `todo` tool - it's split into `todowrite` and `todoread`.
 
 ### Context Injection
 
@@ -737,7 +762,8 @@ Apply these transformations to prompt content:
 | Pattern | Replacement | Notes |
 |---------|-------------|-------|
 | `AskUserQuestion` | `question` | User question tool |
-| `TodoWrite` | `todo` | Todo management tool |
+| `TodoWrite` | `todowrite` | Todo write tool |
+| `TodoRead` | `todoread` | Todo read tool |
 
 **Other replacements:**
 | Pattern | Replacement | Notes |
