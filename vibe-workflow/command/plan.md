@@ -83,13 +83,13 @@ Started: {timestamp} | Spec: {path or "inline"}
 
 **Prerequisites**: Requires `vibe-workflow:codebase-explorer`. If Task tool fails (timeout >120s, agent not found, incomplete) OR returns <3 files when expecting multi-module changes (spec lists 3+ components OR feature description contains "across/connects/bridges/end-to-end/spans/links/integrates/coordinates/orchestrates"): do supplementary research with Read/Glob/Grep, note `[SUPPLEMENTED RESEARCH: codebase-explorer insufficient - {reason}]`. Don't retry timeouts.
 
-**If all research fails**: Log `[RESEARCH BLOCKED: {reason}]`, ask user via AskUserQuestion: (a) proceed with assumptions or (b) pause for manual context.
+**If all research fails**: Log `[RESEARCH BLOCKED: {reason}]`, ask user via question: (a) proceed with assumptions or (b) pause for manual context.
 
 ### 2.1 Read/infer spec
 
 Extract: requirements, user stories, acceptance criteria, constraints, out-of-scope.
 
-**No formal spec?** Infer from conversation. If <2 concrete requirements (concrete = verifiable by test/demo/metric), use AskUserQuestion:
+**No formal spec?** Infer from conversation. If <2 concrete requirements (concrete = verifiable by test/demo/metric), use question:
 
 ```
 questions: [{
@@ -168,7 +168,7 @@ Valid approach = (1) fulfills all spec requirements, (2) technically feasible, (
 **Choose alternative if**: {honest conditions where other approach wins}
 ```
 
-**AskUserQuestion**:
+**question**:
 ```
 questions: [{
   question: "Which approach for {requirement}?",
@@ -204,7 +204,7 @@ First draft with `[TBD]` markers. Same file path for all updates.
 
 ## Phase 3: Iterative Discovery Interview
 
-**CRITICAL**: Use AskUserQuestion for ALL questions—never plain text. If unavailable: structured markdown with numbered options. For Priority 0 without AskUserQuestion: MUST include "Planner decides based on recommendation" option.
+**CRITICAL**: Use question for ALL questions—never plain text. If unavailable: structured markdown with numbered options. For Priority 0 without question: MUST include "Planner decides based on recommendation" option.
 
 **No response handling**: Priority 0 = blocking (after 2 follow-ups: "Planning blocked pending decision. Reply or say 'delegate'."); Priority 1-5 = proceed with recommendation, note `[USER UNRESPONSIVE: proceeding with recommendation]`.
 
@@ -227,7 +227,7 @@ questions: [
 ### Discovery Loop
 
 1. Mark todo `in_progress`
-2. Research (codebase-explorer) OR ask (AskUserQuestion)
+2. Research (codebase-explorer) OR ask (question)
 3. **Write findings immediately** to research log
 4. Expand todos for new questions/dependencies
 5. Update plan (replace `[TBD]`)

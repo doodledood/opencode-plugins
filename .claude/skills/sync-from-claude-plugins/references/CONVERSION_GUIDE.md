@@ -512,6 +512,7 @@ export default async ({ project, client }) => {
 | `Write` | `edit` |
 | `Skill` | `skill` |
 | `Task` | `task` |
+| `AskUserQuestion` | `question` |
 
 ### Return Value Format
 
@@ -633,6 +634,12 @@ Apply these transformations to prompt content:
 |---------|-------------|-------|
 | `Skill\("[\w-]+:([\w-]+)"\)` | `skill({ name: "$1" })` | Skill calls → skill tool |
 | `Skill\("[\w-]+:([\w-]+)",\s*"([^"]*)"\)` | `skill({ name: "$1", arguments: "$2" })` | With args |
+
+**Tool name replacements:**
+| Pattern | Replacement | Notes |
+|---------|-------------|-------|
+| `AskUserQuestion` | `question` | User question tool |
+| `TodoWrite` | `todo` | Todo management tool |
 
 **Other replacements:**
 | Pattern | Replacement | Notes |

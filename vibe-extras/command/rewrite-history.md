@@ -16,7 +16,7 @@ This command:
 5. Rewrites history: `git reset --soft` → `git add` + `git commit` for each group
 
 **Modes**:
-- **Interactive** (default): Shows proposal, allows adjustment/approval via AskUserQuestion
+- **Interactive** (default): Shows proposal, allows adjustment/approval via question
 - **Automatic** (`--auto`): Skips proposal, executes directly
 
 ## Steps
@@ -91,7 +91,7 @@ Proposed commits:
 
 If `$ARGUMENTS` does NOT contain `--auto`:
 
-Use AskUserQuestion to present proposal and get approval:
+Use question to present proposal and get approval:
 
 ```
 Proceed with this restructuring?
@@ -135,7 +135,7 @@ Report: "History rewritten into {new-count} commits"
 
 After successful rewrite, prompt about pushing:
 
-Use AskUserQuestion:
+Use question:
 ```
 Push rewritten history to remote?
 - [Yes] Push with --force-with-lease (safe force push)

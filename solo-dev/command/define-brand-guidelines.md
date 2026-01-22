@@ -70,7 +70,7 @@ options:
 
 ### Phase 1: Discovery
 
-Use AskUserQuestion for all questions. **Put the recommended option FIRST** with "(Recommended)" suffix. Infer recommendations from CUSTOMER.md.
+Use question for all questions. **Put the recommended option FIRST** with "(Recommended)" suffix. Infer recommendations from CUSTOMER.md.
 
 **Question 1: Brand Personality**
 
@@ -607,7 +607,7 @@ Reference this document for ALL copy:
 - Iterate until samples feel authentically on-brand
 
 ### Reduce Cognitive Load
-- ALWAYS use AskUserQuestion tool when available
+- ALWAYS use question tool when available
 - **Put recommended option FIRST** with "(Recommended)" suffix
 - **Pre-fill recommendations from CUSTOMER.md** - user should be able to accept all defaults
 - Present multi-choice questions to minimize typing

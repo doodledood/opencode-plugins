@@ -25,10 +25,17 @@ MODEL_MAP = {
 # Tool permission mappings
 TOOL_MAP = {
     'Bash': 'bash', 'BashOutput': 'bash',
-    'Read': 'read',
+    'Read': 'read', 'Glob': 'glob', 'Grep': 'grep',
     'Edit': 'edit', 'Write': 'edit',
     'WebFetch': 'webfetch', 'WebSearch': 'websearch',
-    'Task': 'task', 'Skill': 'skill', 'NotebookEdit': 'notebook'
+    'Task': 'task', 'Skill': 'skill', 'NotebookEdit': 'notebook',
+    'TodoWrite': 'todo', 'AskUserQuestion': 'question',
+}
+
+# Tool name replacements in prompt content (Claude Code → OpenCode)
+TOOL_NAME_REPLACEMENTS = {
+    'AskUserQuestion': 'question',
+    'TodoWrite': 'todo',
 }
 
 # Track non-user-invocable skills globally (populated during discovery)
@@ -157,6 +164,13 @@ def transform_task_references(content: str) -> str:
     return content
 
 
+def transform_tool_names_in_content(content: str) -> str:
+    """Replace Claude Code tool names with OpenCode equivalents in prompt content."""
+    for claude_name, opencode_name in TOOL_NAME_REPLACEMENTS.items():
+        content = re.sub(rf'\b{claude_name}\b', opencode_name, content)
+    return content
+
+
 def transform_claude_md_references(content: str) -> str:
     """Transform CLAUDE.md references to AGENTS.md per OpenCode terminology.
 
@@ -209,6 +223,7 @@ def process_file(filepath: str, file_type: str) -> None:
     content = transform_skill_calls(content)
     content = transform_task_references(content)
     content = transform_claude_md_references(content)
+    content = transform_tool_names_in_content(content)
 
     with open(filepath, 'w') as f:
         f.write(content)

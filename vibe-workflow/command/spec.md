@@ -6,7 +6,7 @@ description: 'Requirements discovery through structured interview. Use when WHAT
 
 Build requirements spec through structured discovery interview. Defines WHAT and WHY - not technical implementation (architecture, APIs, data models come in planning phase).
 
-**If $ARGUMENTS is empty**: Ask user "What work would you like to specify? (feature, bug fix, refactor, etc.)" via AskUserQuestion before proceeding to Phase 1.
+**If $ARGUMENTS is empty**: Ask user "What work would you like to specify? (feature, bug fix, refactor, etc.)" via question before proceeding to Phase 1.
 
 **Loop**: Research → Expand todos → Ask questions → Write findings → Repeat until complete
 
@@ -119,7 +119,7 @@ Started: {timestamp}
 - References to files, functions, APIs, database schemas, components
 - System behavior changes, UI modifications, integration work
 
-**If unclear**: Ask user via AskUserQuestion: "Is this spec about code/system changes, or external research/analysis?" with options:
+**If unclear**: Ask user via question: "Is this spec about code/system changes, or external research/analysis?" with options:
 - "Code/system changes" → Proceed to 2.1
 - "External research/analysis" → Skip to Phase 3
 
@@ -129,7 +129,7 @@ Started: {timestamp}
 
 ### 2.1 Launch codebase-explorer (code work only)
 
-Use Task tool with `subagent_type: "vibe-workflow:codebase-explorer"` to understand context. Launch multiple in parallel (single message) for cross-cutting work. Limit to 3 parallel researchers per batch. If findings conflict, immediately present both perspectives to user via AskUserQuestion: "Research found conflicting information about {topic}: {perspective A} vs {perspective B}. Which applies to your situation?" If user cannot resolve, document both perspectives in spec with `[CONTEXT-DEPENDENT: {perspective A} applies when X; {perspective B} applies when Y]` and ask follow-up to clarify applicability. If 3 researchers don't cover all needed areas, run additional batches sequentially.
+Use Task tool with `subagent_type: "vibe-workflow:codebase-explorer"` to understand context. Launch multiple in parallel (single message) for cross-cutting work. Limit to 3 parallel researchers per batch. If findings conflict, immediately present both perspectives to user via question: "Research found conflicting information about {topic}: {perspective A} vs {perspective B}. Which applies to your situation?" If user cannot resolve, document both perspectives in spec with `[CONTEXT-DEPENDENT: {perspective A} applies when X; {perspective B} applies when Y]` and ask follow-up to clarify applicability. If 3 researchers don't cover all needed areas, run additional batches sequentially.
 
 Explore: product purpose, existing patterns, user flows, terminology, product docs (CUSTOMER.md, SPEC.md, PRD.md, BRAND_GUIDELINES.md, DESIGN_GUIDELINES.md, README.md), existing specs in `docs/` or `specs/`. For bug fixes: also explore bug context, related code, potential causes.
 
@@ -172,7 +172,7 @@ Write first draft with `[TBD]` markers for unresolved items. Use same file path 
 
 ## Phase 3: Iterative Discovery Interview
 
-**CRITICAL**: Use AskUserQuestion tool for ALL questions - never plain text.
+**CRITICAL**: Use question tool for ALL questions - never plain text.
 
 **Example** (the `questions` array supports 1-4 questions per call - that's batching):
 ```
@@ -204,7 +204,7 @@ questions: [
 
 For each step:
 1. Mark todo `in_progress`
-2. Research OR ask question (AskUserQuestion)
+2. Research OR ask question (question)
 3. **Write findings immediately** to interview log
 4. Expand todos for: new areas revealed, follow-up questions, dependencies discovered
 5. Update spec file (replace `[TBD]` markers)
@@ -215,7 +215,7 @@ For each step:
 
 ### Interview Log Update Format
 
-After EACH question/answer, append (Round = one AskUserQuestion call, may contain batched questions):
+After EACH question/answer, append (Round = one question call, may contain batched questions):
 
 ```markdown
 ### Round {N} - {HH:MM:SS}
@@ -502,7 +502,7 @@ Any question from these simulations = gap to address before finalizing.
 - Ask about technical implementation
 - Finalize with unresolved `[TBD]`
 - Skip summary output
-- Ask interview questions without AskUserQuestion tool (research findings don't require user questions)
+- Ask interview questions without question tool (research findings don't require user questions)
 - Proceed past Phase 2 without initial draft
 - Forget to expand todos on new areas revealed
 
@@ -515,5 +515,5 @@ Any question from these simulations = gap to address before finalizing.
 | Contradictory requirements | Surface conflict before proceeding |
 | User corrects earlier decision | Update spec, log correction with reason, check if other requirements affected |
 | Interview interrupted | Spec saved; add `[INCOMPLETE]` at top. To resume: provide existing spec file path as argument |
-| Resume interrupted spec | Read provided spec file. If file not found or not a valid spec (missing required sections like Overview, Requirements), inform user: "Could not resume from {path}: {reason}. Start fresh?" via AskUserQuestion. If valid, look for matching interview log at same timestamp, scan for `[TBD]` and `[INCOMPLETE]` markers, present status to user and ask "Continue from {last incomplete area}?" via AskUserQuestion |
+| Resume interrupted spec | Read provided spec file. If file not found or not a valid spec (missing required sections like Overview, Requirements), inform user: "Could not resume from {path}: {reason}. Start fresh?" via question. If valid, look for matching interview log at same timestamp, scan for `[TBD]` and `[INCOMPLETE]` markers, present status to user and ask "Continue from {last incomplete area}?" via question |
 | "Just build it" | Push back with 2-3 critical questions (questions where guessing wrong = significant rework). If declined, document assumptions clearly |

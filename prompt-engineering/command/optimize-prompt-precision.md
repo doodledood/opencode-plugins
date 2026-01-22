@@ -133,7 +133,7 @@ Can resolution be INFERRED from prompt context?
     │        - Conflict between "brief" and "thorough" → infer based on prompt's stated purpose
     │        - Undefined "standard format" → infer from examples in prompt or domain norms
     │
-    └─ NO → Ask user via AskUserQuestion
+    └─ NO → Ask user via question
              (truly ambiguous, multiple valid interpretations, author intent unclear)
 ```
 
@@ -152,7 +152,7 @@ Can resolution be INFERRED from prompt context?
 | Missing context only author knows | "Use the standard format" with no examples |
 | Business/preference decision | Opt-in vs opt-out default |
 
-**AskUserQuestion format**:
+**question format**:
 
 ```
 questions: [
@@ -169,7 +169,7 @@ questions: [
 ]
 ```
 
-**Batch related questions** - If multiple issues need user input, ask up to 4 related questions in one AskUserQuestion call.
+**Batch related questions** - If multiple issues need user input, ask up to 4 related questions in one question call.
 
 **After user answers**: Apply their clarification to the prompt, then continue optimization loop.
 

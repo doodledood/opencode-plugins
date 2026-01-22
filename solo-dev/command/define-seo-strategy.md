@@ -155,7 +155,7 @@ options:
 
 **Mark "Input collection" todo `in_progress`.**
 
-Collect required inputs via AskUserQuestion.
+Collect required inputs via question.
 
 **Question 1: Website URL** (Required)
 
@@ -665,7 +665,7 @@ After generating the initial document, validate major sections with the user.
 
 For each validation section:
 1. Mark current section validation `in_progress`
-2. Ask validation question (AskUserQuestion)
+2. Ask validation question (question)
 3. **Write feedback immediately** to research log
 4. If not "Yes": add todo for that section's revision
 5. Update SEO_STRATEGY.md

@@ -58,7 +58,7 @@ Extract from `$ARGUMENTS`:
 
 **Step 1.3: Gather feedback**
 
-If feedback not in arguments, use AskUserQuestion:
+If feedback not in arguments, use question:
 
 ```
 questions: [
@@ -272,7 +272,7 @@ Review the changes manually.
 | Scenario | Handling |
 |----------|----------|
 | No prompt provided | Error: "Usage: /apply-prompt-feedback <file-path-or-prompt> [feedback]" |
-| No feedback provided | Use AskUserQuestion to gather feedback |
+| No feedback provided | Use question to gather feedback |
 | File not found | Re-classify as inline prompt, write to temp file |
 | Empty file | Error: "Cannot apply feedback to empty prompt: {path}" |
 | Vague feedback | Apply reasonable interpretation; verifier will catch over/under-fitting |

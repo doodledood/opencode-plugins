@@ -198,5 +198,5 @@ When reviewer findings conflict with each other:
 - **Respect User Rules**: AGENTS.md adherence issues take precedence—these are explicit user decisions that override generic reviewer suggestions
 - **Respect the Plan**: Filter out findings that contradict the implementation plan or spec—these are intentional decisions, not mistakes
 - **User Control**: Confirm scope before making changes
-- **Reduce Cognitive Load**: Use AskUserQuestion for decisions, recommended option first
+- **Reduce Cognitive Load**: Use question for decisions, recommended option first
 - **High Confidence Only**: Only fix issues that are clearly unintentional problems, not design decisions

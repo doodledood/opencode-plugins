@@ -45,7 +45,7 @@ This skill guides you through:
 "Warning: This doesn't appear to be a git repository. The bugfix workflow works best in a git repo where changes can be tracked and reverted if needed. Proceed anyway?"
 ```
 
-Use AskUserQuestion:
+Use question:
 ```
 header: "Not a Git Repository"
 question: "This directory isn't a git repository. The bugfix workflow works best with git for tracking changes. How would you like to proceed?"
@@ -71,7 +71,7 @@ options:
 
 **If the user provided detailed bug information** (error message, reproduction steps, or clear description), skip directly to Phase 2.
 
-**If bug information is vague or missing**, use AskUserQuestion to gather essential context:
+**If bug information is vague or missing**, use question to gather essential context:
 
 **Question 1: Bug Type**
 
@@ -228,7 +228,7 @@ Recommended next steps:
 | **Test-driven** | Create reproduction test BEFORE fixing; test proves fix works; prevents regression |
 | **Root cause** | Fix underlying cause, not symptoms; consider why bug wasn't caught; look for patterns |
 | **Minimal changes** | Smallest fix for root cause; avoid refactoring while bug fixing; keep focused |
-| **Reduce cognitive load** | AskUserQuestion for clarification; reasonable defaults; don't repeat questions |
+| **Reduce cognitive load** | question for clarification; reasonable defaults; don't repeat questions |
 
 ## Edge Cases
 

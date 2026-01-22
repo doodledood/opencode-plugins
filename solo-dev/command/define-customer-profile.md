@@ -103,7 +103,7 @@ options:
 
 **Mark "Discovery questions" todo `in_progress`.**
 
-Use AskUserQuestion tool with multi-choice options for EVERY question. **Put the recommended option FIRST** with "(Recommended)" suffix to reduce cognitive load.
+Use question tool with multi-choice options for EVERY question. **Put the recommended option FIRST** with "(Recommended)" suffix to reduce cognitive load.
 
 **After EACH question**, append to discovery log:
 ```markdown
@@ -682,7 +682,7 @@ After generating the initial document, begin iterative refinement.
 
 For each refinement cycle:
 1. Mark current refinement todo `in_progress`
-2. Ask validation question (AskUserQuestion)
+2. Ask validation question (question)
 3. **Write feedback immediately** to discovery log
 4. If not "Yes": add todo for that section's revision
 5. Update CUSTOMER.md
@@ -843,7 +843,7 @@ This is your **foundational document**. Use it to:
 - Keep discoveries as mental notes instead of todos
 - Skip todo list
 - Finalize with unresolved sections
-- Ask questions without AskUserQuestion tool
+- Ask questions without question tool
 - Forget to expand todos when user reveals complexity
 
 ## Output Location

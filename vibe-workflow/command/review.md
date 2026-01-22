@@ -163,5 +163,5 @@ options:
 3. Launch all agents simultaneously in a single message (do NOT run sequentially)
 4. After all agents complete, launch the verification agent with all findings
 5. Present the final consolidated report to the user
-6. Ask user about next steps using AskUserQuestion
+6. Ask user about next steps using question
 7. If user chooses to fix, invoke /fix-review-issues with appropriate scope

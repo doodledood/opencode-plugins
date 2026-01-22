@@ -239,13 +239,13 @@ NEVER: implementation details during spec phase
 
 ### Weakened Instruction
 
-**Original**: "Always use the AskUserQuestion tool for ALL questions - never ask in plain text"
-**In Compressed**: "Prefer using AskUserQuestion for questions"
+**Original**: "Always use the question tool for ALL questions - never ask in plain text"
+**In Compressed**: "Prefer using question for questions"
 **Gap**: Mandatory instruction weakened to preference
 
 **Suggested Restoration**:
 ```
-AskUserQuestion for ALL questions - never plain text
+question for ALL questions - never plain text
 ```
 
 ### Ambiguity Introduced

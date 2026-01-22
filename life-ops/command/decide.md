@@ -43,13 +43,13 @@ Guide users through decisions via **exhaustive discovery**, **targeted research*
 
 ---
 
-**Required tools**: AskUserQuestion, Read, Write, TodoWrite; WebSearch or Task (web-researcher) for external decisions
+**Required tools**: question, Read, Write, TodoWrite; WebSearch or Task (web-researcher) for external decisions
 
 **Tool syntax**: `Task(subagent_type:'<plugin>:<agent>', prompt:'...', description:'...')`. Task unavailable → use WebSearch.
 
 **Partial availability**: Core tools unavailable → inform user, exit. WebSearch/Task unavailable → skip research, self-knowledge flow. web-researcher not found → WebSearch directly.
 
-**AskUserQuestion fallback**: Free-text → map to closest option. Tool fails → natural language.
+**question fallback**: Free-text → map to closest option. Tool fails → natural language.
 
 **Research thoroughness**:
 | Level | Sources | Queries | Verification |
@@ -323,7 +323,7 @@ Then → research (if external) or elimination (if enough data).
 
 **Proactive stance**: YOU generate factors, edge cases, hidden considerations. Don't wait—surface what they'd miss.
 
-**Question style**: Default AskUserQuestion. Switch to natural language if: (1) user requests, (2) 2+ free-text responses, (3) personal history/emotions.
+**Question style**: Default question. Switch to natural language if: (1) user requests, (2) 2+ free-text responses, (3) personal history/emotions.
 
 ## 2.1 Decision Framing & Underlying Need (MUST COMPLETE BEFORE 2.3)
 
