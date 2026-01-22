@@ -110,6 +110,7 @@ OpenCode discovers resources from **flat directories**, not nested plugin struct
 1. Cleans existing files for the plugin (by postfix pattern)
 2. Copies fresh files from source
 3. Updates `name:` fields to match new filenames
+4. Updates internal references: `/command` → `/command-<plugin>`, `skill({ name: "x" })` → `skill({ name: "x-<plugin>" })`
 
 ### Path Mapping
 
@@ -985,10 +986,12 @@ tools:
 
 **Non-user-invocable skills (remain skills):**
 
-| Find | Replace |
-|------|---------|
-| `Skill("plugin:foo")` | `skill({ name: "foo" })` |
-| `Skill("plugin:foo", "args")` | `skill({ name: "foo", arguments: "args" })` |
+| Find | Replace (Source) | After Install |
+|------|------------------|---------------|
+| `Skill("plugin:foo")` | `skill({ name: "foo" })` | `skill({ name: "foo-<plugin>" })` |
+| `Skill("plugin:foo", "args")` | `skill({ name: "foo", arguments: "args" })` | `skill({ name: "foo-<plugin>", arguments: "args" })` |
+
+**Note**: The install script automatically updates internal references (`/command` and `skill({ name: "..." })`) to include the plugin postfix.
 
 **Other transformations:**
 

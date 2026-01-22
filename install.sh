@@ -120,12 +120,46 @@ update_name_field() {
     fi
 }
 
+# Update internal slash command references to include plugin postfix
+# /review → /review-vibe-workflow (if review.md exists in same plugin)
+update_internal_command_refs() {
+    local file="$1"
+    local plugin="$2"
+    local plugin_dir="$3"  # Source plugin directory
+
+    # Only process .md files
+    [[ "$file" != *.md ]] && return 0
+
+    # Update /command references for commands in this plugin
+    if [ -d "$plugin_dir/command" ]; then
+        for cmd_file in "$plugin_dir/command"/*.md; do
+            [ -e "$cmd_file" ] || continue
+            local cmd_basename=$(basename "$cmd_file" .md)
+            # Replace /cmd with /cmd-plugin
+            # Match /cmd NOT followed by more hyphenated-alphanumeric (to avoid /cmd-other)
+            perl -i -pe "s|(?<=/)${cmd_basename}(?![a-z0-9-])|${cmd_basename}-${plugin}|g" "$file" 2>/dev/null || true
+        done
+    fi
+
+    # Update skill({ name: "..." }) references for skills in this plugin
+    if [ -d "$plugin_dir/skill" ]; then
+        for skill_dir in "$plugin_dir/skill"/*/; do
+            [ -d "$skill_dir" ] || continue
+            local skill_name=$(basename "$skill_dir")
+            # Replace skill({ name: "foo" with skill({ name: "foo-plugin"
+            # Handles both single and double quotes
+            perl -i -pe "s|(?<=skill\\(\\{ name: [\"'])${skill_name}(?=[\"'])|${skill_name}-${plugin}|g" "$file" 2>/dev/null || true
+        done
+    fi
+}
+
 # Copy and rename files from plugin to target
 copy_files() {
     local src="$1"
     local dst="$2"
     local type="$3"
     local plugin="$4"
+    local plugin_dir="$5"  # Root plugin directory for finding commands
 
     if [ ! -d "$src" ] || [ -z "$(ls -A "$src" 2>/dev/null)" ]; then
         return 0
@@ -145,6 +179,11 @@ copy_files() {
         local name_without_ext="${new_basename%.*}"
         update_name_field "$target" "$name_without_ext"
 
+        # Update internal /command and skill() references to include plugin postfix
+        if [ -n "$plugin_dir" ]; then
+            update_internal_command_refs "$target" "$plugin" "$plugin_dir"
+        fi
+
         count=$((count + 1))
     done
 
@@ -158,6 +197,7 @@ copy_skills() {
     local src="$1"
     local dst="$2"
     local plugin="$3"
+    local plugin_dir="$4"  # Root plugin directory for finding commands
 
     if [ ! -d "$src" ] || [ -z "$(ls -A "$src" 2>/dev/null)" ]; then
         return 0
@@ -177,6 +217,10 @@ copy_skills() {
         # Update name field in SKILL.md if it exists
         if [ -f "$target/SKILL.md" ]; then
             update_name_field "$target/SKILL.md" "$new_skill_name"
+            # Update internal /command and skill() references
+            if [ -n "$plugin_dir" ]; then
+                update_internal_command_refs "$target/SKILL.md" "$plugin" "$plugin_dir"
+            fi
         fi
 
         count=$((count + 1))
@@ -230,10 +274,10 @@ sync_plugin() {
     # First, remove all existing files for this plugin
     clean_plugin_files "$plugin"
 
-    # Then copy fresh files
-    copy_files "$plugin_dir/command" "$CONFIG_DIR/command" "command" "$plugin"
-    copy_files "$plugin_dir/agent" "$CONFIG_DIR/agent" "agent" "$plugin"
-    copy_skills "$plugin_dir/skill" "$CONFIG_DIR/skill" "$plugin"
+    # Then copy fresh files (pass plugin_dir for internal ref updates)
+    copy_files "$plugin_dir/command" "$CONFIG_DIR/command" "command" "$plugin" "$plugin_dir"
+    copy_files "$plugin_dir/agent" "$CONFIG_DIR/agent" "agent" "$plugin" "$plugin_dir"
+    copy_skills "$plugin_dir/skill" "$CONFIG_DIR/skill" "$plugin" "$plugin_dir"
     copy_hooks "$plugin_dir/plugin" "$CONFIG_DIR/plugin" "$plugin"
 }
 
