@@ -12,10 +12,6 @@
   "license": "MIT",
   "keywords": ["opencode", "opencode-plugin", "experimental", "manifest", "define", "verification", "invariants", "deliverables", "acceptance-criteria", "autonomous", "do"],
   "opencode": {
-    "type": "plugin",
-    "hooks": ["tool.execute.before", "session.idle"]
-  },
-  "dependencies": {
-    "@opencode-ai/plugin": "^1.0.162"
+    "type": "plugin"
   }
 }

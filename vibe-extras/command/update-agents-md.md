@@ -1,6 +1,5 @@
 ---
 description: Create or update AGENTS.md with best practices - brevity, universal applicability, progressive disclosure
-agent: build
 ---
 
 Update my AGENTS.md based on: $ARGUMENTS

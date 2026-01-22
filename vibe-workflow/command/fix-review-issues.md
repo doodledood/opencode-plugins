@@ -1,6 +1,5 @@
 ---
 description: 'Orchestrate fixing issues found by /review. Handles issue discovery, user confirmation, plan creation, and execution via /implement.'
-agent: build
 ---
 
 **User request**: $ARGUMENTS

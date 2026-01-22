@@ -1,55 +1,51 @@
-# Vibe Workflow
+# Vibe Workflow Plugin
 
 Ship high-quality code faster with less back-and-forth.
 
 ## Commands
 
-- `/bugfix` - Fix bugs with structured analysis
-- `/explore-codebase` - Explore and understand the codebase
-- `/fix-review-issues` - Fix issues from code review
-- `/implement` - Implement a feature with planning
-- `/implement-inplace` - Implement changes in-place
-- `/plan` - Create an implementation plan
-- `/research-web` - Research topic on the web
-- `/review` - Run comprehensive code review
-- `/review-bugs` - Review code for bugs
-- `/review-claude-md-adherence` - Review CLAUDE.md adherence
-- `/review-coverage` - Review test coverage
-- `/review-docs` - Review documentation
-- `/review-maintainability` - Review code maintainability
-- `/review-simplicity` - Review code simplicity
-- `/review-testability` - Review code testability
-- `/review-type-safety` - Review type safety
-- `/spec` - Create a specification document
-- `/web-research` - Research topic on the web
+| Command | Description |
+|---------|-------------|
+| `/bugfix` | Investigate and fix bugs systematically |
+| `/explore-codebase` | Find files relevant to a query |
+| `/fix-review-issues` | Fix issues found by /review |
+| `/implement` | Execute implementation plans via subagents |
+| `/implement-inplace` | Single-agent implementation without subagents |
+| `/plan` | Create implementation plans from spec |
+| `/research-web` | Deep web research with parallel investigators |
+| `/review` | Run all code review agents in parallel |
+| `/review-agents-md-adherence` | Verify AGENTS.md compliance |
+| `/review-bugs` | Audit code for logical bugs |
+| `/review-coverage` | Verify test coverage for code changes |
+| `/review-docs` | Audit documentation accuracy |
+| `/review-maintainability` | Audit code maintainability |
+| `/review-simplicity` | Audit code simplicity |
+| `/review-testability` | Audit code testability |
+| `/review-type-safety` | Audit type safety |
+| `/spec` | Requirements discovery through interview |
+| `/web-research` | Research external topics via web search |
 
 ## Agents
 
-- `bug-fixer` - Fix bugs
-- `chunk-implementor` - Implement code chunks
-- `chunk-verifier` - Verify code chunks
-- `claude-md-adherence-reviewer` - Review CLAUDE.md adherence
-- `code-bugs-reviewer` - Review code for bugs
-- `code-coverage-reviewer` - Review test coverage
-- `code-maintainability-reviewer` - Review code maintainability
-- `code-simplicity-reviewer` - Review code simplicity
-- `code-testability-reviewer` - Review code testability
-- `codebase-explorer` - Explore the codebase
-- `docs-reviewer` - Review documentation
-- `plan-verifier` - Verify implementation plans
-- `type-safety-reviewer` - Review type safety
-- `web-researcher` - Research on the web
+| Agent | Description |
+|-------|-------------|
+| `agents-md-adherence-reviewer` | Verifies AGENTS.md compliance |
+| `bug-fixer` | Investigates and fixes bugs |
+| `chunk-implementor` | Implements a single plan chunk |
+| `chunk-verifier` | Verifies chunk implementation |
+| `code-bugs-reviewer` | Audits code for logical bugs |
+| `code-coverage-reviewer` | Verifies test coverage |
+| `code-maintainability-reviewer` | Audits code maintainability |
+| `code-simplicity-reviewer` | Audits code simplicity |
+| `code-testability-reviewer` | Audits code testability |
+| `codebase-explorer` | Context-gathering for file discovery |
+| `docs-reviewer` | Reviews documentation accuracy |
+| `plan-verifier` | Verifies implementation plans |
+| `type-safety-reviewer` | Audits type safety |
+| `web-researcher` | Deep web research agent |
 
 ## Installation
 
 ```bash
 ./install.sh vibe-workflow
 ```
-
-## Note
-
-This plugin has hooks that require manual TypeScript conversion. The original Python hooks handle:
-- SessionStart hook: Inject session-start reminders
-- PostCompact hook: Re-anchor session after compaction
-- Stop hook: Prevent premature stops during /implement workflows
-- PostToolUse (TodoWrite): Remind to update progress files

@@ -1,6 +1,5 @@
 ---
 description: Audit code for DRY violations, dead code, complexity, and consistency issues.
-agent: build
 context: fork
 ---
 

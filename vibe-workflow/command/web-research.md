@@ -1,6 +1,5 @@
 ---
 description: Research external topics via web search with structured hypothesis tracking and source evaluation.
-agent: build
 context: fork
 ---
 

@@ -1,6 +1,5 @@
 ---
 description: Audit documentation accuracy against code changes. Reports discrepancies without modifying files.
-agent: build
 context: fork
 ---
 

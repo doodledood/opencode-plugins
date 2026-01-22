@@ -101,11 +101,11 @@ Categorize every issue into one of these severity levels:
    - Windows: `C:\Program Files\ClaudeCode\AGENTS.md`
 
    **User Level** (personal preferences across all projects):
-   - `~/.claude/AGENTS.md`
+   - `~/.opencode/AGENTS.md`
 
    **Project Level** (shared with team):
-   - `AGENTS.md` (root) or `.claude/AGENTS.md` (modern location)
-   - `.claude/rules/*.md` (all markdown files auto-loaded)
+   - `AGENTS.md` (root) or `.opencode/AGENTS.md` (modern location)
+   - `.opencode/rules/*.md` (all markdown files auto-loaded)
 
    **Local Project Level** (personal overrides, not committed):
    - `CLAUDE.local.md`

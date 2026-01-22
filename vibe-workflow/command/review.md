@@ -1,6 +1,5 @@
 ---
 description: Run all code review agents in parallel (bugs, coverage, maintainability, simplicity, type-safety if typed, AGENTS.md adherence, docs). Respects AGENTS.md reviewer configuration.
-agent: build
 ---
 
 Run a comprehensive code review. First detect the codebase type, then launch appropriate agents.

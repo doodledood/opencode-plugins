@@ -1,6 +1,5 @@
 ---
 description: Audit code for over-engineering, premature optimization, and cognitive complexity.
-agent: build
 context: fork
 ---
 

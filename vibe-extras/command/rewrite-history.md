@@ -1,6 +1,5 @@
 ---
 description: 'Restructure branch into clean, reviewer-friendly commits. Analyzes total diff since main, groups files by concern, and rewrites with conventional commit messages.'
-agent: build
 ---
 
 # Rewrite History Command

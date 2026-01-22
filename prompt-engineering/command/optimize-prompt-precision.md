@@ -1,6 +1,5 @@
 ---
 description: 'Iteratively optimizes prompts for precision - eliminates ambiguities, resolves conflicts, adds missing definitions. Use when asked to optimize precision, clarify, disambiguate, or make a prompt unambiguous.'
-agent: build
 ---
 
 # Optimize Prompt Precision

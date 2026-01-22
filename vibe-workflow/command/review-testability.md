@@ -1,6 +1,5 @@
 ---
 description: Audit code for testability design patterns. Identifies business logic entangled with IO and suggests functional core / imperative shell separation.
-agent: build
 context: fork
 ---
 

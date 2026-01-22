@@ -91,9 +91,7 @@ def transform_frontmatter(content: str, file_type: str) -> str:
     for short, full in MODEL_MAP.items():
         frontmatter = re.sub(rf'^model: {short}$', f'model: {full}', frontmatter, flags=re.MULTILINE)
 
-    if file_type == 'command' and 'agent:' not in frontmatter:
-        frontmatter = re.sub(r'(description: [^\n]+\n)', r'\1agent: build\n', frontmatter)
-    elif file_type == 'agent' and 'mode:' not in frontmatter:
+    if file_type == 'agent' and 'mode:' not in frontmatter:
         frontmatter = frontmatter.rstrip() + '\nmode: subagent\n'
 
     return f'---{frontmatter}---{body}'
@@ -105,7 +103,7 @@ def transform_tools(content: str) -> str:
     if match:
         tools = [t.strip() for t in match.group(1).split(',')]
         perms = sorted(set(TOOL_MAP[t] for t in tools if t in TOOL_MAP))
-        yaml = 'tools:\n' + ''.join(f'  {p}: allow\n' for p in perms)
+        yaml = 'tools:\n' + ''.join(f'  {p}: true\n' for p in perms)
         content = re.sub(r'^tools: .+$', yaml.rstrip(), content, flags=re.MULTILINE)
     return content
 
@@ -159,6 +157,47 @@ def transform_task_references(content: str) -> str:
     return content
 
 
+def transform_claude_md_references(content: str) -> str:
+    """Transform CLAUDE.md references to AGENTS.md per OpenCode terminology.
+
+    - CLAUDE.md → AGENTS.md
+    - claude-md (in identifiers) → agents-md
+    - .claude/ → .opencode/
+    - ~/.claude/ → ~/.config/opencode/
+    """
+    # Replace CLAUDE.md with AGENTS.md (case sensitive)
+    content = re.sub(r'\bCLAUDE\.md\b', 'AGENTS.md', content)
+
+    # Replace claude-md in identifiers (hyphenated form)
+    content = re.sub(r'\bclaude-md\b', 'agents-md', content)
+
+    # Replace directory references
+    content = re.sub(r'\.claude/', '.opencode/', content)
+    content = re.sub(r'~/\.claude/', '~/.config/opencode/', content)
+
+    return content
+
+
+def rename_claude_md_files(pattern: str) -> dict:
+    """Rename files with 'claude-md' in name to 'agents-md'.
+
+    Returns dict mapping old paths to new paths.
+    """
+    renames = {}
+
+    for old_path in glob.glob(f'{pattern}/**/*claude-md*.md', recursive=True):
+        dir_name = os.path.dirname(old_path)
+        old_name = os.path.basename(old_path)
+        new_name = old_name.replace('claude-md', 'agents-md')
+        new_path = os.path.join(dir_name, new_name)
+
+        if old_path != new_path:
+            os.rename(old_path, new_path)
+            renames[old_path] = new_path
+
+    return renames
+
+
 def process_file(filepath: str, file_type: str) -> None:
     """Process a single file with all transformations."""
     with open(filepath) as f:
@@ -169,6 +208,7 @@ def process_file(filepath: str, file_type: str) -> None:
         content = transform_tools(content)
     content = transform_skill_calls(content)
     content = transform_task_references(content)
+    content = transform_claude_md_references(content)
 
     with open(filepath, 'w') as f:
         f.write(content)
@@ -186,7 +226,15 @@ def main():
     else:
         print('  None found')
 
-    # Phase 2: Transform files
+    # Phase 2: Rename claude-md files to agents-md
+    print('\nRenaming claude-md files...')
+    renames = rename_claude_md_files(pattern)
+    for old, new in renames.items():
+        print(f'  {old} → {new}')
+    if not renames:
+        print('  No files to rename')
+
+    # Phase 3: Transform files
     print('\nTransforming files...')
 
     # Process commands

@@ -1,6 +1,5 @@
 ---
 description: 'Deep web research with parallel investigators, multi-wave exploration, and structured synthesis. Spawns multiple web-researcher agents to explore different facets of a topic simultaneously, launches additional waves when gaps are identified, then synthesizes findings. Use when asked to research, investigate, compare options, find best practices, or gather comprehensive information from the web.\n\nThoroughness: quick for factual lookups | medium for focused topics | thorough for comparisons/evaluations (waves continue while critical gaps remain) | very-thorough for comprehensive research (waves continue until satisficed). Auto-selects if not specified.'
-agent: build
 context: fork
 ---
 

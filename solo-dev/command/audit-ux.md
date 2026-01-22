@@ -1,6 +1,5 @@
 ---
 description: Audit UI/UX changes in a focus area against design guidelines for accessibility, consistency, and usability issues.
-agent: build
 context: fork
 ---
 

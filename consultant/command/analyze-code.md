@@ -1,6 +1,5 @@
 ---
 description: Deep code analysis using consultant agent. Identifies technical debt, risks, and improvement opportunities.
-agent: build
 ---
 
 Analyze code: $ARGUMENTS

@@ -1,10 +1,12 @@
-# Life Ops
+# Life Ops Plugin
 
 Personal decision-making and life workflow support.
 
 ## Commands
 
-- `/decide` - Get help making personal decisions with structured analysis
+| Command | Description |
+|---------|-------------|
+| `/decide` | Structured decision-making framework |
 
 ## Installation
 

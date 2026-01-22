@@ -1,6 +1,5 @@
 ---
 description: Generate text in your voice using your AUTHOR_VOICE.md document. Provide a topic or prompt as argument.
-agent: build
 context: fork
 ---
 

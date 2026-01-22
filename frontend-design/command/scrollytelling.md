@@ -1,6 +1,5 @@
 ---
 description: 'Implements scroll-driven storytelling experiences with pinned sections, progressive reveals, and scroll-linked animations. Use when asked to build scrollytelling, scroll-driven animations, parallax effects, narrative scroll experiences, or story-driven landing pages.'
-agent: build
 ---
 
 # Scrollytelling Skill

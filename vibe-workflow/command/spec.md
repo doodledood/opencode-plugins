@@ -1,6 +1,5 @@
 ---
 description: 'Requirements discovery through structured interview. Use when WHAT is unclear—scope needs definition, requirements need gathering, or starting from scratch. Outputs spec document, not executable manifest.'
-agent: build
 ---
 
 **User request**: $ARGUMENTS

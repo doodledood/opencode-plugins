@@ -1,6 +1,5 @@
 ---
 description: 'Single-agent implementation: executes plans in-place without subagents. Use /implement (default) for complex features; use this for simpler tasks or when subagent overhead is unwanted.'
-agent: build
 ---
 
 **User request**: $ARGUMENTS

@@ -1,19 +1,23 @@
-# Consultant
+# Consultant Plugin
 
 Flexible multi-provider LLM consultations using Python/LiteLLM - includes consultant agent, review/bug-investigation commands, and consultant skill for deep AI-powered code analysis across 100+ models.
 
 ## Commands
 
-- `/analyze-code` - Analyze code structure and patterns
-- `/ask-council` - Get opinions from multiple AI models
-- `/ask` - Ask a question to the consultant
-- `/consultant` - Interactive consultant session
-- `/investigate-bug` - Investigate a bug with AI assistance
-- `/review` - Review code with AI consultant
+| Command | Description |
+|---------|-------------|
+| `/analyze-code` | Deep code analysis for technical debt, risks, and improvements |
+| `/ask` | Single-model consultation (defaults to gpt-5.2-pro) |
+| `/ask-council` | Multi-model ensemble consultation (3 models in parallel) |
+| `/consultant` | General consultation with external AI models |
+| `/investigate-bug` | Deep bug investigation with root cause analysis |
+| `/review` | Production-level PR review using consultant agent |
 
 ## Agents
 
-- `consultant` - AI consultant agent for code analysis
+| Agent | Description |
+|-------|-------------|
+| `consultant` | Consults external AI models for complex analysis |
 
 ## Installation
 

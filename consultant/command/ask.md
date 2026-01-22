@@ -1,6 +1,5 @@
 ---
 description: Single-model consultation using consultant agent. Defaults to gpt-5.2-pro.
-agent: build
 ---
 
 Consult an external model about: $ARGUMENTS

@@ -1,6 +1,5 @@
 ---
 description: Update main/master from origin, rebase current branch on it, resolve conflicts, and push.
-agent: build
 ---
 
 Perform a rebase workflow for the current branch:

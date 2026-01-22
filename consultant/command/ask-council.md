@@ -1,6 +1,5 @@
 ---
 description: Multi-model ensemble consultation. Runs 3 models in parallel for diverse perspectives.
-agent: build
 ---
 
 Consult multiple models in parallel about: $ARGUMENTS

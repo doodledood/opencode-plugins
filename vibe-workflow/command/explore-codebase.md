@@ -1,6 +1,5 @@
 ---
 description: 'Find all files relevant to a query with orthogonal exploration for comprehensive coverage. Returns topic-specific overview + file list with line ranges. Uses parallel agents for thorough+ levels to ensure nothing is missed.'
-agent: build
 context: fork
 ---
 

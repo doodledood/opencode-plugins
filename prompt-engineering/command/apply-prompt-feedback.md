@@ -1,6 +1,5 @@
 ---
 description: 'Applies user feedback to prompts with precision - incorporates feedback intent without over-fitting, maintains information density, prevents regressions. Use when asked to apply feedback, incorporate suggestions, or update a prompt based on user input.'
-agent: build
 ---
 
 # Apply Prompt Feedback

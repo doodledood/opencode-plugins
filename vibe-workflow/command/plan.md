@@ -1,6 +1,5 @@
 ---
 description: 'Create implementation plans from spec via iterative codebase research and strategic questions. Produces mini-PR plans optimized for iterative development.'
-agent: build
 ---
 
 **User request**: $ARGUMENTS

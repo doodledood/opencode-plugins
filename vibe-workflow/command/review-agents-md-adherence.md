@@ -1,6 +1,5 @@
 ---
 description: Verify code changes comply with AGENTS.md instructions and project standards.
-agent: build
 context: fork
 ---
 

@@ -1,6 +1,5 @@
 ---
 description: 'Consults external AI models (100+ via LiteLLM) for complex analysis. Use for architectural review, security audit, deep code understanding, or when extended reasoning is needed. Runs async with session management.'
-agent: build
 ---
 
 # Consultant

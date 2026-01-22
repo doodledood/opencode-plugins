@@ -1,6 +1,5 @@
 ---
 description: 'Personal decision advisor for QUALITY over speed. Exhaustive discovery, option finding, sequential elimination, structured analysis. Use for investments, purchases, career, life decisions. Surfaces hidden factors, tracks eliminations with reasons, confident recommendations. Triggers: help me decide, should I, which should I choose, compare options, what should I do, weighing options.'
-agent: build
 context: fork
 ---
 

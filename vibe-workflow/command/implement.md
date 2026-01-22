@@ -1,6 +1,5 @@
 ---
 description: 'Executes implementation plans via subagents with automated verification and fix loops. Use after /plan for complex features. Each chunk gets dedicated Implementor + Verifier agents with up to 5 fix attempts.'
-agent: build
 ---
 
 **User request**: $ARGUMENTS

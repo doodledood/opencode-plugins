@@ -2,13 +2,14 @@
 # Install/sync OpenCode plugins by copying to ~/.config/opencode/
 #
 # Usage:
-#   ./install.sh                           # Sync all plugins
+#   ./install.sh                           # Sync default plugins (vibe-workflow, vibe-extras)
 #   ./install.sh vibe-workflow             # Sync specific plugin
-#   ./install.sh vibe-workflow,vibe-extras # Sync multiple (comma-separated)
+#   ./install.sh vibe-workflow,consultant  # Sync multiple (comma-separated)
 #
 # Environment variables:
-#   OPENCODE_PLUGINS    - Comma or space-separated list of plugins
-#                         Default: all available plugins in repo
+#   OPENCODE_PLUGINS    - Comma or space-separated list of plugins, or:
+#                         "all" or "" to install all available plugins
+#                         If unset, defaults to: vibe-workflow vibe-extras
 #   OPENCODE_CONFIG_DIR - Target directory (default: ~/.config/opencode)
 #
 # Sync behavior:
@@ -114,7 +115,7 @@ update_name_field() {
     if head -1 "$file" | grep -q '^---$'; then
         # Use sed to update name: field in frontmatter
         if grep -q '^name:' "$file"; then
-            sed -i "s/^name:.*$/name: $new_name/" "$file"
+            sed -i '' "s/^name:.*$/name: $new_name/" "$file"
         fi
     fi
 }
@@ -236,6 +237,9 @@ sync_plugin() {
     copy_hooks "$plugin_dir/plugin" "$CONFIG_DIR/plugin" "$plugin"
 }
 
+# Default plugins when no args and OPENCODE_PLUGINS is not set
+DEFAULT_PLUGINS="vibe-workflow vibe-extras"
+
 # Parse plugins from args or env var
 get_plugins() {
     local input=""
@@ -243,11 +247,17 @@ get_plugins() {
     # Command line args take precedence
     if [ $# -gt 0 ]; then
         input="$*"
-    elif [ -n "$OPENCODE_PLUGINS" ]; then
-        input="$OPENCODE_PLUGINS"
+    elif [ -n "${OPENCODE_PLUGINS+x}" ]; then
+        # OPENCODE_PLUGINS is set (even if empty)
+        if [ -z "$OPENCODE_PLUGINS" ] || [ "$OPENCODE_PLUGINS" = "all" ]; then
+            # Empty string or "all" means install all plugins
+            input=$(discover_plugins)
+        else
+            input="$OPENCODE_PLUGINS"
+        fi
     else
-        # Default: all available plugins
-        input=$(discover_plugins)
+        # OPENCODE_PLUGINS not set: use defaults
+        input="$DEFAULT_PLUGINS"
     fi
 
     # Normalize: replace commas with spaces

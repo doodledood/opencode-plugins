@@ -1,25 +1,29 @@
-# Solo Dev
+# Solo Dev Plugin
 
 Toolkit for solo developers to build, manage, and grow their business - customer profiling, brand guidelines, design system, SEO strategy, X/Twitter growth strategy, content creation, and more.
 
 ## Commands
 
-- `/audit-ux` - Audit user experience of your product
-- `/craft-author-voice` - Define your unique author voice
-- `/define-brand-guidelines` - Create brand guidelines document
-- `/define-customer-profile` - Define ideal customer profile (ICP)
-- `/define-design-guidelines` - Create design system guidelines
-- `/define-seo-strategy` - Define SEO and content strategy
-- `/define-x-strategy` - Define X/Twitter growth strategy
-- `/write-as-me` - Write content in your defined voice
+| Command | Description |
+|---------|-------------|
+| `/audit-ux` | Audit UX of your application |
+| `/craft-author-voice` | Create your author voice document |
+| `/define-brand-guidelines` | Define your brand guidelines |
+| `/define-customer-profile` | Define your ideal customer profile |
+| `/define-design-guidelines` | Define your design system guidelines |
+| `/define-seo-strategy` | Define your SEO strategy |
+| `/define-x-strategy` | Define your X/Twitter growth strategy |
+| `/write-as-me` | Generate content in your authentic voice |
 
 ## Agents
 
-- `design-quality-auditor` - Audit design quality
-- `design-research` - Research design patterns
-- `seo-researcher` - Research SEO strategies
-- `ux-auditor` - Audit user experience
-- `voice-writer` - Write in defined author voice
+| Agent | Description |
+|-------|-------------|
+| `design-quality-auditor` | Audits design quality |
+| `design-research` | Design research agent |
+| `seo-researcher` | SEO research agent |
+| `ux-auditor` | UX audit agent |
+| `voice-writer` | Writes in your authentic voice |
 
 ## Installation
 

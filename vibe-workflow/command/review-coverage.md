@@ -1,6 +1,5 @@
 ---
 description: Verify test coverage for code changes. Analyzes diff against main and reports coverage gaps.
-agent: build
 context: fork
 ---
 

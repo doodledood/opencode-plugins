@@ -1,6 +1,5 @@
 ---
 description: Audit code for logical bugs, race conditions, edge cases, and error handling issues.
-agent: build
 context: fork
 ---
 

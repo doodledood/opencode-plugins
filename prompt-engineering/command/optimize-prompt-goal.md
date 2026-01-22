@@ -1,6 +1,5 @@
 ---
 description: 'Optimizes prompts for goal effectiveness - ensures instructions serve the stated goal, prevents missteps, improves efficiency. Use when asked to optimize a prompt for its goal, improve goal alignment, or make a prompt more effective at achieving its purpose.'
-agent: build
 ---
 
 # Optimize Prompt Goal

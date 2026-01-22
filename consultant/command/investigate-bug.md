@@ -1,6 +1,5 @@
 ---
 description: Deep bug investigation using consultant agent. Identifies root causes and fix suggestions.
-agent: build
 ---
 
 Investigate bug: $ARGUMENTS

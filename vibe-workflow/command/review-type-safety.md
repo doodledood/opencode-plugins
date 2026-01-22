@@ -1,6 +1,5 @@
 ---
 description: Audit TypeScript code for type safety issues—any/unknown abuse, invalid states, missing narrowing.
-agent: build
 context: fork
 ---
 

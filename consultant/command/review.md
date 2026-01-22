@@ -1,6 +1,5 @@
 ---
 description: Production-level PR review using consultant agent. 10-category framework focused on correctness.
-agent: build
 ---
 
 Review code: $ARGUMENTS

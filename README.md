@@ -23,12 +23,19 @@ OpenCode discovers resources from flat directories:
 The install script copies contents to these locations, **postfixing filenames with the plugin name** to avoid collisions:
 - `review.md` → `review-vibe-workflow.md` → `/review-vibe-workflow`
 
-### Quick Install (All Plugins)
+### Quick Install (Default Plugins)
 
 ```bash
-# Clone and install all plugins
+# Clone and install default plugins (vibe-workflow, vibe-extras)
 git clone https://github.com/doodledood/opencode-plugins.git /tmp/opencode-plugins && \
 /tmp/opencode-plugins/install.sh
+```
+
+### Install All Plugins
+
+```bash
+# Install all available plugins
+OPENCODE_PLUGINS=all /tmp/opencode-plugins/install.sh
 ```
 
 ### Install Specific Plugins
@@ -40,22 +47,34 @@ Pass plugin names as arguments (comma or space-separated):
 /tmp/opencode-plugins/install.sh vibe-workflow
 
 # Install multiple plugins (comma-separated)
-/tmp/opencode-plugins/install.sh vibe-workflow,vibe-extras
+/tmp/opencode-plugins/install.sh vibe-workflow,consultant
 
 # Or use environment variable
-OPENCODE_PLUGINS="vibe-workflow,vibe-extras" /tmp/opencode-plugins/install.sh
+OPENCODE_PLUGINS="vibe-workflow,consultant" /tmp/opencode-plugins/install.sh
+```
+
+### Shell Aliases
+
+Add to your `~/.zshrc` or `~/.bashrc`:
+
+```bash
+# Sync default plugins (vibe-workflow, vibe-extras)
+alias opencode-sync='([ -d /tmp/opencode-plugins ] && git -C /tmp/opencode-plugins pull || git clone https://github.com/doodledood/opencode-plugins.git /tmp/opencode-plugins) && /tmp/opencode-plugins/install.sh'
+
+# Sync all plugins
+alias opencode-sync-all='([ -d /tmp/opencode-plugins ] && git -C /tmp/opencode-plugins pull || git clone https://github.com/doodledood/opencode-plugins.git /tmp/opencode-plugins) && OPENCODE_PLUGINS=all /tmp/opencode-plugins/install.sh'
 ```
 
 ### Update Existing Installation
 
 ```bash
-# Pull latest and reinstall (FORCE=1 overwrites existing)
-cd /tmp/opencode-plugins && git pull && FORCE=1 ./install.sh
+# Pull latest and reinstall
+cd /tmp/opencode-plugins && git pull && ./install.sh
 
-# Or one-liner:
+# Or one-liner (all plugins):
 [ -d /tmp/opencode-plugins ] && git -C /tmp/opencode-plugins pull || \
 git clone https://github.com/doodledood/opencode-plugins.git /tmp/opencode-plugins && \
-FORCE=1 /tmp/opencode-plugins/install.sh
+OPENCODE_PLUGINS=all /tmp/opencode-plugins/install.sh
 ```
 
 ### Project-Level Installation

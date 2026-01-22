@@ -1,6 +1,5 @@
 ---
 description: 'Iteratively optimizes prompts for token efficiency by maximizing information density - reduces verbosity, removes redundancy, tightens phrasing while preserving semantic content. Use when asked to compress, shorten, reduce tokens, tighten, maximize density, increase information density, or make a prompt more concise.'
-agent: build
 ---
 
 # Optimize Prompt Token Efficiency

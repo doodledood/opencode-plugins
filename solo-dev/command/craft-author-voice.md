@@ -1,6 +1,5 @@
 ---
 description: 'Captures writing style/voice into AUTHOR_VOICE.md so AI can write like the user. Use when asked to match tone, write like me, replicate voice, or capture writing style for content generation.'
-agent: build
 ---
 
 **User request**: $ARGUMENTS
