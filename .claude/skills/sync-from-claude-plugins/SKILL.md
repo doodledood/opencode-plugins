@@ -81,12 +81,46 @@ List commands, agents, skills for each plugin.
 
 ### 9. Final Validation
 
-Re-read CONVERSION_GUIDE.md, then validate ALL files against:
-- Frontmatter rules (commands, agents, skills)
-- Content transformations (Skill calls, tool names, CLAUDE.md→AGENTS.md)
-- Hook API patterns (see "Converting Hooks" section)
+**CRITICAL**: Automated scripts may miss edge cases. This step ensures complete conversion.
 
-Fix any issues found.
+#### 9a. Re-read the Guide
+
+Re-read `references/CONVERSION_GUIDE.md` sections:
+- "Migration Checklist" (use this as your checklist)
+- "Frontmatter Field Mapping" tables
+- "Prompt Content Transformations"
+- "Converting Hooks" (if plugin has hooks)
+
+#### 9b. Validate Every File (do NOT sample)
+
+For **each command** (`command/*.md`):
+- [ ] `name:` field removed
+- [ ] `model:` uses full ID (not "sonnet"/"opus")
+- [ ] `Skill()` calls → `/command` or `skill({ name: "..." })`
+- [ ] `AskUserQuestion` → `question`, `TodoWrite` → `todo`
+- [ ] `CLAUDE.md` → `AGENTS.md`
+
+For **each agent** (`agent/*.md`):
+- [ ] `name:` field removed
+- [ ] `mode: subagent` added
+- [ ] `tools:` is YAML object with booleans (not comma list)
+- [ ] `model:` uses full ID
+- [ ] Same content transformations as commands
+
+For **each skill** (`skill/*/SKILL.md`):
+- [ ] `name:` field KEPT (required)
+- [ ] `user-invocable: false` removed
+- [ ] Same content transformations as commands
+
+For **hooks** (`plugin/hooks.ts`):
+- [ ] Uses `event` hook for session.created/session.idle (NOT direct keys)
+- [ ] Uses `input.tool` (NOT `input.call.name`)
+- [ ] Documents blocking limitations
+- [ ] Tool names: `todo`, `question`, `skill`, `bash`, etc.
+
+#### 9c. Fix Issues
+
+Edit files directly to fix any issues found. If systematic (same issue in multiple files), note for future transform.py improvements.
 
 ## Output
 
