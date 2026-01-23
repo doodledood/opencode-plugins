@@ -6,7 +6,7 @@ Manifest-driven workflows separating Deliverables (what to build) from Invariant
 
 | Command | Description |
 |---------|-------------|
-| `/define` | Build comprehensive manifest with deliverables and invariants |
+| `/define` | Build comprehensive manifest with deliverables, invariants, and process guidance |
 | `/do` | Execute manifest-driven workflow with verification |
 
 ## Agents

@@ -6,7 +6,7 @@ description: 'Manifest executor. Iterates through Deliverables satisfying Accept
 
 ## Goal
 
-Execute a Manifest: satisfy all Deliverables' Acceptance Criteria, then verify everything passes (including Global Invariants).
+Execute a Manifest: satisfy all Deliverables' Acceptance Criteria while following Process Guidance, then verify everything passes (including Global Invariants).
 
 **Why quality execution matters**: The manifest front-loaded the thinking—criteria are already defined. Your job is implementation that passes verification on first attempt. Every verification failure is rework.
 
@@ -54,7 +54,7 @@ skill({ name: "verify", arguments: "/tmp/manifest-{ts}.md /tmp/do-log-{ts}.md" }
 
 ## What to Do
 
-**Read the manifest** - Extract intent, global invariants, deliverables with their ACs, tradeoffs.
+**Read the manifest** - Extract intent, global invariants, process guidance (PG-* items on HOW to work), deliverables with their ACs, tradeoffs.
 
 **Work through deliverables** - For each, satisfy its acceptance criteria. Log your work.
 
@@ -96,9 +96,9 @@ Started: [timestamp]
 ## Flow
 
 ```
-1. Read manifest
+1. Read manifest (intent, invariants, process guidance, deliverables)
 2. Create todos + log
-3. For each deliverable: work toward ACs, log progress
+3. For each deliverable: work toward ACs (following PG-* guidance), log progress
 4. Call /verify
 5. If failures: fix specific criteria, /verify again
 6. All pass: /verify calls /done
