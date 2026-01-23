@@ -113,7 +113,7 @@ Categorize every issue into one of these severity levels:
    - `.opencode/rules/*.md` (all markdown files auto-loaded)
 
    **Local Project Level** (personal overrides, not committed):
-   - `CLAUDE.local.md`
+   - `AGENTS.local.md`
 
    **Directory Level** (more specific rules):
    - `AGENTS.md` files in parent directories of changed files

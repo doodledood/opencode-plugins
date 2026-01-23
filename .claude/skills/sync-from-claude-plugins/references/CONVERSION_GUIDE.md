@@ -327,9 +327,9 @@ tools:
 
 OpenCode supports `reasoningEffort` in agent frontmatter to control thinking depth for supported models (OpenAI reasoning models, Claude with extended thinking).
 
-**Default behavior**: Do NOT include `reasoningEffort` in converted agents. Claude Code agents don't have this setting, so we preserve that behavior by default.
+**Automatic for reasoning models**: When converting `model: opus` → `model: openai/gpt-5.2`, automatically add `reasoningEffort: xhigh` for agents. This enables extended reasoning capabilities that match the intent of using a high-capability model.
 
-**When requested**: If the user explicitly requests reasoning effort via the sync skill (e.g., `/sync-from-claude-plugins --reasoning-effort`), add to all agents:
+**When requested for other models**: If the user explicitly requests reasoning effort via the sync skill (e.g., `/sync-from-claude-plugins --reasoning-effort`), add to all agents (not just opus-mapped ones):
 
 ```yaml
 reasoningEffort: medium
@@ -820,11 +820,11 @@ This is the **canonical reference** for model ID conversion. All other sections 
 
 ### Claude Code → OpenCode Model IDs
 
-| Claude Code | OpenCode Full ID |
-|-------------|------------------|
-| `opus` | `openai/gpt-5.2` |
-| `sonnet` | `anthropic/claude-sonnet-4-5-20250929` |
-| `haiku` | `anthropic/claude-haiku-4-5-20251001` |
+| Claude Code | OpenCode Full ID | Notes |
+|-------------|------------------|-------|
+| `opus` | `openai/gpt-5.2` | Agents get `reasoningEffort: xhigh` |
+| `sonnet` | `anthropic/claude-sonnet-4-5-20250929` | |
+| `haiku` | `anthropic/claude-haiku-4-5-20251001` | |
 
 ### Provider Prefixes
 

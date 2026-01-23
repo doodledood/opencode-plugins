@@ -4,49 +4,71 @@ import type { Plugin } from "@opencode-ai/plugin"
  * OpenCode hooks for vibe-experimental plugin.
  * Converted from Python hooks in claude-code-plugins.
  *
- * LIMITATIONS (not convertible - both original hooks are blocking):
- * - Stop hook (block until /done or /escalate) - OpenCode cannot block stopping
- * - PreToolUse hook (block /escalate before /verify) - OpenCode cannot block tool use
+ * LIMITATIONS (cannot be fully converted):
  *
- * This file provides logging only. The workflow enforcement relies on
- * the agent following instructions rather than hard blocks.
+ * 1. Stop blocking (stop_do_hook.py):
+ *    - Original: Blocks stop unless /done or /escalate was called after /do
+ *    - OpenCode: session.idle event CANNOT block stopping
+ *    - Mitigation: Log warning only - workflow discipline relies on prompts
+ *
+ * 2. PreToolUse blocking (pretool_escalate_hook.py):
+ *    - Original: Blocks /escalate unless /verify was called first after /do
+ *    - OpenCode: tool.execute.before CANNOT block execution
+ *    - Mitigation: Log warning only - escalate gating relies on prompts
+ *
+ * The /do, /verify, /done, /escalate workflow discipline is enforced
+ * through the skill prompts rather than hooks in OpenCode.
  */
 
 const VibeExperimentalPlugin: Plugin = async ({ client }) => {
   return {
     /**
-     * Log skill invocations for /do workflow tracking.
-     * Original: PreToolUse hook that blocked /escalate before /verify
+     * Event handler for session lifecycle events.
+     * Logs when sessions start/idle but cannot block stopping.
      *
-     * NOTE: Cannot block in OpenCode - logging only.
+     * Original: stop_do_hook.py - blocked stop unless /done or /escalate called
+     * Limitation: Cannot block in OpenCode, just log.
      */
-    "tool.execute.before": async (input, output) => {
-      if (input.tool !== "skill") return
-
-      const args = output.args as { name?: string } | undefined
-      const skillName = args?.name || ""
-
-      if (skillName === "escalate" || skillName.endsWith("-escalate")) {
+    event: async ({ event }) => {
+      if (event.type === "session.created") {
         await client.app.log({
           service: "vibe-experimental",
-          level: "info",
-          message: "Escalate skill invoked - ensure /verify was called first",
+          level: "debug",
+          message: "Session started - /do workflow tracking active",
+        })
+      }
+
+      if (event.type === "session.idle") {
+        // NOTE: Cannot block stopping in OpenCode
+        // The /done and /escalate workflow is enforced via prompts
+        await client.app.log({
+          service: "vibe-experimental",
+          level: "debug",
+          message: "Session idle - workflow discipline relies on skill prompts",
         })
       }
     },
 
     /**
-     * Log session idle events for /do workflow tracking.
-     * Original: Stop hook that blocked until /done or /escalate
+     * Before tool execution - observe skill calls.
      *
-     * NOTE: Cannot block stopping in OpenCode - logging only.
+     * Original: pretool_escalate_hook.py - blocked /escalate unless /verify called
+     * Limitation: Cannot block in OpenCode, can only log warnings.
      */
-    event: async ({ event }) => {
-      if (event.type === "session.idle") {
+    "tool.execute.before": async (input, output) => {
+      // Only care about skill tool calls
+      if (input.tool !== "skill") return
+
+      const args = output.args as { name?: string; arguments?: string } | undefined
+      const skillName = args?.name ?? ""
+
+      // Log escalate calls (cannot block - workflow discipline is in prompts)
+      if (skillName === "escalate" || skillName.endsWith("-vibe-experimental")) {
         await client.app.log({
           service: "vibe-experimental",
-          level: "debug",
-          message: "Session idle - if in /do workflow, ensure /done or /escalate was called",
+          level: "info",
+          message: `Skill invoked: ${skillName}`,
+          extra: { skill: skillName },
         })
       }
     },
