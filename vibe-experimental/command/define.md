@@ -60,36 +60,9 @@ Both can cover **output** or **process**:
 
 ### Code Quality Gates (for coding tasks)
 
-For tasks involving code, ask users to **multi-select** which quality aspects they care about. Present both questions together.
+For coding tasks, surface which quality aspects matter: bugs, type safety, maintainability, simplicity, coverage, testability, documentation, AGENTS.md adherence. Present as multi-select with the first option marked "(Recommended)" to reduce cognitive load. Map selections to corresponding reviewer agents with "no HIGH/CRITICAL" thresholds (docs uses "no MEDIUM+").
 
 **Filter through project preferences**: AGENTS.md is auto-loaded into context—check it for quality gate preferences. Users may have disabled certain default gates (e.g., "skip documentation checks") or added custom ones (e.g., "always run security scan"). Exclude disabled gates from the selection, and include any custom gates the user has defined.
-
-```
-questions: [
-  {
-    question: "Which code quality checks should apply as global invariants?",
-    header: "Quality",
-    options: [
-      { label: "No HIGH/CRITICAL bugs (Recommended)", description: "Logic errors, race conditions, error handling" },
-      { label: "Type safety", description: "No any abuse, proper narrowing, invalid states unrepresentable" },
-      { label: "Maintainability", description: "DRY, low coupling, consistency, no dead code" },
-      { label: "Simplicity", description: "No over-engineering, appropriate complexity" }
-    ],
-    multiSelect: true
-  },
-  {
-    question: "Additional quality checks:",
-    header: "More quality",
-    options: [
-      { label: "Test coverage", description: "New/changed code has adequate tests" },
-      { label: "Testability", description: "Code structure allows easy testing (low mock count)" },
-      { label: "Documentation", description: "Docs and comments match code" },
-      { label: "AGENTS.md adherence", description: "Follows project-specific standards" }
-    ],
-    multiSelect: true
-  }
-]
-```
 
 **Map selections to reviewer agents:**
 
@@ -120,10 +93,6 @@ verify:
   method: bash
   command: "[command from AGENTS.md]"
 ```
-
-## Question Format
-
-When presenting options, mark the first as "(Recommended)" to reduce cognitive load.
 
 ## The Manifest Schema
 
