@@ -34,13 +34,15 @@ If no arguments provided, ask: "What would you like to build or change?"
 
 ## Constraints
 
+**When uncertain, ask** - Never assume or infer requirements. If you're unsure, probe—don't produce an answer.
+
 **Todo list immediately** - Adapt to task. Required: log file (`/tmp/define-interview-{timestamp}.md`), `→log` after discovery, `(expand: ...)` for emerging areas, `Refresh: read full log` before synthesis, acceptance criteria ("; done when X"). Update after every action.
 
 **Write to log as you go** - Don't wait until the end.
 
 **Refresh before synthesis** - Read full interview log to restore context.
 
-**Stop when converged** - When probing yields no new criteria, or user signals "enough", move to synthesis.
+**Stop when converged** - Before marking any area complete, verify you've challenged it from multiple angles. Prefer "I haven't fully explored X" over premature closure. Move to synthesis when probing genuinely yields no new criteria, or user signals "enough".
 
 **Insights become criteria** - Outside view findings, pre-mortem risks, non-obvious discoveries → convert to INV-G* or AC-*. No standalone value.
 
