@@ -1,43 +1,36 @@
 # vibe-experimental
 
-Manifest-driven workflows separating Deliverables (what to build) from Invariants (rules to follow). Two-level verification: Global Invariants (task-level rules) and Acceptance Criteria (per-deliverable).
+Manifest-driven workflows separating Deliverables (what to build) from Invariants (rules to follow).
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `/define` | Manifest builder with verification criteria. Converts known requirements into Deliverables + Invariants. |
-| `/do` | Manifest executor. Iterates through Deliverables satisfying Acceptance Criteria, then verifies all pass. |
+| `/define` | Build comprehensive manifest with deliverables and invariants |
+| `/do` | Execute manifest-driven workflow with verification |
 
 ## Agents
 
 | Agent | Description |
 |-------|-------------|
-| `agents-md-adherence-reviewer` | Verifies code changes comply with AGENTS.md instructions and project standards |
-| `code-bugs-reviewer` | Audits code changes for logical bugs |
-| `code-coverage-reviewer` | Verifies test coverage for code changes |
-| `code-maintainability-reviewer` | Audits code for DRY violations, dead code, complexity, and consistency |
-| `code-simplicity-reviewer` | Audits code for over-engineering and cognitive complexity |
-| `code-testability-reviewer` | Audits code for testability issues |
-| `criteria-checker` | Read-only verification agent for single criterion checks |
-| `docs-reviewer` | Audits documentation accuracy against code changes |
-| `manifest-verifier` | Reviews /define manifests for gaps and outputs actionable continuation steps |
-| `type-safety-reviewer` | Audits TypeScript code for type safety issues |
+| `agents-md-adherence-reviewer` | Verify code changes comply with AGENTS.md |
+| `code-bugs-reviewer` | Audit code for logical bugs |
+| `code-coverage-reviewer` | Verify test coverage for changes |
+| `code-maintainability-reviewer` | Audit code organization and DRY |
+| `code-simplicity-reviewer` | Check for over-engineering |
+| `code-testability-reviewer` | Audit code for testability issues |
+| `criteria-checker` | Verify single acceptance criterion |
+| `docs-reviewer` | Audit documentation accuracy |
+| `manifest-verifier` | Review manifests for gaps |
+| `type-safety-reviewer` | Audit TypeScript type safety |
 
-## Skills (non-user-invocable)
+## Skills (Non-User-Invocable)
 
 | Skill | Description |
 |-------|-------------|
-| `verify` | Manifest verification runner. Called by /do, not directly by users. |
-| `done` | Signals successful completion of /do workflow. |
-| `escalate` | Escalates to user when genuinely stuck during /do workflow. |
-
-## Hooks
-
-The plugin includes TypeScript hooks for workflow observability. Note that some Claude Code hook behaviors cannot be fully replicated in OpenCode:
-
-- **Stop blocking**: Original Python hook blocked stopping until /done or /escalate was called. OpenCode cannot block session stopping, so this relies on prompt discipline.
-- **PreToolUse blocking**: Original Python hook blocked /escalate without prior /verify. OpenCode cannot block tool execution, so this relies on prompt discipline.
+| `done` | Mark /do workflow complete |
+| `escalate` | Escalate from /do workflow |
+| `verify` | Verify manifest acceptance criteria |
 
 ## Installation
 
