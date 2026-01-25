@@ -8,7 +8,6 @@ tools:
   question: false
   read: true
   skill: true
-  todowrite: true
 model: openai/gpt-5.2
 reasoningEffort: xhigh
 mode: subagent
@@ -92,7 +91,7 @@ Created: []
 Modified: []
 ```
 
-**1.2 Create todo list (todowrite)**
+**1.2 Create task list (use task management)**
 
 Extract tasks from chunk, create granular todos:
 ```

@@ -5,7 +5,6 @@ tools:
   grep: true
   question: false
   read: true
-  todowrite: true
 model: openai/gpt-5.2
 reasoningEffort: xhigh
 mode: subagent

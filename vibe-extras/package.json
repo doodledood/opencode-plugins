@@ -10,5 +10,21 @@
     "url": "https://github.com/doodledood/opencode-plugins"
   },
   "license": "MIT",
-  "keywords": ["opencode", "opencode-plugin", "utilities", "git", "rebase", "documentation", "cleanup", "slop", "history-rewrite"]
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "utilities",
+    "git",
+    "rebase",
+    "documentation",
+    "cleanup",
+    "slop",
+    "history-rewrite"
+  ],
+  "opencode": {
+    "type": "plugin"
+  },
+  "dependencies": {
+    "@opencode-ai/plugin": "^1.0.162"
+  }
 }

@@ -8,7 +8,6 @@ tools:
   question: false
   read: true
   skill: true
-  todowrite: true
   webfetch: true
   websearch: true
 model: openai/gpt-5.2
@@ -67,7 +66,7 @@ Check for "YOUR ASSIGNED SCOPE:" and "DO NOT RESEARCH:" sections:
 
 ## Phase 1: Initial Setup
 
-### 1.1 Establish current date & create todo list (todowrite immediately)
+### 1.1 Establish current date & create task list (use task management immediately)
 
 Run `date '+%Y-%m-%d %H%M%S'` to get today's date and timestamp (use the 6-digit time portion as HHMMSS throughout). This is critical because:
 - You need accurate "recency" judgments when evaluating sources
@@ -324,7 +323,7 @@ Finished: {YYYY-MM-DD HH:MM:SS} | Sources: {count} | Sub-questions: {count}
 
 ### 4.2 Refresh context (MANDATORY - never skip)
 
-**CRITICAL**: Read the FULL research notes file using the Read tool to restore ALL findings, sources, and confidence assessments into context.
+**CRITICAL**: Read the FULL research notes file to restore ALL findings, sources, and confidence assessments into context.
 
 **Why this matters**: By this point, findings from multiple search batches have been written to the research notes. Context degradation means these details may have faded. Reading the full file immediately before synthesis brings all findings into recent context where attention is strongest.
 

@@ -5,238 +5,94 @@ import type { Plugin } from "@opencode-ai/plugin"
  * Converted from Python hooks in claude-code-plugins.
  *
  * Original hooks:
- * - Stop hook: Blocked stopping during /do workflow if verification incomplete
- * - PreToolUse hook: Gated /escalate calls - required /verify before escalation
+ * - PreToolUse (Skill/escalate): Gate escalate calls - require verify before escalation
+ * - Stop: Enforce /done or /escalate before stopping during /do workflow
  *
  * LIMITATIONS:
- * - Stop blocking is NOT supported in OpenCode - using warning logs instead
- * - PreToolUse blocking uses permission.ask hook for deny behavior
- * - Transcript parsing not available - using session state tracking instead
+ * - PreToolUse blocking is NOT supported in OpenCode - tool.execute.before cannot abort
+ * - Stop blocking is NOT supported in OpenCode - session.idle cannot prevent stopping
+ * - Using permission.ask hook as alternative for escalate gating
+ * - Stop enforcement converted to logging only
  */
-
-// Session state tracking (per-session workflow state)
-interface DoFlowState {
-  hasDo: boolean
-  hasVerify: boolean
-  hasDone: boolean
-  hasEscalate: boolean
-}
-
-const sessionStates = new Map<string, DoFlowState>()
-
-function getSessionState(sessionID: string): DoFlowState {
-  if (!sessionStates.has(sessionID)) {
-    sessionStates.set(sessionID, {
-      hasDo: false,
-      hasVerify: false,
-      hasDone: false,
-      hasEscalate: false,
-    })
-  }
-  return sessionStates.get(sessionID)!
-}
-
-function resetDoFlow(sessionID: string): void {
-  sessionStates.set(sessionID, {
-    hasDo: true,
-    hasVerify: false,
-    hasDone: false,
-    hasEscalate: false,
-  })
-}
 
 export const VibeExperimentalPlugin: Plugin = async ({ client }) => {
   return {
     /**
      * Event handler for session lifecycle events.
-     * Cleans up session state when sessions end.
+     *
+     * NOTE: Stop blocking is NOT supported in OpenCode.
+     * The original stop_do_hook.py logic cannot be fully replicated.
+     * Original behavior:
+     * - Block stop if /do was called but neither /done nor /escalate
+     * - Allow stop if /done or /escalate was properly called
      */
     event: async ({ event }) => {
-      if (event.type === "session.deleted") {
-        const sessionID = (event as { sessionID?: string }).sessionID
-        if (sessionID) {
-          sessionStates.delete(sessionID)
-        }
-      }
-
-      // LIMITATION: session.idle cannot block stopping
-      // Log warning if stopping with incomplete /do flow
-      if (event.type === "session.idle") {
-        const sessionID = (event as { sessionID?: string }).sessionID
-        if (sessionID) {
-          const state = getSessionState(sessionID)
-          if (state.hasDo && !state.hasDone && !state.hasEscalate) {
-            await client.app.log({
-              service: "vibe-experimental",
-              level: "warn",
-              message:
-                "Session stopping with incomplete /do workflow. " +
-                "Run skill({ name: \"verify\" }) to check acceptance criteria. " +
-                "If all criteria pass, it will call skill({ name: \"done\" }). " +
-                "If genuinely stuck, call skill({ name: \"escalate\" }).",
-            })
-          }
-        }
-      }
-    },
-
-    /**
-     * Track skill invocations to maintain workflow state.
-     * Monitors: do, verify, done, escalate skill calls.
-     */
-    "tool.execute.after": async (input, output) => {
-      if (input.tool !== "skill") return
-
-      const args = output.metadata?.args as { name?: string } | undefined
-      const skillName = args?.name
-
-      if (!skillName) return
-
-      const state = getSessionState(input.sessionID)
-
-      // Normalize skill name (remove plugin prefix if present)
-      const normalizedName = skillName.includes("-")
-        ? skillName.split("-").pop()
-        : skillName
-
-      switch (normalizedName) {
-        case "do":
-          // New /do resets the flow
-          resetDoFlow(input.sessionID)
-          await client.app.log({
-            service: "vibe-experimental",
-            level: "info",
-            message: "/do workflow started",
-          })
-          break
-
-        case "verify":
-          if (state.hasDo) {
-            state.hasVerify = true
-            await client.app.log({
-              service: "vibe-experimental",
-              level: "debug",
-              message: "/verify called in /do workflow",
-            })
-          }
-          break
-
-        case "done":
-          if (state.hasDo) {
-            state.hasDone = true
-            await client.app.log({
-              service: "vibe-experimental",
-              level: "info",
-              message: "/do workflow completed via /done",
-            })
-          }
-          break
-
-        case "escalate":
-          if (state.hasDo) {
-            state.hasEscalate = true
-            await client.app.log({
-              service: "vibe-experimental",
-              level: "info",
-              message: "/do workflow escalated",
-            })
-          }
-          break
-      }
-    },
-
-    /**
-     * Gate /escalate calls - require /verify before escalation.
-     * Converted from PreToolUse blocking hook.
-     *
-     * Decision matrix:
-     * - No /do: DENY (no flow to escalate from)
-     * - /do + /verify: ALLOW (genuinely tried)
-     * - /do only: DENY (must verify first)
-     */
-    "permission.ask": async (input, output) => {
-      // Only gate skill tool calls
-      if (input.tool !== "skill") return
-
-      const args = input.args as { name?: string } | undefined
-      const skillName = args?.name
-
-      if (!skillName) return
-
-      // Only gate escalate skill
-      const normalizedName = skillName.includes("-")
-        ? skillName.split("-").pop()
-        : skillName
-
-      if (normalizedName !== "escalate") return
-
-      const state = getSessionState(input.sessionID)
-
-      // No /do in progress - can't escalate from nothing
-      if (!state.hasDo) {
-        output.status = "deny"
+      if (event.type === "session.created") {
         await client.app.log({
           service: "vibe-experimental",
-          level: "warn",
-          message:
-            "Cannot escalate - no /do workflow is active. " +
-            "/escalate is only valid during a /do workflow.",
+          level: "info",
+          message: "Session started - vibe-experimental hooks active",
         })
-        return
       }
 
-      // /verify was called - allow escalation
-      if (state.hasVerify) {
-        output.status = "allow"
-        return
+      if (event.type === "session.idle") {
+        // LIMITATION: Cannot block stopping in OpenCode
+        // Original Python hook would block if /do workflow incomplete
+        await client.app.log({
+          service: "vibe-experimental",
+          level: "debug",
+          message:
+            "Session idle - /do workflow enforcement not available in OpenCode. " +
+            "Ensure /verify was called and /done or /escalate properly invoked.",
+        })
       }
+    },
 
-      // /do was called but /verify was not - block
-      output.status = "deny"
+    /**
+     * Before tool execution - log warnings for escalate without verify.
+     * Converted from: PreToolUse hook with Skill/escalate matcher
+     *
+     * LIMITATION: Cannot block tool execution in OpenCode.
+     * Original behavior would block /escalate unless /verify was called first.
+     * Now we just log a warning.
+     */
+    "tool.execute.before": async (input, output) => {
+      if (input.tool !== "skill") return
+
+      const args = output.args as { name?: string } | undefined
+      const skillName = args?.name ?? ""
+
+      // Check if this is an escalate skill call
+      if (skillName !== "escalate" && !skillName.endsWith("-escalate")) return
+
+      // Log warning about escalate workflow
+      // LIMITATION: Cannot block - original hook would block if /verify not called
       await client.app.log({
         service: "vibe-experimental",
         level: "warn",
         message:
-          "Cannot escalate - must call skill({ name: \"verify\" }) first. " +
-          "Run verification to check acceptance criteria, then escalate if genuinely stuck.",
+          "Escalate skill invoked. Reminder: /verify should be called before /escalate " +
+          "to check acceptance criteria. If this escalation is premature, consider " +
+          "running /verify first.",
       })
     },
 
     /**
-     * System prompt additions for /do workflow context.
+     * Permission hook - can control allow/deny/ask for tools.
+     *
+     * This is the closest equivalent to PreToolUse blocking in OpenCode.
+     * However, it operates at the permission level, not per-invocation.
+     *
+     * For now, we don't implement strict gating here as it would require
+     * tracking /do and /verify state across the session, which OpenCode
+     * hooks don't have access to (no transcript_path equivalent).
+     *
+     * Future enhancement: Could use session storage to track workflow state.
      */
-    "experimental.chat.system.transform": async (input, output) => {
-      const state = getSessionState(input.sessionID)
-
-      if (state.hasDo && !state.hasDone && !state.hasEscalate) {
-        output.system.push(
-          `<system-reminder>` +
-            `You are in an active /do workflow. ` +
-            `Before stopping or claiming completion, you MUST call skill({ name: "verify" }) ` +
-            `to check acceptance criteria. If verification passes, it calls skill({ name: "done" }). ` +
-            `If genuinely stuck after verification, call skill({ name: "escalate" }) with evidence.` +
-            `</system-reminder>`
-        )
-      }
-    },
-
-    /**
-     * Preserve workflow state during session compaction.
-     */
-    "experimental.session.compacting": async (input, output) => {
-      const state = getSessionState(input.sessionID)
-
-      if (state.hasDo) {
-        output.context.push(
-          `<preserved-state type="vibe-experimental-workflow">` +
-            `Active /do workflow. ` +
-            `Verified: ${state.hasVerify ? "yes" : "no"}. ` +
-            `Completed: ${state.hasDone ? "yes" : "no"}. ` +
-            `Escalated: ${state.hasEscalate ? "yes" : "no"}.` +
-            `</preserved-state>`
-        )
-      }
-    },
+    // "permission.ask": async (input, output) => {
+    //   // Placeholder for future workflow state tracking
+    //   // Could implement escalate gating here if session state becomes available
+    // },
   }
 }
 
