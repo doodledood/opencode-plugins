@@ -124,7 +124,7 @@ verify:
   command: "[command from AGENTS.md]"
 ```
 
-**Probe e2e verification** - When AGENTS.md or codebase reveals API endpoints relevant to deliverables, ask: "Should we verify via [endpoint]? What test data can we use?" If yes, encode as Global Invariant with bash verification.
+**Probe e2e verification** - For coding tasks, surface e2e verification opportunities: endpoints, services, test data. If actionable, encode as Global Invariant with bash verification.
 
 ## The Manifest Schema
 
