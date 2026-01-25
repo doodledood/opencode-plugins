@@ -8,7 +8,6 @@ tools:
   question: false
   read: true
   skill: true
-  todowrite: true
 model: anthropic/claude-haiku-4-5-20251001
 mode: subagent
 ---
@@ -228,7 +227,7 @@ Finished: {YYYYMMDD-HHMMSS} | Files: {count} | Search calls: {count}
 
 ### 3.2 Refresh context (MANDATORY)
 
-**CRITICAL**: Complete the "Refresh context: read full research file" todo by reading the FULL research file using the Read tool. This restores ALL findings into context before generating output.
+**CRITICAL**: Complete the "Refresh context: read full research file" todo by reading the FULL research file. This restores ALL findings into context before generating output.
 
 ```
 - [x] Refresh context: read full research file  ← Must complete BEFORE compile output

@@ -20,7 +20,7 @@ This skill guides you through:
 
 ## Workflow
 
-### Initial Setup (todowrite immediately)
+### Initial Setup (create todos immediately)
 
 **Create todo list** - phases to complete.
 
@@ -223,7 +223,7 @@ Recommended next steps:
 
 | Principle | Rule |
 |-----------|------|
-| **Track progress** | Use todowrite to track phases; mark progress immediately; visible state at all times |
+| **Track progress** | Use todo list to track phases; mark progress immediately; visible state at all times |
 | **Systematic** | Form hypotheses before changes; test methodically; document findings |
 | **Test-driven** | Create reproduction test BEFORE fixing; test proves fix works; prevents regression |
 | **Root cause** | Fix underlying cause, not symptoms; consider why bug wasn't caught; look for patterns |

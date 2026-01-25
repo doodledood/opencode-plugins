@@ -6,7 +6,7 @@ description: 'Manifest executor. Iterates through Deliverables satisfying Accept
 
 ## Goal
 
-Execute a Manifest: satisfy all Deliverables' Acceptance Criteria while following Process Guidance, then verify everything passes (including Global Invariants).
+Execute a Manifest: satisfy all Deliverables' Acceptance Criteria while following Process Guidance and Approach direction, then verify everything passes (including Global Invariants).
 
 **Why quality execution matters**: The manifest front-loaded the thinking—criteria are already defined. Your job is implementation that passes verification on first attempt. Every verification failure is rework.
 
@@ -18,88 +18,28 @@ If no arguments: Output error "Usage: /do <manifest-file-path>"
 
 ## Principles
 
-1. **ACs define success, not the path** - Work toward acceptance criteria however makes sense. The manifest says WHAT, you decide HOW.
-
-2. **Target failures specifically** - On verification failure, fix the specific failing criterion. Don't restart from scratch. Don't touch passing criteria.
-
-3. **Respect tradeoffs** - When values conflict, check the manifest's "Tradeoffs & Preferences" section and apply.
+| Principle | Rule |
+|-----------|------|
+| **ACs define success** | Work toward acceptance criteria however makes sense. Manifest says WHAT, you decide HOW. |
+| **Architecture is direction** | Follow approach's architecture as starting direction. Adapt tactics freely—architecture guides, doesn't constrain. |
+| **Target failures specifically** | On verification failure, fix the specific failing criterion. Don't restart. Don't touch passing criteria. |
+| **Trade-offs guide adjustment** | When risks (R-*) materialize, consult trade-offs (T-*) for decision criteria. Log adjustments with rationale. |
 
 ## Constraints
 
-**Must call /verify** - Can't declare done without verification. When all deliverables addressed:
-```
-skill({ name: "verify", arguments: "/tmp/manifest-{ts}.md /tmp/do-log-{ts}.md" })
-```
+**Must call /verify** - Can't declare done without verification. Invoke vibe-experimental:verify with manifest and log paths.
 
-## Todo Discipline
+**Escalation boundary** - Escalate only when ACs can't be met as written (contract broken). If ACs remain achievable, adjust and continue autonomously.
 
-**Create todo list immediately** based on manifest structure—deliverables and their ACs. Use `D{N}:` prefix. Adapt to THIS manifest's complexity.
+**Refresh before verify** - Read full execution log before calling /verify to restore context.
 
-**Required elements:**
-- Log file creation (`/tmp/do-log-{timestamp}.md`)
-- `→log` after implementation steps (externalizes progress)
-- `(expand: ...)` when sub-tasks will emerge during implementation
-- `Refresh: read full log` before calling /verify
-- Acceptance criteria on each todo ("; done when X")
+## Memento Pattern
 
-**Update todos after every substantive action**—no batching completions.
+Externalize progress continuously—survives context loss, enables recovery.
 
-## Log Discipline
+**Todos**: Create from manifest (deliverables → ACs). Follow execution order from Approach. Update after each AC completed. Include completion criteria on each item.
 
-**Create execution log** - Write to `/tmp/do-log-{timestamp}.md`. This is your working memory.
-
-**Write as you go** - After each significant action, update the log. Don't wait until the end.
-
-**Refresh before /verify** - Read the full log to restore context before verification.
-
-## What to Do
-
-**Read the manifest** - Extract intent, global invariants, process guidance (PG-* items on HOW to work), deliverables with their ACs, tradeoffs.
-
-**Work through deliverables** - For each, satisfy its acceptance criteria. Log your work.
-
-**Call /verify** - When all deliverables addressed, verify everything passes.
-
-**Handle failures** - Fix specific failing criteria, call /verify again. Loop until pass.
-
-**Escalate when stuck** - If you've tried 3+ approaches on a criterion and can't satisfy it:
-```
-skill({ name: "escalate", arguments: "[criterion ID] blocking after 3 attempts" })
-```
-
-## Log Structure
-
-```markdown
-# Execution Log
-
-Manifest: [path]
-Started: [timestamp]
-
-## Intent
-**Goal:** [from manifest]
-
-## Deliverable 1: [Name]
-
-### AC-1.1: [description]
-- Approach: [what you tried]
-- Result: [outcome]
-
-### Status: [COMPLETE/IN PROGRESS]
-
-## Verification Attempts
-
-### Attempt 1
-- Results: [summary]
-- Action: [what to fix]
-```
-
-## Flow
-
-```
-1. Read manifest (intent, invariants, process guidance, deliverables)
-2. Create todos + log
-3. For each deliverable: work toward ACs (following PG-* guidance), log progress
-4. Call /verify
-5. If failures: fix specific criteria, /verify again
-6. All pass: /verify calls /done
-```
+**Execution log**: Write to `/tmp/do-log-{timestamp}.md`. Log:
+- Approaches tried and outcomes
+- Risk detections: when R-* triggers observed, what was detected
+- Approach adjustments: what changed, which T-* informed the decision, why ACs remain achievable

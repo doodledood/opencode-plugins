@@ -95,7 +95,7 @@ After all review agents complete, launch an **opus verification agent** to recon
 
 **Verification Agent Task**:
 
-Use the Task tool with `model: opus` to launch a verification agent with this prompt:
+Launch an opus verification agent with this prompt:
 
 ```
 You are a Review Reconciliation Expert. Analyze the combined findings from all review agents and produce a final, consolidated report.
@@ -152,8 +152,8 @@ options:
 ```
 
 **Based on selection:**
-- **Critical/High only**: `/fix-review-issues --severity critical,high`
-- **All issues**: `/fix-review-issues`
+- **Critical/High only**: Invoke the vibe-workflow:fix-review-issues skill with "--severity critical,high"
+- **All issues**: Invoke the vibe-workflow:fix-review-issues skill
 - **Skip**: End workflow
 
 ## Execution
