@@ -357,8 +357,12 @@ thinking:
 | `Grep` | `grep: true` | |
 | `WebFetch` | `webfetch: true` | |
 | `WebSearch` | `websearch: true` | |
-| `TodoWrite` | `todowrite: true` | |
-| `TodoRead` | `todoread: true` | |
+| `TodoWrite` | `todowrite: true` | Legacy (pre-v2.1.16) |
+| `TodoRead` | `todoread: true` | Legacy (pre-v2.1.16) |
+| `TaskCreate` | `todowrite: true` | v2.1.16+ replacement for TodoWrite |
+| `TaskUpdate` | `todowrite: true` | v2.1.16+ task status/comments/blockers |
+| `TaskList` | `todoread: true` | v2.1.16+ replacement for TodoRead |
+| `TaskGet` | `todoread: true` | v2.1.16+ get task details by ID |
 | `Task` | `task: true` | For spawning subagents |
 | `Skill` | `skill: true` | For loading skills |
 | `SlashCommand` | `skill: true` | Same as Skill in OpenCode |
@@ -614,19 +618,23 @@ export default MyPlugin;
 
 These are the tool names seen in `input.tool` within hook callbacks.
 
-| Claude Code Tool | OpenCode Tool Name |
-|-----------------|-------------------|
-| `TodoWrite` | `todowrite` |
-| `TodoRead` | `todoread` |
-| `Bash` | `bash` |
-| `Read` | `read` |
-| `Edit` | `edit` |
-| `Write` | `edit` |
-| `Skill` | `skill` |
-| `Task` | `task` |
-| `AskUserQuestion` | `question` |
+| Claude Code Tool | OpenCode Tool Name | Notes |
+|-----------------|-------------------|-------|
+| `TodoWrite` | `todowrite` | Legacy (pre-v2.1.16) |
+| `TodoRead` | `todoread` | Legacy (pre-v2.1.16) |
+| `TaskCreate` | `todowrite` | v2.1.16+ replacement for TodoWrite |
+| `TaskUpdate` | `todowrite` | v2.1.16+ task status/blockers |
+| `TaskList` | `todoread` | v2.1.16+ replacement for TodoRead |
+| `TaskGet` | `todoread` | v2.1.16+ get task by ID |
+| `Bash` | `bash` | |
+| `Read` | `read` | |
+| `Edit` | `edit` | |
+| `Write` | `edit` | |
+| `Skill` | `skill` | |
+| `Task` | `task` | |
+| `AskUserQuestion` | `question` | |
 
-**Note**: There is no single `todo` tool - it's split into `todowrite` and `todoread`.
+**Note**: Claude Code v2.1.16+ replaced `TodoWrite`/`TodoRead` with `TaskCreate`/`TaskUpdate`/`TaskList`/`TaskGet`. All four map to OpenCode's `todowrite`/`todoread`. In hooks, check for both old and new tool names for compatibility.
 
 ### Context Injection
 
@@ -881,8 +889,12 @@ Apply these transformations to prompt content:
 | Pattern | Replacement | Notes |
 |---------|-------------|-------|
 | `AskUserQuestion` | `question` | User question tool |
-| `TodoWrite` | `todowrite` | Todo write tool |
-| `TodoRead` | `todoread` | Todo read tool |
+| `TodoWrite` | `todowrite` | Legacy todo write tool |
+| `TodoRead` | `todoread` | Legacy todo read tool |
+| `TaskCreate` | `todowrite` | v2.1.16+ task creation |
+| `TaskUpdate` | `todowrite` | v2.1.16+ task status/blockers |
+| `TaskList` | `todoread` | v2.1.16+ task listing |
+| `TaskGet` | `todoread` | v2.1.16+ task details |
 
 **Other replacements:**
 | Pattern | Replacement | Notes |
