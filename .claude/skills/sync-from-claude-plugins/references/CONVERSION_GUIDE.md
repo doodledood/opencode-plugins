@@ -405,7 +405,7 @@ Tool permissions use **boolean values**:
 | `PostToolUse` | `tool.execute.after` | No | React to tool completion |
 | `PreToolUse` | `tool.execute.before` | **No** | Can modify args but NOT block |
 | `Stop` | `event` (session.idle) + `client.session.prompt` | **Reactive** | Cannot block, but can resume session (see [Stop Hook Simulation](#stop-hook-simulation)) |
-| `SubagentStop` | N/A | — | ❌ No equivalent |
+| `SubagentStop` | `event` (session.created + parentID) | **Reactive** | Detect child sessions, react via prompt/abort (see [Subagent Activity Detection](#subagent-activity-detection)) |
 
 **CRITICAL**: Session lifecycle events (`session.created`, `session.idle`) are caught via the **`event`** hook, NOT as direct hook keys. The `event` hook receives `{ event: Event }` where `event.type` can be `"session.created"`, `"session.idle"`, etc.
 
@@ -660,8 +660,8 @@ These are the tool names seen in `input.tool` within hook callbacks.
 |---------|-----|------------|
 | Stop blocking (synchronous) | `session.idle` cannot prevent stopping synchronously | Reactive simulation: detect idle → check conditions → `client.session.prompt` to resume (see [Stop Hook Simulation](#stop-hook-simulation)) |
 | **PreToolUse blocking** | `tool.execute.before` has no `output.abort` | Use `permission.ask` hook OR log warning |
-| SubagentStop | No equivalent event | None |
-| Subagent tool interception | Hooks don't intercept subagent tool calls | Design around this limitation |
+| SubagentStop (synchronous) | No cancellable "before subagent stops" hook | Reactive: detect child sessions via `session.created` + `parentID`, then prompt/abort (see [Subagent Activity Detection](#subagent-activity-detection)) |
+| Subagent tool interception | `tool.execute.before/after` don't fire for subagent tool calls | Use agent-level tool permissions for enforcement; plugin hooks only for observability of parent session |
 | MCP tool interception | MCP tool calls don't trigger hooks | Use MCP server-side logic |
 | Python dependencies | Different runtime | Find TypeScript alternatives |
 | additionalContext returns | Hooks cannot return additionalContext | Use system transform hooks |
@@ -809,6 +809,75 @@ Always implement these safeguards to prevent infinite loops:
 | Loop safety | Built-in | Must implement guardrails manually |
 
 **Note on `noReply`**: The SDK documents `body.noReply: true` for context-only injection. However, behavior may vary across OpenCode versions. For stop hook simulation, use explicit continuation prompts rather than `noReply`.
+
+### Subagent Activity Detection
+
+Claude Code's `SubagentStop` hook lets you intercept when a subagent finishes. OpenCode has no direct equivalent, but subagent activity can be **detected reactively** through child session monitoring.
+
+#### How It Works
+
+OpenCode subagents run in child sessions. The session creation API supports a `parentID` field, and you can query `/session/:id/children` to enumerate a session's subagents. By watching `session.created` events and checking for parent relationships, you can detect subagent spawning and react accordingly.
+
+#### Detection Pattern
+
+```typescript
+import type { Plugin } from "@opencode-ai/plugin"
+
+export const SubagentMonitor: Plugin = async ({ client }) => {
+  // Track known parent sessions
+  const parentSessions = new Set<string>()
+
+  return {
+    event: async ({ event }) => {
+      // Detect new child sessions (subagent spawned)
+      if (event.type === "session.created") {
+        const parentID = event.properties.parentID
+        if (parentID) {
+          await client.app.log({
+            service: "subagent-monitor",
+            level: "info",
+            message: `Subagent spawned: session ${event.properties.sessionID} (parent: ${parentID})`,
+          })
+          parentSessions.add(parentID)
+        }
+      }
+
+      // Detect child session going idle (subagent "stopped")
+      if (event.type === "session.idle") {
+        const sessionID = event.properties.sessionID
+        // Check if this is a child session by querying parent
+        // or maintaining your own parent→child map
+        await client.app.log({
+          service: "subagent-monitor",
+          level: "debug",
+          message: `Session idle: ${sessionID}`,
+        })
+      }
+    },
+  }
+}
+
+export default SubagentMonitor
+```
+
+#### Capabilities and Limitations
+
+| Goal | Possible? | How |
+|------|-----------|-----|
+| **Detect** subagent spawning | ✅ Yes | Watch `session.created` with `parentID` |
+| **React** to subagent completion | ✅ Yes | Watch `session.idle` for child sessions, then prompt/abort |
+| **Query** child sessions | ✅ Yes | Use `/session/:id/children` endpoint |
+| **Veto** subagent spawning | ❌ No | No cancellable "before subagent" hook |
+| **Intercept** subagent tool calls | ❌ No | `tool.execute.before/after` don't fire for subagent calls |
+
+#### Enforcement Strategy
+
+Since plugin hooks don't reliably intercept subagent tool calls, use a two-layer approach:
+
+1. **Agent-level tool permissions** (preventive) — Configure subagent tool restrictions in agent frontmatter (`tools: { bash: false }`) to enforce security boundaries
+2. **Plugin-based monitoring** (reactive) — Use session event detection for observability, logging, and orchestration
+
+**Prefer agent config over plugin hooks for security-critical restrictions on subagents.**
 
 ---
 
@@ -1108,8 +1177,8 @@ OpenCode uses glob patterns that accept **both** singular and plural:
 ### Cannot Convert
 
 1. **Stop hooks that block synchronously**: `session.idle` cannot prevent stopping, but can reactively resume (see [Stop Hook Simulation](#stop-hook-simulation))
-2. **SubagentStop hooks**: No equivalent event in OpenCode
-3. **Subagent tool interception**: Hooks don't fire for subagent tool calls
+2. **SubagentStop hooks (synchronous)**: No cancellable hook, but can reactively detect child sessions and prompt/abort (see [Subagent Activity Detection](#subagent-activity-detection))
+3. **Subagent tool interception**: `tool.execute.before/after` don't fire for subagent tool calls — use agent-level tool permissions for enforcement
 4. **MCP tool interception**: MCP tool calls don't trigger hooks
 5. **Complex Python deps**: Must find TypeScript alternatives
 6. **Model auto-routing**: Claude Code uses Haiku for searches automatically
