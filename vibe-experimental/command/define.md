@@ -15,7 +15,7 @@ Build a **comprehensive Manifest** that captures:
 
 Comprehensive means surfacing **latent criteria**—requirements the user doesn't know they have until probed. Users know their surface-level needs; your job is to discover the constraints and edge cases they haven't thought about.
 
-100% upfront is impossible—some criteria only emerge during implementation. But strive for high coverage. The manifest supports amendments for what's discovered later.
+100% upfront is impossible—some criteria only emerge during implementation. Aim for high coverage. The manifest supports amendments for what's discovered later.
 
 Output: `/tmp/manifest-{timestamp}.md`
 
@@ -37,11 +37,15 @@ If no arguments provided, ask: "What would you like to build or change?"
 
 5. **Directed** - For complex tasks, establish validated implementation direction (Approach) before execution. Architecture defines direction, not step-by-step script. Trade-offs enable autonomous adjustment.
 
-6. **Efficient** - Maximize information per question, not minimize questions. One missed criterion costs more than one extra question. Prioritize questions that eliminate the most uncertainty. Mark recommended option(s): for single-select questions, mark exactly one option "(Recommended)"; for multi-select, mark zero or more based on context (none if all equally valid, or sensible defaults if applicable).
+6. **Efficient** - Every question must pass a quality gate: it **materially changes the manifest**, **locks an assumption**, or **chooses between meaningful trade-offs**. If a question fails all three, don't ask it. One missed criterion costs more than one extra question—err toward asking, but never ask trivia. Prioritize questions that split the space—scope and constraints before details.
 
 ## Constraints
 
-**When uncertain, ask** - Never assume or infer requirements. If you're unsure, probe—don't produce an answer.
+**Discoverable unknowns — search first** - Facts about the codebase or system (file locations, API shapes, existing patterns, config values) are discoverable. Exhaust codebase search before asking the user. Only ask about discoverable facts when: multiple plausible candidates exist, searches yield nothing but the fact is needed, or the ambiguity is actually about intent not fact. When asking, present what you found and recommend one option.
+
+**Preference unknowns — ask early** - Trade-offs, priorities, scope decisions, and style preferences cannot be discovered from code. Ask these directly. Provide concrete options with a recommended default. If genuinely low-impact and the user signals "enough", proceed with the recommended default and record as a Known Assumption in the manifest.
+
+**Mark a recommended option** - Every question with options must include a recommended default. For single-select, mark exactly one "(Recommended)". For multi-select, mark sensible defaults or none if all equally valid. Reduces cognitive load — users accept, reject, or adjust rather than evaluating from scratch.
 
 **Confirm before encoding** - When you discover constraints from codebase analysis (technical limits, architecture patterns, API boundaries), present them to the user before encoding as invariants. "I found X in the codebase—should this be a hard constraint?" Discovered ≠ confirmed.
 
@@ -53,7 +57,11 @@ If no arguments provided, ask: "What would you like to build or change?"
 
 **Log after every action** - Write to `/tmp/define-discovery-{timestamp}.md` immediately after each discovery (domain findings, interview answers, codebase insights). Goal: another agent reading only the log could resume the interview. Read full log before synthesis.
 
-**Stop when converged** - Err on more probing. Convergence requires: pre-mortem checked, domain understood, edge cases probed, and no obvious areas left unexplored. Only then, if very confident further questions would yield nothing new, move to synthesis. User can signal "enough" to override.
+**Confirm understanding periodically** - Before transitioning to a new topic area or after resolving a cluster of related questions, synthesize your current understanding back to the user: "Here's what I've established so far: [summary]. Correct?" This catches interpretation drift early—a misunderstanding in round 2 compounds through round 8 if never checked.
+
+**Batch related questions** - Group related questions into a single turn rather than asking one at a time. Batching keeps momentum and reduces round-trips without sacrificing depth. Each batch should cover a coherent topic area—don't mix unrelated concerns in one batch.
+
+**Stop when converged** - Err on more probing. Convergence requires: pre-mortem checked, domain understood, edge cases probed, and no obvious areas left unexplored. Only then, if very confident further questions would yield nothing new, move to synthesis. Remaining low-impact unknowns that don't warrant further probing are recorded as Known Assumptions in the manifest. User can signal "enough" to override.
 
 **Verify before finalizing** - After writing manifest, verify completeness using the manifest-verifier agent with the manifest and discovery log as input. If status is CONTINUE, ask the outputted questions, log new answers, update manifest, re-verify. Loop until COMPLETE or user signals "enough".
 
@@ -169,7 +177,12 @@ verify:
 
 - [PG-1] Description: ...
 
-## 5. Deliverables (The Work)
+## 5. Known Assumptions
+*Low-impact items where a reasonable default was chosen without explicit user confirmation. If any assumption is wrong, amend the manifest.*
+
+- [ASM-1] [What was assumed] | Default: [chosen value] | Impact if wrong: [consequence]
+
+## 6. Deliverables (The Work)
 *Ordered by execution order from Approach, or by dependency then importance.*
 
 ### Deliverable 1: [Name]
@@ -194,6 +207,7 @@ verify:
 | Process Guidance | PG-{N} | PG-1, PG-2 | /do (followed) |
 | Risk Area | R-{N} | R-1, R-2 | /do (watched) |
 | Trade-off | T-{N} | T-1, T-2 | /do (consulted) |
+| Known Assumption | ASM-{N} | ASM-1, ASM-2 | /verify (audited) |
 | Acceptance Criteria | AC-{D}.{N} | AC-1.1, AC-2.3 | /verify (verified) |
 
 ## Amendment Protocol

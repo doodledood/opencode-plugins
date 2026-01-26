@@ -13,6 +13,8 @@ import type { Plugin } from "@opencode-ai/plugin"
  * CONVERSION NOTES:
  * - Stop blocking: reactive simulation via session.idle + client.session.prompt
  * - additionalContext returns not supported - using system transform hooks instead
+ * - API error detection: tracks session.error events to allow stops on API failures
+ *   (prevents infinite blocking loops when API errors like 529 Overloaded occur)
  */
 
 // Session reminder strings
@@ -60,6 +62,7 @@ export const VibeWorkflowPlugin: Plugin = async ({ client, $ }) => {
     {
       resumeCount: number
       lastResumeAt: number
+      lastErrorAt: number
     }
   >()
 
@@ -111,14 +114,48 @@ export const VibeWorkflowPlugin: Plugin = async ({ client, $ }) => {
         })
       }
 
+      // Track API errors to prevent infinite blocking loops
+      if (event.type === "session.error") {
+        const sessionID = event.properties.sessionID
+        if (!sessions.has(sessionID)) {
+          sessions.set(sessionID, {
+            resumeCount: 0,
+            lastResumeAt: 0,
+            lastErrorAt: 0,
+          })
+        }
+        sessions.get(sessionID)!.lastErrorAt = Date.now()
+        await client.app.log({
+          service: "vibe-workflow",
+          level: "debug",
+          message: "Session error detected - will allow stop if idle follows",
+        })
+      }
+
       if (event.type === "session.idle") {
         const sessionID = event.properties.sessionID
         const now = Date.now()
 
         if (!sessions.has(sessionID)) {
-          sessions.set(sessionID, { resumeCount: 0, lastResumeAt: 0 })
+          sessions.set(sessionID, {
+            resumeCount: 0,
+            lastResumeAt: 0,
+            lastErrorAt: 0,
+          })
         }
         const state = sessions.get(sessionID)!
+
+        // API errors (e.g., 529 Overloaded) are system failures, not voluntary stops.
+        // Allow stop to prevent infinite blocking loops.
+        if (state.lastErrorAt > 0 && now - state.lastErrorAt < 30_000) {
+          await client.app.log({
+            service: "vibe-workflow",
+            level: "warn",
+            message:
+              "Recent API error detected - allowing stop to prevent infinite loop",
+          })
+          return
+        }
 
         // Guardrails: cap total resumes and enforce debounce
         if (state.resumeCount >= MAX_RESUMES) return
