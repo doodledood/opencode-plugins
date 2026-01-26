@@ -135,7 +135,7 @@ OpenCode discovers resources from **flat directories**, not nested plugin struct
 | PreToolUse hook (observe) | Python | TypeScript | ✅ Full | `tool.execute.before` - observe/modify |
 | PreToolUse hook (block) | Python | TypeScript | ⚠️ Partial | Use `permission.ask` hook instead |
 | PostToolUse hook | Python | TypeScript | ⚠️ Partial | `tool.execute.after` - no additionalContext |
-| Stop hook (blocking) | Python | N/A | ❌ None | Cannot block in OpenCode |
+| Stop hook (blocking) | Python | TypeScript | ⚠️ Partial | Reactive simulation via `session.idle` + `client.session.prompt` (see [Stop Hook Simulation](#stop-hook-simulation)) |
 | Permission control | N/A | TypeScript | ✅+ Better | `permission.ask` hook can allow/deny/ask |
 | MCP servers | `.mcp.json` | `opencode.json` | ✅ Full | Different config location |
 | Custom tools | Via MCP only | `tools/*.ts` | ✅+ Better | OpenCode has native tools |
@@ -400,7 +400,7 @@ Tool permissions use **boolean values**:
 | `PostCompact` | `experimental.session.compacting` | N/A | Re-inject context after compaction |
 | `PostToolUse` | `tool.execute.after` | No | React to tool completion |
 | `PreToolUse` | `tool.execute.before` | **No** | Can modify args but NOT block |
-| `Stop` | `event` (session.idle) | **No** | Cannot prevent stopping |
+| `Stop` | `event` (session.idle) + `client.session.prompt` | **Reactive** | Cannot block, but can resume session (see [Stop Hook Simulation](#stop-hook-simulation)) |
 | `SubagentStop` | N/A | — | ❌ No equivalent |
 
 **CRITICAL**: Session lifecycle events (`session.created`, `session.idle`) are caught via the **`event`** hook, NOT as direct hook keys. The `event` hook receives `{ event: Event }` where `event.type` can be `"session.created"`, `"session.idle"`, etc.
@@ -509,7 +509,8 @@ export const MyPlugin: Plugin = async ({ project, client, $, directory, worktree
       }
 
       if (event.type === "session.idle") {
-        // LIMITATION: Cannot block stopping in OpenCode
+        // Can reactively resume session via client.session.prompt
+        // See "Stop Hook Simulation" section for full pattern
         await client.app.log({
           service: "my-plugin",
           level: "debug",
@@ -649,7 +650,7 @@ These are the tool names seen in `input.tool` within hook callbacks.
 
 | Feature | Why | Workaround |
 |---------|-----|------------|
-| Stop blocking | `session.idle` cannot prevent stopping | Log warning |
+| Stop blocking (synchronous) | `session.idle` cannot prevent stopping synchronously | Reactive simulation: detect idle → check conditions → `client.session.prompt` to resume (see [Stop Hook Simulation](#stop-hook-simulation)) |
 | **PreToolUse blocking** | `tool.execute.before` has no `output.abort` | Use `permission.ask` hook OR log warning |
 | SubagentStop | No equivalent event | None |
 | Subagent tool interception | Hooks don't intercept subagent tool calls | Design around this limitation |
@@ -682,6 +683,124 @@ await client.app.log({
 ```
 
 Enable verbose logging with `opencode --verbose`.
+
+### Stop Hook Simulation
+
+OpenCode cannot synchronously block a session from going idle the way Claude Code stop hooks can. However, you can **reactively simulate stop hooks** by detecting `session.idle`, evaluating conditions, and programmatically resuming the session via `client.session.prompt`.
+
+#### How It Works
+
+1. Subscribe to `session.idle` via the `event` hook
+2. When idle fires, run your stop conditions (e.g., dirty working tree, failing tests, incomplete TODOs)
+3. If conditions indicate work remains, call `client.session.prompt` to inject a continuation prompt into the same session
+4. The session resumes as if the user typed a new message
+
+#### Implementation Pattern
+
+```typescript
+import type { Plugin } from "@opencode-ai/plugin"
+
+export const AutoContinue: Plugin = async ({ client, $ }) => {
+  // Per-session state to prevent infinite loops
+  const state = new Map<string, { runs: number; lastAt: number }>()
+
+  const MAX_RUNS_PER_SESSION = 10
+  const MIN_MS_BETWEEN_RUNS = 5_000
+
+  async function shouldContinue(): Promise<{ ok: boolean; reason?: string }> {
+    // Example: continue if working tree has uncommitted changes
+    const diff = await $`git diff --name-only`.text()
+    if (diff.trim().length > 0) {
+      return { ok: true, reason: `Working tree not clean:\n${diff}` }
+    }
+
+    // Example: continue if tests are failing
+    // const test = await $`bun test`.nothrow()
+    // if (test.exitCode !== 0) {
+    //   return { ok: true, reason: `Tests failing (exit ${test.exitCode}).` }
+    // }
+
+    return { ok: false }
+  }
+
+  async function continueSession(sessionID: string, reason: string) {
+    await client.session.prompt({
+      path: { id: sessionID },
+      body: {
+        parts: [{
+          type: "text",
+          text:
+            `Do not stop yet. Continue until completion.\n` +
+            `Reason: ${reason}\n\n` +
+            `Next steps:\n` +
+            `- Fix remaining issues implied by the reason.\n` +
+            `- Re-run necessary checks.\n` +
+            `- Summarize what changed and why.\n`,
+        }],
+      },
+    })
+  }
+
+  return {
+    event: async ({ event }) => {
+      if (event.type !== "session.idle") return
+
+      const sessionID = event.properties.sessionID
+      const now = Date.now()
+      const s = state.get(sessionID) ?? { runs: 0, lastAt: 0 }
+
+      // Guardrails: cap total resumes and enforce debounce
+      if (s.runs >= MAX_RUNS_PER_SESSION) return
+      if (now - s.lastAt < MIN_MS_BETWEEN_RUNS) return
+
+      const decision = await shouldContinue()
+      if (!decision.ok) return
+
+      state.set(sessionID, { runs: s.runs + 1, lastAt: now })
+      await continueSession(sessionID, decision.reason ?? "Unspecified condition")
+    },
+  }
+}
+
+export default AutoContinue
+```
+
+#### Common Stop Conditions
+
+| Condition | Check |
+|-----------|-------|
+| Dirty working tree | `git diff --name-only` non-empty |
+| Tests failing | Test runner exits non-zero |
+| Lint/format violations | Linter exits non-zero |
+| Typecheck errors | `tsc --noEmit` exits non-zero |
+| TODOs remaining | Watch `todo.updated` events or query session state |
+
+#### Guardrails (Required)
+
+Always implement these safeguards to prevent infinite loops:
+
+1. **Max resumes per session** - Cap total auto-continues (e.g., 10)
+2. **Debounce interval** - Minimum time between resumes (e.g., 5 seconds)
+3. **Deterministic checks** - Flaky tests will cause oscillation
+4. **Logging** - Use `client.app.log` for observability
+
+#### Implementation Styles
+
+| Style | Description | Best For |
+|-------|-------------|----------|
+| **In-process plugin** | Plugin in `.opencode/plugins/` subscribes to `session.idle` and calls `client.session.prompt` | Linting, small checks, "continue until clean" |
+| **Out-of-process supervisor** | Separate process uses `opencode serve` + SDK event stream (`client.event.subscribe()` SSE) to observe and resume sessions | Multi-project control, centralized policy, long-running workflows |
+
+#### Limitations vs Claude Code Stop Hooks
+
+| Aspect | Claude Code | OpenCode |
+|--------|-------------|----------|
+| Timing | Synchronous (blocks before idle) | Reactive (resumes after idle) |
+| Veto stopping | Yes (return `decision: "block"`) | No (session goes idle, then resumes) |
+| User visibility | Transparent | User may briefly see idle state |
+| Loop safety | Built-in | Must implement guardrails manually |
+
+**Note on `noReply`**: The SDK documents `body.noReply: true` for context-only injection. However, behavior may vary across OpenCode versions. For stop hook simulation, use explicit continuation prompts rather than `noReply`.
 
 ---
 
@@ -976,7 +1095,7 @@ OpenCode uses glob patterns that accept **both** singular and plural:
 
 ### Cannot Convert
 
-1. **Stop hooks that block**: `session.idle` cannot prevent stopping
+1. **Stop hooks that block synchronously**: `session.idle` cannot prevent stopping, but can reactively resume (see [Stop Hook Simulation](#stop-hook-simulation))
 2. **SubagentStop hooks**: No equivalent event in OpenCode
 3. **Subagent tool interception**: Hooks don't fire for subagent tool calls
 4. **MCP tool interception**: MCP tool calls don't trigger hooks
@@ -1044,7 +1163,7 @@ OpenCode uses glob patterns that accept **both** singular and plural:
 - [ ] Map `PostCompact` → `experimental.session.compacting`
 - [ ] Map `PostToolUse` → `tool.execute.after` (use `input.tool` not `input.call.name`)
 - [ ] Map `PreToolUse` → `tool.execute.before` (CANNOT block - log warnings only)
-- [ ] Document any `Stop` hooks (blocking not supported)
+- [ ] Convert `Stop` hooks → reactive idle-triggered continue pattern (see [Stop Hook Simulation](#stop-hook-simulation))
 - [ ] Document any `PreToolUse` blocking (not supported - use logging)
 - [ ] Convert Python logic to TypeScript
 
