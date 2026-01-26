@@ -8,26 +8,57 @@ import type { Plugin } from "@opencode-ai/plugin"
  * - PreToolUse (Skill/escalate): Gate escalate calls - require verify before escalation
  * - Stop: Enforce /done or /escalate before stopping during /do workflow
  *
- * LIMITATIONS:
- * - PreToolUse blocking is NOT supported in OpenCode - tool.execute.before cannot abort
- * - Stop blocking is NOT supported in OpenCode - session.idle cannot prevent stopping
- * - Using permission.ask hook as alternative for escalate gating
- * - Stop enforcement converted to logging only
+ * CONVERSION NOTES:
+ * - PreToolUse blocking: uses `throw` in tool.execute.before (primary agent only)
+ * - Stop blocking: reactive simulation via session.idle + client.session.prompt
  */
 
 export const VibeExperimentalPlugin: Plugin = async ({ client }) => {
+  // Per-session workflow state tracking
+  const sessions = new Map<
+    string,
+    {
+      doInvoked: boolean
+      verifyInvoked: boolean
+      doneOrEscalateInvoked: boolean
+      resumeCount: number
+      lastResumeAt: number
+    }
+  >()
+
+  const MAX_RESUMES = 3
+  const MIN_MS_BETWEEN_RESUMES = 5_000
+
+  // Track the active session for tool hooks (which don't receive session ID)
+  let activeSessionID: string | undefined
+
+  function getSession(id: string) {
+    if (!sessions.has(id)) {
+      sessions.set(id, {
+        doInvoked: false,
+        verifyInvoked: false,
+        doneOrEscalateInvoked: false,
+        resumeCount: 0,
+        lastResumeAt: 0,
+      })
+    }
+    return sessions.get(id)!
+  }
+
   return {
     /**
      * Event handler for session lifecycle events.
      *
-     * NOTE: Stop blocking is NOT supported in OpenCode.
-     * The original stop_do_hook.py logic cannot be fully replicated.
-     * Original behavior:
-     * - Block stop if /do was called but neither /done nor /escalate
-     * - Allow stop if /done or /escalate was properly called
+     * Reactive stop hook simulation:
+     * - Tracks session creation for state management
+     * - On session.idle, checks if /do workflow is incomplete
+     * - If /do was called but neither /done nor /escalate invoked, resumes session
      */
     event: async ({ event }) => {
       if (event.type === "session.created") {
+        const sessionID = event.properties.sessionID
+        activeSessionID = sessionID
+        getSession(sessionID)
         await client.app.log({
           service: "vibe-experimental",
           level: "info",
@@ -36,25 +67,59 @@ export const VibeExperimentalPlugin: Plugin = async ({ client }) => {
       }
 
       if (event.type === "session.idle") {
-        // LIMITATION: Cannot block stopping in OpenCode
-        // Original Python hook would block if /do workflow incomplete
+        const sessionID = event.properties.sessionID
+        const state = getSession(sessionID)
+
+        // Reactive stop hook simulation:
+        // If /do was invoked but neither /done nor /escalate was called, resume session
+        if (!state.doInvoked || state.doneOrEscalateInvoked) return
+
+        const now = Date.now()
+        if (state.resumeCount >= MAX_RESUMES) {
+          await client.app.log({
+            service: "vibe-experimental",
+            level: "warn",
+            message:
+              "Max resume attempts reached for /do workflow enforcement",
+          })
+          return
+        }
+        if (now - state.lastResumeAt < MIN_MS_BETWEEN_RESUMES) return
+
+        state.resumeCount++
+        state.lastResumeAt = now
+
         await client.app.log({
           service: "vibe-experimental",
-          level: "debug",
-          message:
-            "Session idle - /do workflow enforcement not available in OpenCode. " +
-            "Ensure /verify was called and /done or /escalate properly invoked.",
+          level: "warn",
+          message: "/do workflow incomplete - resuming session",
+        })
+
+        await client.session.prompt({
+          path: { id: sessionID },
+          body: {
+            parts: [
+              {
+                type: "text",
+                text:
+                  "Do not stop yet. The /do workflow is not complete.\n" +
+                  "You must either:\n" +
+                  "- Run /verify to check acceptance criteria, then /done or /escalate\n" +
+                  "- Run /escalate if you are blocked\n\n" +
+                  "Continue working on the current task.",
+              },
+            ],
+          },
         })
       }
     },
 
     /**
-     * Before tool execution - log warnings for escalate without verify.
+     * Before tool execution - block escalate without verify, track workflow state.
      * Converted from: PreToolUse hook with Skill/escalate matcher
      *
-     * LIMITATION: Cannot block tool execution in OpenCode.
-     * Original behavior would block /escalate unless /verify was called first.
-     * Now we just log a warning.
+     * Uses `throw` to block execution when escalate is called without prior verify.
+     * NOTE: Only fires for primary agent -- not subagent or MCP tool calls.
      */
     "tool.execute.before": async (input, output) => {
       if (input.tool !== "skill") return
@@ -62,37 +127,35 @@ export const VibeExperimentalPlugin: Plugin = async ({ client }) => {
       const args = output.args as { name?: string } | undefined
       const skillName = args?.name ?? ""
 
-      // Check if this is an escalate skill call
-      if (skillName !== "escalate" && !skillName.endsWith("-escalate")) return
+      if (!activeSessionID) return
+      const state = getSession(activeSessionID)
 
-      // Log warning about escalate workflow
-      // LIMITATION: Cannot block - original hook would block if /verify not called
-      await client.app.log({
-        service: "vibe-experimental",
-        level: "warn",
-        message:
-          "Escalate skill invoked. Reminder: /verify should be called before /escalate " +
-          "to check acceptance criteria. If this escalation is premature, consider " +
-          "running /verify first.",
-      })
+      // Track workflow skill invocations
+      if (skillName === "do" || skillName.endsWith("-do")) {
+        state.doInvoked = true
+      }
+      if (skillName === "verify" || skillName.endsWith("-verify")) {
+        state.verifyInvoked = true
+      }
+      if (
+        skillName === "done" ||
+        skillName.endsWith("-done") ||
+        skillName === "escalate" ||
+        skillName.endsWith("-escalate")
+      ) {
+        state.doneOrEscalateInvoked = true
+      }
+
+      // Block escalate if verify wasn't called first
+      if (skillName === "escalate" || skillName.endsWith("-escalate")) {
+        if (!state.verifyInvoked) {
+          throw new Error(
+            "Blocked: /escalate requires /verify to be called first. " +
+              "Run /verify to check acceptance criteria before escalating.",
+          )
+        }
+      }
     },
-
-    /**
-     * Permission hook - can control allow/deny/ask for tools.
-     *
-     * This is the closest equivalent to PreToolUse blocking in OpenCode.
-     * However, it operates at the permission level, not per-invocation.
-     *
-     * For now, we don't implement strict gating here as it would require
-     * tracking /do and /verify state across the session, which OpenCode
-     * hooks don't have access to (no transcript_path equivalent).
-     *
-     * Future enhancement: Could use session storage to track workflow state.
-     */
-    // "permission.ask": async (input, output) => {
-    //   // Placeholder for future workflow state tracking
-    //   // Could implement escalate gating here if session state becomes available
-    // },
   }
 }
 
