@@ -11,6 +11,8 @@ import type { Plugin } from "@opencode-ai/plugin"
  * CONVERSION NOTES:
  * - PreToolUse blocking: uses `throw` in tool.execute.before (primary agent only)
  * - Stop blocking: reactive simulation via session.idle + client.session.prompt
+ * - API error detection: tracks session.error events to allow stops on API failures
+ *   (prevents infinite blocking loops when API errors like 529 Overloaded occur)
  */
 
 export const VibeExperimentalPlugin: Plugin = async ({ client }) => {
@@ -23,6 +25,7 @@ export const VibeExperimentalPlugin: Plugin = async ({ client }) => {
       doneOrEscalateInvoked: boolean
       resumeCount: number
       lastResumeAt: number
+      lastErrorAt: number
     }
   >()
 
@@ -40,6 +43,7 @@ export const VibeExperimentalPlugin: Plugin = async ({ client }) => {
         doneOrEscalateInvoked: false,
         resumeCount: 0,
         lastResumeAt: 0,
+        lastErrorAt: 0,
       })
     }
     return sessions.get(id)!
@@ -66,6 +70,18 @@ export const VibeExperimentalPlugin: Plugin = async ({ client }) => {
         })
       }
 
+      // Track API errors to prevent infinite blocking loops
+      if (event.type === "session.error") {
+        const sessionID = event.properties.sessionID
+        const state = getSession(sessionID)
+        state.lastErrorAt = Date.now()
+        await client.app.log({
+          service: "vibe-experimental",
+          level: "debug",
+          message: "Session error detected - will allow stop if idle follows",
+        })
+      }
+
       if (event.type === "session.idle") {
         const sessionID = event.properties.sessionID
         const state = getSession(sessionID)
@@ -75,6 +91,18 @@ export const VibeExperimentalPlugin: Plugin = async ({ client }) => {
         if (!state.doInvoked || state.doneOrEscalateInvoked) return
 
         const now = Date.now()
+
+        // API errors (e.g., 529 Overloaded) are system failures, not voluntary stops.
+        // Allow stop to prevent infinite blocking loops.
+        if (state.lastErrorAt > 0 && now - state.lastErrorAt < 30_000) {
+          await client.app.log({
+            service: "vibe-experimental",
+            level: "warn",
+            message:
+              "Recent API error detected - allowing stop to prevent infinite loop",
+          })
+          return
+        }
         if (state.resumeCount >= MAX_RESUMES) {
           await client.app.log({
             service: "vibe-experimental",
