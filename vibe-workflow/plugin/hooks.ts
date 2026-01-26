@@ -8,10 +8,10 @@ import type { Plugin } from "@opencode-ai/plugin"
  * - SessionStart: Inject reminders for codebase explorer and web researcher
  * - PostCompact: Re-anchor session after compaction with implement recovery
  * - PostToolUse (TaskUpdate): Remind to update log files after task completion
- * - Stop: Enforce task completion during implement workflows (CANNOT block in OpenCode)
+ * - Stop: Enforce task completion during implement workflows
  *
- * LIMITATIONS:
- * - Stop blocking is not supported in OpenCode - converted to logging
+ * CONVERSION NOTES:
+ * - Stop blocking: reactive simulation via session.idle + client.session.prompt
  * - additionalContext returns not supported - using system transform hooks instead
  */
 
@@ -53,14 +53,54 @@ function buildSessionReminders(): string {
   )
 }
 
-export const VibeWorkflowPlugin: Plugin = async ({ client }) => {
+export const VibeWorkflowPlugin: Plugin = async ({ client, $ }) => {
+  // Per-session state for stop hook simulation
+  const sessions = new Map<
+    string,
+    {
+      resumeCount: number
+      lastResumeAt: number
+    }
+  >()
+
+  const MAX_RESUMES = 3
+  const MIN_MS_BETWEEN_RESUMES = 5_000
+
+  async function shouldContinue(): Promise<{
+    ok: boolean
+    reason?: string
+  }> {
+    // Check for active implement workflow with incomplete work
+    // Look for implement log files in /tmp that suggest an ongoing workflow
+    try {
+      const logFiles = await $`ls /tmp/implement-*.md 2>/dev/null`.text()
+      if (logFiles.trim().length === 0) return { ok: false }
+
+      // If implement log files exist, check if there are uncommitted changes
+      // (suggesting work is still in progress)
+      const diff = await $`git diff --name-only`.text()
+      if (diff.trim().length > 0) {
+        return {
+          ok: true,
+          reason:
+            "Implement workflow appears active (log files in /tmp) and " +
+            "working tree has uncommitted changes. Tasks may be incomplete.",
+        }
+      }
+    } catch {
+      // If checks fail, don't resume
+    }
+
+    return { ok: false }
+  }
+
   return {
     /**
-     * Event handler for session lifecycle events
-     * Catches session.created, session.idle, etc.
+     * Event handler for session lifecycle events.
      *
-     * NOTE: Stop blocking is NOT supported in OpenCode.
-     * The original stop_todo_enforcement.py logic cannot be replicated.
+     * Reactive stop hook simulation:
+     * - On session.idle, checks for incomplete implement workflows
+     * - If work appears incomplete, resumes session via client.session.prompt
      */
     event: async ({ event }) => {
       if (event.type === "session.created") {
@@ -72,12 +112,47 @@ export const VibeWorkflowPlugin: Plugin = async ({ client }) => {
       }
 
       if (event.type === "session.idle") {
-        // LIMITATION: Cannot block stopping in OpenCode
-        // Original Python hook would block if incomplete tasks exist during implement workflow
+        const sessionID = event.properties.sessionID
+        const now = Date.now()
+
+        if (!sessions.has(sessionID)) {
+          sessions.set(sessionID, { resumeCount: 0, lastResumeAt: 0 })
+        }
+        const state = sessions.get(sessionID)!
+
+        // Guardrails: cap total resumes and enforce debounce
+        if (state.resumeCount >= MAX_RESUMES) return
+        if (now - state.lastResumeAt < MIN_MS_BETWEEN_RESUMES) return
+
+        const decision = await shouldContinue()
+        if (!decision.ok) return
+
+        state.resumeCount++
+        state.lastResumeAt = now
+
         await client.app.log({
           service: "vibe-workflow",
-          level: "debug",
-          message: "Session idle - stop enforcement not available in OpenCode",
+          level: "warn",
+          message: `Implement workflow incomplete - resuming session: ${decision.reason}`,
+        })
+
+        await client.session.prompt({
+          path: { id: sessionID },
+          body: {
+            parts: [
+              {
+                type: "text",
+                text:
+                  "Do not stop yet. Continue until completion.\n" +
+                  `Reason: ${decision.reason}\n\n` +
+                  "Next steps:\n" +
+                  "- Complete remaining tasks in your todo list.\n" +
+                  "- Update your progress/log file in /tmp/.\n" +
+                  "- Commit completed work.\n" +
+                  "- Run /done when all tasks are complete.",
+              },
+            ],
+          },
         })
       }
     },
@@ -120,7 +195,7 @@ export const VibeWorkflowPlugin: Plugin = async ({ client }) => {
      * Consider using system transform hooks for persistent reminders.
      */
     "tool.execute.after": async (input, _output) => {
-      // Only react to todowrite tool (OpenCode equivalent of TaskUpdate)
+      // Only react to todowrite tool (OpenCode equivalent of TaskUpdate/TodoWrite)
       if (input.tool !== "todowrite") return
 
       // Log reminder about updating progress files
