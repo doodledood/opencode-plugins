@@ -133,7 +133,7 @@ OpenCode discovers resources from **flat directories**, not nested plugin struct
 | Agents/subagents | `agent/*.md` | `agent/*.md` | ✅ Full | Different frontmatter |
 | SessionStart hook | Python | TypeScript | ✅ Full | Use `event` + `experimental.chat.system.transform` |
 | PreToolUse hook (observe) | Python | TypeScript | ✅ Full | `tool.execute.before` - observe/modify |
-| PreToolUse hook (block) | Python | TypeScript | ⚠️ Partial | Use `permission.ask` hook instead |
+| PreToolUse hook (block) | Python | TypeScript | ✅ Full | `throw new Error()` in `tool.execute.before` OR `permission.ask` hook OR permission config |
 | PostToolUse hook | Python | TypeScript | ⚠️ Partial | `tool.execute.after` - no additionalContext |
 | Stop hook (blocking) | Python | TypeScript | ⚠️ Partial | Reactive simulation via `session.idle` + `client.session.prompt` (see [Stop Hook Simulation](#stop-hook-simulation)) |
 | Permission control | N/A | TypeScript | ✅+ Better | `permission.ask` hook can allow/deny/ask |
@@ -403,13 +403,13 @@ Tool permissions use **boolean values**:
 | `SessionStart` | `event` + `experimental.chat.system.transform` | N/A | See below |
 | `PostCompact` | `experimental.session.compacting` | N/A | Re-inject context after compaction |
 | `PostToolUse` | `tool.execute.after` | No | React to tool completion |
-| `PreToolUse` | `tool.execute.before` | **No** | Can modify args but NOT block |
+| `PreToolUse` | `tool.execute.before` | **Yes** | Modify args OR `throw` to block (primary agent only — not subagents) |
 | `Stop` | `event` (session.idle) + `client.session.prompt` | **Reactive** | Cannot block, but can resume session (see [Stop Hook Simulation](#stop-hook-simulation)) |
 | `SubagentStop` | `event` (session.created + parentID) | **Reactive** | Detect child sessions, react via prompt/abort (see [Subagent Activity Detection](#subagent-activity-detection)) |
 
 **CRITICAL**: Session lifecycle events (`session.created`, `session.idle`) are caught via the **`event`** hook, NOT as direct hook keys. The `event` hook receives `{ event: Event }` where `event.type` can be `"session.created"`, `"session.idle"`, etc.
 
-**IMPORTANT**: OpenCode's `tool.execute.before` **CANNOT block** execution. There is no `output.abort` field. It can only modify `output.args`. For gating logic, log warnings instead of blocking.
+**IMPORTANT**: OpenCode's `tool.execute.before` can block execution by **throwing an error** (there is no `output.abort` field, but `throw new Error(...)` works). It can also modify `output.args`. For first-class policy enforcement, use `permission.ask` hooks or permission config. **Caveat**: These hooks only fire for the primary agent — subagent and MCP tool calls do not trigger them.
 
 ### Complete Hooks Interface (Reference)
 
@@ -492,7 +492,8 @@ import type { Plugin } from "@opencode-ai/plugin"
  * CRITICAL API NOTES:
  * - Session events (session.created, session.idle) go through the `event` hook
  * - tool.execute.before/after use `input.tool` (NOT input.call.name)
- * - tool.execute.before CANNOT block - can only modify output.args
+ * - tool.execute.before can block via `throw new Error()`, or modify output.args
+ * - tool.execute.before/after only fire for primary agent, NOT subagents or MCP tools
  * - No additionalContext return is supported
  */
 
@@ -558,25 +559,30 @@ export const MyPlugin: Plugin = async ({ project, client, $, directory, worktree
     },
 
     /**
-     * Before tool execution - modify args or log warnings
+     * Before tool execution - modify args, log, or block via throw
      * Converted from: PreToolUse hook
      *
-     * LIMITATION: CANNOT block execution. No output.abort exists.
-     * Can only modify output.args or log warnings.
+     * Can modify output.args, log warnings, or throw to block execution.
+     * NOTE: Only fires for primary agent — not subagent or MCP tool calls.
      */
     "tool.execute.before": async (input, output) => {
       // Use input.tool (NOT input.call.name)
-      if (input.tool !== "skill") return;
+      if (input.tool !== "bash") return;
 
       // Access args via output.args (can read and modify)
-      const args = output.args as { name?: string } | undefined;
+      const args = output.args as { command?: string } | undefined;
 
-      // Example: Log a warning (cannot block)
-      if (args?.name === "dangerous-skill") {
+      // Example: Block dangerous commands by throwing
+      if (args?.command?.includes("rm -rf")) {
+        throw new Error("Blocked dangerous command");
+      }
+
+      // Example: Log a warning (non-blocking)
+      if (args?.command?.includes("sudo")) {
         await client.app.log({
           service: "my-plugin",
           level: "warn",
-          message: "Warning: dangerous-skill invoked"
+          message: "Warning: sudo command invoked"
         });
       }
     },
@@ -659,24 +665,39 @@ These are the tool names seen in `input.tool` within hook callbacks.
 | Feature | Why | Workaround |
 |---------|-----|------------|
 | Stop blocking (synchronous) | `session.idle` cannot prevent stopping synchronously | Reactive simulation: detect idle → check conditions → `client.session.prompt` to resume (see [Stop Hook Simulation](#stop-hook-simulation)) |
-| **PreToolUse blocking** | `tool.execute.before` has no `output.abort` | Use `permission.ask` hook OR log warning |
+| **PreToolUse blocking (subagents)** | `tool.execute.before` does not fire for subagent tool calls | Use agent-level tool permissions; `throw` in `tool.execute.before` works for primary agent only |
 | SubagentStop (synchronous) | No cancellable "before subagent stops" hook | Reactive: detect child sessions via `session.created` + `parentID`, then prompt/abort (see [Subagent Activity Detection](#subagent-activity-detection)) |
 | Subagent tool interception | `tool.execute.before/after` don't fire for subagent tool calls | Use agent-level tool permissions for enforcement; plugin hooks only for observability of parent session |
 | MCP tool interception | MCP tool calls don't trigger hooks | Use MCP server-side logic |
 | Python dependencies | Different runtime | Find TypeScript alternatives |
 | additionalContext returns | Hooks cannot return additionalContext | Use system transform hooks |
 
-**IMPORTANT**: Unlike Claude Code, OpenCode's `tool.execute.before` **CANNOT block** execution - there is no `output.abort` field. It can only modify `output.args` or log warnings.
+**IMPORTANT**: OpenCode's `tool.execute.before` **can block** execution by throwing an error (there is no `output.abort` field, but `throw new Error(...)` works). However, this hook **only fires for the primary agent** — subagent and MCP tool calls are not intercepted.
 
-**Alternative for blocking**: Use the `permission.ask` hook to control whether tools are allowed:
+**Blocking approaches** (from most to least granular):
+
+1. **Permission config** — Declarative deny/ask/allow rules (see [Permission Config](#permission-config))
+2. **`permission.ask` hook** — Programmatic allow/deny/ask decisions:
+
 ```typescript
 "permission.ask": async (input, output) => {
-  // Can set output.status to "allow", "deny", or "ask" (prompt user)
   if (shouldBlock(input)) {
     output.status = "deny";
   }
 }
 ```
+
+3. **`tool.execute.before` throw** — Block with custom logic:
+
+```typescript
+"tool.execute.before": async (input, output) => {
+  if (input.tool === "bash" && output.args.command?.includes("rm -rf")) {
+    throw new Error("Blocked dangerous command");
+  }
+}
+```
+
+**Note**: All three approaches only apply to the **primary agent**. For subagent enforcement, use agent-level tool permissions in frontmatter (see [Subagent Activity Detection](#subagent-activity-detection)).
 
 ### Logging
 
@@ -691,6 +712,46 @@ await client.app.log({
 ```
 
 Enable verbose logging with `opencode --verbose`.
+
+### Permission Config
+
+OpenCode supports declarative permission rules in `opencode.json` that control tool access without writing plugin code. This is the most robust enforcement mechanism and applies system-wide.
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "*": "ask",
+    "edit": "deny",
+    "bash": {
+      "*": "ask",
+      "git *": "allow",
+      "rm *": "deny"
+    },
+    "task": "deny"
+  }
+}
+```
+
+**Permission values:**
+- `"allow"` — Always permit without prompting
+- `"ask"` — Prompt user for confirmation (default)
+- `"deny"` — Always block
+
+**Key features:**
+- Supports glob patterns for command-level granularity (e.g., `"git *": "allow"`)
+- `"task": "deny"` prevents subagent spawning (useful to prevent "delegate-to-bypass" policy circumvention)
+- Applies to all agents including subagents (unlike plugin hooks)
+
+**Claude Code → OpenCode mapping:**
+
+| Claude Code PreToolUse Pattern | OpenCode Permission Config |
+|-------------------------------|---------------------------|
+| Block specific tool entirely | `"toolname": "deny"` |
+| Block specific commands | `"bash": { "rm *": "deny" }` |
+| Prompt before dangerous ops | `"bash": { "*": "ask" }` |
+| Allow safe operations | `"bash": { "git *": "allow" }` |
+| Block subagent spawning | `"task": "deny"` |
 
 ### Stop Hook Simulation
 
@@ -1243,9 +1304,9 @@ OpenCode uses glob patterns that accept **both** singular and plural:
 - [ ] Use `experimental.chat.system.transform` for context injection at start
 - [ ] Map `PostCompact` → `experimental.session.compacting`
 - [ ] Map `PostToolUse` → `tool.execute.after` (use `input.tool` not `input.call.name`)
-- [ ] Map `PreToolUse` → `tool.execute.before` (CANNOT block - log warnings only)
+- [ ] Map `PreToolUse` → `tool.execute.before` (can block via `throw`, modify args, or log — primary agent only)
 - [ ] Convert `Stop` hooks → reactive idle-triggered continue pattern (see [Stop Hook Simulation](#stop-hook-simulation))
-- [ ] Document any `PreToolUse` blocking (not supported - use logging)
+- [ ] Convert `PreToolUse` blocking → `throw` in `tool.execute.before` OR `permission.ask` hook OR permission config
 - [ ] Convert Python logic to TypeScript
 
 ### Testing
