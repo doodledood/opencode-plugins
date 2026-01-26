@@ -133,9 +133,9 @@ OpenCode discovers resources from **flat directories**, not nested plugin struct
 | Agents/subagents | `agent/*.md` | `agent/*.md` | ✅ Full | Different frontmatter |
 | SessionStart hook | Python | TypeScript | ✅ Full | Use `event` + `experimental.chat.system.transform` |
 | PreToolUse hook (observe) | Python | TypeScript | ✅ Full | `tool.execute.before` - observe/modify |
-| PreToolUse hook (block) | Python | TypeScript | ⚠️ Partial | Use `permission.ask` hook instead |
+| PreToolUse hook (block) | Python | TypeScript | ✅ Full | `throw new Error()` in `tool.execute.before` OR `permission.ask` hook OR permission config |
 | PostToolUse hook | Python | TypeScript | ⚠️ Partial | `tool.execute.after` - no additionalContext |
-| Stop hook (blocking) | Python | N/A | ❌ None | Cannot block in OpenCode |
+| Stop hook (blocking) | Python | TypeScript | ⚠️ Partial | Reactive simulation via `session.idle` + `client.session.prompt` (see [Stop Hook Simulation](#stop-hook-simulation)) |
 | Permission control | N/A | TypeScript | ✅+ Better | `permission.ask` hook can allow/deny/ask |
 | MCP servers | `.mcp.json` | `opencode.json` | ✅ Full | Different config location |
 | Custom tools | Via MCP only | `tools/*.ts` | ✅+ Better | OpenCode has native tools |
@@ -357,8 +357,12 @@ thinking:
 | `Grep` | `grep: true` | |
 | `WebFetch` | `webfetch: true` | |
 | `WebSearch` | `websearch: true` | |
-| `TodoWrite` | `todowrite: true` | |
-| `TodoRead` | `todoread: true` | |
+| `TodoWrite` | `todowrite: true` | Legacy (pre-v2.1.16) |
+| `TodoRead` | `todoread: true` | Legacy (pre-v2.1.16) |
+| `TaskCreate` | `todowrite: true` | v2.1.16+ replacement for TodoWrite |
+| `TaskUpdate` | `todowrite: true` | v2.1.16+ task status/comments/blockers |
+| `TaskList` | `todoread: true` | v2.1.16+ replacement for TodoRead |
+| `TaskGet` | `todoread: true` | v2.1.16+ get task details by ID |
 | `Task` | `task: true` | For spawning subagents |
 | `Skill` | `skill: true` | For loading skills |
 | `SlashCommand` | `skill: true` | Same as Skill in OpenCode |
@@ -399,13 +403,13 @@ Tool permissions use **boolean values**:
 | `SessionStart` | `event` + `experimental.chat.system.transform` | N/A | See below |
 | `PostCompact` | `experimental.session.compacting` | N/A | Re-inject context after compaction |
 | `PostToolUse` | `tool.execute.after` | No | React to tool completion |
-| `PreToolUse` | `tool.execute.before` | **No** | Can modify args but NOT block |
-| `Stop` | `event` (session.idle) | **No** | Cannot prevent stopping |
-| `SubagentStop` | N/A | — | ❌ No equivalent |
+| `PreToolUse` | `tool.execute.before` | **Yes** | Modify args OR `throw` to block (primary agent only — not subagents) |
+| `Stop` | `event` (session.idle) + `client.session.prompt` | **Reactive** | Cannot block, but can resume session (see [Stop Hook Simulation](#stop-hook-simulation)) |
+| `SubagentStop` | `event` (session.created + parentID) | **Reactive** | Detect child sessions, react via prompt/abort (see [Subagent Activity Detection](#subagent-activity-detection)) |
 
 **CRITICAL**: Session lifecycle events (`session.created`, `session.idle`) are caught via the **`event`** hook, NOT as direct hook keys. The `event` hook receives `{ event: Event }` where `event.type` can be `"session.created"`, `"session.idle"`, etc.
 
-**IMPORTANT**: OpenCode's `tool.execute.before` **CANNOT block** execution. There is no `output.abort` field. It can only modify `output.args`. For gating logic, log warnings instead of blocking.
+**IMPORTANT**: OpenCode's `tool.execute.before` can block execution by **throwing an error** (there is no `output.abort` field, but `throw new Error(...)` works). It can also modify `output.args`. For first-class policy enforcement, use `permission.ask` hooks or permission config. **Caveat**: These hooks only fire for the primary agent — subagent and MCP tool calls do not trigger them.
 
 ### Complete Hooks Interface (Reference)
 
@@ -488,7 +492,8 @@ import type { Plugin } from "@opencode-ai/plugin"
  * CRITICAL API NOTES:
  * - Session events (session.created, session.idle) go through the `event` hook
  * - tool.execute.before/after use `input.tool` (NOT input.call.name)
- * - tool.execute.before CANNOT block - can only modify output.args
+ * - tool.execute.before can block via `throw new Error()`, or modify output.args
+ * - tool.execute.before/after only fire for primary agent, NOT subagents or MCP tools
  * - No additionalContext return is supported
  */
 
@@ -509,7 +514,8 @@ export const MyPlugin: Plugin = async ({ project, client, $, directory, worktree
       }
 
       if (event.type === "session.idle") {
-        // LIMITATION: Cannot block stopping in OpenCode
+        // Can reactively resume session via client.session.prompt
+        // See "Stop Hook Simulation" section for full pattern
         await client.app.log({
           service: "my-plugin",
           level: "debug",
@@ -553,25 +559,30 @@ export const MyPlugin: Plugin = async ({ project, client, $, directory, worktree
     },
 
     /**
-     * Before tool execution - modify args or log warnings
+     * Before tool execution - modify args, log, or block via throw
      * Converted from: PreToolUse hook
      *
-     * LIMITATION: CANNOT block execution. No output.abort exists.
-     * Can only modify output.args or log warnings.
+     * Can modify output.args, log warnings, or throw to block execution.
+     * NOTE: Only fires for primary agent — not subagent or MCP tool calls.
      */
     "tool.execute.before": async (input, output) => {
       // Use input.tool (NOT input.call.name)
-      if (input.tool !== "skill") return;
+      if (input.tool !== "bash") return;
 
       // Access args via output.args (can read and modify)
-      const args = output.args as { name?: string } | undefined;
+      const args = output.args as { command?: string } | undefined;
 
-      // Example: Log a warning (cannot block)
-      if (args?.name === "dangerous-skill") {
+      // Example: Block dangerous commands by throwing
+      if (args?.command?.includes("rm -rf")) {
+        throw new Error("Blocked dangerous command");
+      }
+
+      // Example: Log a warning (non-blocking)
+      if (args?.command?.includes("sudo")) {
         await client.app.log({
           service: "my-plugin",
           level: "warn",
-          message: "Warning: dangerous-skill invoked"
+          message: "Warning: sudo command invoked"
         });
       }
     },
@@ -613,19 +624,23 @@ export default MyPlugin;
 
 These are the tool names seen in `input.tool` within hook callbacks.
 
-| Claude Code Tool | OpenCode Tool Name |
-|-----------------|-------------------|
-| `TodoWrite` | `todowrite` |
-| `TodoRead` | `todoread` |
-| `Bash` | `bash` |
-| `Read` | `read` |
-| `Edit` | `edit` |
-| `Write` | `edit` |
-| `Skill` | `skill` |
-| `Task` | `task` |
-| `AskUserQuestion` | `question` |
+| Claude Code Tool | OpenCode Tool Name | Notes |
+|-----------------|-------------------|-------|
+| `TodoWrite` | `todowrite` | Legacy (pre-v2.1.16) |
+| `TodoRead` | `todoread` | Legacy (pre-v2.1.16) |
+| `TaskCreate` | `todowrite` | v2.1.16+ replacement for TodoWrite |
+| `TaskUpdate` | `todowrite` | v2.1.16+ task status/blockers |
+| `TaskList` | `todoread` | v2.1.16+ replacement for TodoRead |
+| `TaskGet` | `todoread` | v2.1.16+ get task by ID |
+| `Bash` | `bash` | |
+| `Read` | `read` | |
+| `Edit` | `edit` | |
+| `Write` | `edit` | |
+| `Skill` | `skill` | |
+| `Task` | `task` | |
+| `AskUserQuestion` | `question` | |
 
-**Note**: There is no single `todo` tool - it's split into `todowrite` and `todoread`.
+**Note**: Claude Code v2.1.16+ replaced `TodoWrite`/`TodoRead` with `TaskCreate`/`TaskUpdate`/`TaskList`/`TaskGet`. All four map to OpenCode's `todowrite`/`todoread`. In hooks, check for both old and new tool names for compatibility.
 
 ### Context Injection
 
@@ -649,25 +664,40 @@ These are the tool names seen in `input.tool` within hook callbacks.
 
 | Feature | Why | Workaround |
 |---------|-----|------------|
-| Stop blocking | `session.idle` cannot prevent stopping | Log warning |
-| **PreToolUse blocking** | `tool.execute.before` has no `output.abort` | Use `permission.ask` hook OR log warning |
-| SubagentStop | No equivalent event | None |
-| Subagent tool interception | Hooks don't intercept subagent tool calls | Design around this limitation |
+| Stop blocking (synchronous) | `session.idle` cannot prevent stopping synchronously | Reactive simulation: detect idle → check conditions → `client.session.prompt` to resume (see [Stop Hook Simulation](#stop-hook-simulation)) |
+| **PreToolUse blocking (subagents)** | `tool.execute.before` does not fire for subagent tool calls | Use agent-level tool permissions; `throw` in `tool.execute.before` works for primary agent only |
+| SubagentStop (synchronous) | No cancellable "before subagent stops" hook | Reactive: detect child sessions via `session.created` + `parentID`, then prompt/abort (see [Subagent Activity Detection](#subagent-activity-detection)) |
+| Subagent tool interception | `tool.execute.before/after` don't fire for subagent tool calls | Use agent-level tool permissions for enforcement; plugin hooks only for observability of parent session |
 | MCP tool interception | MCP tool calls don't trigger hooks | Use MCP server-side logic |
 | Python dependencies | Different runtime | Find TypeScript alternatives |
 | additionalContext returns | Hooks cannot return additionalContext | Use system transform hooks |
 
-**IMPORTANT**: Unlike Claude Code, OpenCode's `tool.execute.before` **CANNOT block** execution - there is no `output.abort` field. It can only modify `output.args` or log warnings.
+**IMPORTANT**: OpenCode's `tool.execute.before` **can block** execution by throwing an error (there is no `output.abort` field, but `throw new Error(...)` works). However, this hook **only fires for the primary agent** — subagent and MCP tool calls are not intercepted.
 
-**Alternative for blocking**: Use the `permission.ask` hook to control whether tools are allowed:
+**Blocking approaches** (from most to least granular):
+
+1. **Permission config** — Declarative deny/ask/allow rules (see [Permission Config](#permission-config))
+2. **`permission.ask` hook** — Programmatic allow/deny/ask decisions:
+
 ```typescript
 "permission.ask": async (input, output) => {
-  // Can set output.status to "allow", "deny", or "ask" (prompt user)
   if (shouldBlock(input)) {
     output.status = "deny";
   }
 }
 ```
+
+3. **`tool.execute.before` throw** — Block with custom logic:
+
+```typescript
+"tool.execute.before": async (input, output) => {
+  if (input.tool === "bash" && output.args.command?.includes("rm -rf")) {
+    throw new Error("Blocked dangerous command");
+  }
+}
+```
+
+**Note**: All three approaches only apply to the **primary agent**. For subagent enforcement, use agent-level tool permissions in frontmatter (see [Subagent Activity Detection](#subagent-activity-detection)).
 
 ### Logging
 
@@ -682,6 +712,233 @@ await client.app.log({
 ```
 
 Enable verbose logging with `opencode --verbose`.
+
+### Permission Config
+
+OpenCode supports declarative permission rules in `opencode.json` that control tool access without writing plugin code. This is the most robust enforcement mechanism and applies system-wide.
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "*": "ask",
+    "edit": "deny",
+    "bash": {
+      "*": "ask",
+      "git *": "allow",
+      "rm *": "deny"
+    },
+    "task": "deny"
+  }
+}
+```
+
+**Permission values:**
+- `"allow"` — Always permit without prompting
+- `"ask"` — Prompt user for confirmation (default)
+- `"deny"` — Always block
+
+**Key features:**
+- Supports glob patterns for command-level granularity (e.g., `"git *": "allow"`)
+- `"task": "deny"` prevents subagent spawning (useful to prevent "delegate-to-bypass" policy circumvention)
+- Applies to all agents including subagents (unlike plugin hooks)
+
+**Claude Code → OpenCode mapping:**
+
+| Claude Code PreToolUse Pattern | OpenCode Permission Config |
+|-------------------------------|---------------------------|
+| Block specific tool entirely | `"toolname": "deny"` |
+| Block specific commands | `"bash": { "rm *": "deny" }` |
+| Prompt before dangerous ops | `"bash": { "*": "ask" }` |
+| Allow safe operations | `"bash": { "git *": "allow" }` |
+| Block subagent spawning | `"task": "deny"` |
+
+### Stop Hook Simulation
+
+OpenCode cannot synchronously block a session from going idle the way Claude Code stop hooks can. However, you can **reactively simulate stop hooks** by detecting `session.idle`, evaluating conditions, and programmatically resuming the session via `client.session.prompt`.
+
+#### How It Works
+
+1. Subscribe to `session.idle` via the `event` hook
+2. When idle fires, run your stop conditions (e.g., dirty working tree, failing tests, incomplete TODOs)
+3. If conditions indicate work remains, call `client.session.prompt` to inject a continuation prompt into the same session
+4. The session resumes as if the user typed a new message
+
+#### Implementation Pattern
+
+```typescript
+import type { Plugin } from "@opencode-ai/plugin"
+
+export const AutoContinue: Plugin = async ({ client, $ }) => {
+  // Per-session state to prevent infinite loops
+  const state = new Map<string, { runs: number; lastAt: number }>()
+
+  const MAX_RUNS_PER_SESSION = 10
+  const MIN_MS_BETWEEN_RUNS = 5_000
+
+  async function shouldContinue(): Promise<{ ok: boolean; reason?: string }> {
+    // Example: continue if working tree has uncommitted changes
+    const diff = await $`git diff --name-only`.text()
+    if (diff.trim().length > 0) {
+      return { ok: true, reason: `Working tree not clean:\n${diff}` }
+    }
+
+    // Example: continue if tests are failing
+    // const test = await $`bun test`.nothrow()
+    // if (test.exitCode !== 0) {
+    //   return { ok: true, reason: `Tests failing (exit ${test.exitCode}).` }
+    // }
+
+    return { ok: false }
+  }
+
+  async function continueSession(sessionID: string, reason: string) {
+    await client.session.prompt({
+      path: { id: sessionID },
+      body: {
+        parts: [{
+          type: "text",
+          text:
+            `Do not stop yet. Continue until completion.\n` +
+            `Reason: ${reason}\n\n` +
+            `Next steps:\n` +
+            `- Fix remaining issues implied by the reason.\n` +
+            `- Re-run necessary checks.\n` +
+            `- Summarize what changed and why.\n`,
+        }],
+      },
+    })
+  }
+
+  return {
+    event: async ({ event }) => {
+      if (event.type !== "session.idle") return
+
+      const sessionID = event.properties.sessionID
+      const now = Date.now()
+      const s = state.get(sessionID) ?? { runs: 0, lastAt: 0 }
+
+      // Guardrails: cap total resumes and enforce debounce
+      if (s.runs >= MAX_RUNS_PER_SESSION) return
+      if (now - s.lastAt < MIN_MS_BETWEEN_RUNS) return
+
+      const decision = await shouldContinue()
+      if (!decision.ok) return
+
+      state.set(sessionID, { runs: s.runs + 1, lastAt: now })
+      await continueSession(sessionID, decision.reason ?? "Unspecified condition")
+    },
+  }
+}
+
+export default AutoContinue
+```
+
+#### Common Stop Conditions
+
+| Condition | Check |
+|-----------|-------|
+| Dirty working tree | `git diff --name-only` non-empty |
+| Tests failing | Test runner exits non-zero |
+| Lint/format violations | Linter exits non-zero |
+| Typecheck errors | `tsc --noEmit` exits non-zero |
+| TODOs remaining | Watch `todo.updated` events or query session state |
+
+#### Guardrails (Required)
+
+Always implement these safeguards to prevent infinite loops:
+
+1. **Max resumes per session** - Cap total auto-continues (e.g., 10)
+2. **Debounce interval** - Minimum time between resumes (e.g., 5 seconds)
+3. **Deterministic checks** - Flaky tests will cause oscillation
+4. **Logging** - Use `client.app.log` for observability
+
+#### Implementation Styles
+
+| Style | Description | Best For |
+|-------|-------------|----------|
+| **In-process plugin** | Plugin in `.opencode/plugins/` subscribes to `session.idle` and calls `client.session.prompt` | Linting, small checks, "continue until clean" |
+| **Out-of-process supervisor** | Separate process uses `opencode serve` + SDK event stream (`client.event.subscribe()` SSE) to observe and resume sessions | Multi-project control, centralized policy, long-running workflows |
+
+#### Limitations vs Claude Code Stop Hooks
+
+| Aspect | Claude Code | OpenCode |
+|--------|-------------|----------|
+| Timing | Synchronous (blocks before idle) | Reactive (resumes after idle) |
+| Veto stopping | Yes (return `decision: "block"`) | No (session goes idle, then resumes) |
+| User visibility | Transparent | User may briefly see idle state |
+| Loop safety | Built-in | Must implement guardrails manually |
+
+**Note on `noReply`**: The SDK documents `body.noReply: true` for context-only injection. However, behavior may vary across OpenCode versions. For stop hook simulation, use explicit continuation prompts rather than `noReply`.
+
+### Subagent Activity Detection
+
+Claude Code's `SubagentStop` hook lets you intercept when a subagent finishes. OpenCode has no direct equivalent, but subagent activity can be **detected reactively** through child session monitoring.
+
+#### How It Works
+
+OpenCode subagents run in child sessions. The session creation API supports a `parentID` field, and you can query `/session/:id/children` to enumerate a session's subagents. By watching `session.created` events and checking for parent relationships, you can detect subagent spawning and react accordingly.
+
+#### Detection Pattern
+
+```typescript
+import type { Plugin } from "@opencode-ai/plugin"
+
+export const SubagentMonitor: Plugin = async ({ client }) => {
+  // Track known parent sessions
+  const parentSessions = new Set<string>()
+
+  return {
+    event: async ({ event }) => {
+      // Detect new child sessions (subagent spawned)
+      if (event.type === "session.created") {
+        const parentID = event.properties.parentID
+        if (parentID) {
+          await client.app.log({
+            service: "subagent-monitor",
+            level: "info",
+            message: `Subagent spawned: session ${event.properties.sessionID} (parent: ${parentID})`,
+          })
+          parentSessions.add(parentID)
+        }
+      }
+
+      // Detect child session going idle (subagent "stopped")
+      if (event.type === "session.idle") {
+        const sessionID = event.properties.sessionID
+        // Check if this is a child session by querying parent
+        // or maintaining your own parent→child map
+        await client.app.log({
+          service: "subagent-monitor",
+          level: "debug",
+          message: `Session idle: ${sessionID}`,
+        })
+      }
+    },
+  }
+}
+
+export default SubagentMonitor
+```
+
+#### Capabilities and Limitations
+
+| Goal | Possible? | How |
+|------|-----------|-----|
+| **Detect** subagent spawning | ✅ Yes | Watch `session.created` with `parentID` |
+| **React** to subagent completion | ✅ Yes | Watch `session.idle` for child sessions, then prompt/abort |
+| **Query** child sessions | ✅ Yes | Use `/session/:id/children` endpoint |
+| **Veto** subagent spawning | ❌ No | No cancellable "before subagent" hook |
+| **Intercept** subagent tool calls | ❌ No | `tool.execute.before/after` don't fire for subagent calls |
+
+#### Enforcement Strategy
+
+Since plugin hooks don't reliably intercept subagent tool calls, use a two-layer approach:
+
+1. **Agent-level tool permissions** (preventive) — Configure subagent tool restrictions in agent frontmatter (`tools: { bash: false }`) to enforce security boundaries
+2. **Plugin-based monitoring** (reactive) — Use session event detection for observability, logging, and orchestration
+
+**Prefer agent config over plugin hooks for security-critical restrictions on subagents.**
 
 ---
 
@@ -762,8 +1019,12 @@ Apply these transformations to prompt content:
 | Pattern | Replacement | Notes |
 |---------|-------------|-------|
 | `AskUserQuestion` | `question` | User question tool |
-| `TodoWrite` | `todowrite` | Todo write tool |
-| `TodoRead` | `todoread` | Todo read tool |
+| `TodoWrite` | `todowrite` | Legacy todo write tool |
+| `TodoRead` | `todoread` | Legacy todo read tool |
+| `TaskCreate` | `todowrite` | v2.1.16+ task creation |
+| `TaskUpdate` | `todowrite` | v2.1.16+ task status/blockers |
+| `TaskList` | `todoread` | v2.1.16+ task listing |
+| `TaskGet` | `todoread` | v2.1.16+ task details |
 
 **Other replacements:**
 | Pattern | Replacement | Notes |
@@ -976,9 +1237,9 @@ OpenCode uses glob patterns that accept **both** singular and plural:
 
 ### Cannot Convert
 
-1. **Stop hooks that block**: `session.idle` cannot prevent stopping
-2. **SubagentStop hooks**: No equivalent event in OpenCode
-3. **Subagent tool interception**: Hooks don't fire for subagent tool calls
+1. **Stop hooks that block synchronously**: `session.idle` cannot prevent stopping, but can reactively resume (see [Stop Hook Simulation](#stop-hook-simulation))
+2. **SubagentStop hooks (synchronous)**: No cancellable hook, but can reactively detect child sessions and prompt/abort (see [Subagent Activity Detection](#subagent-activity-detection))
+3. **Subagent tool interception**: `tool.execute.before/after` don't fire for subagent tool calls — use agent-level tool permissions for enforcement
 4. **MCP tool interception**: MCP tool calls don't trigger hooks
 5. **Complex Python deps**: Must find TypeScript alternatives
 6. **Model auto-routing**: Claude Code uses Haiku for searches automatically
@@ -1043,9 +1304,9 @@ OpenCode uses glob patterns that accept **both** singular and plural:
 - [ ] Use `experimental.chat.system.transform` for context injection at start
 - [ ] Map `PostCompact` → `experimental.session.compacting`
 - [ ] Map `PostToolUse` → `tool.execute.after` (use `input.tool` not `input.call.name`)
-- [ ] Map `PreToolUse` → `tool.execute.before` (CANNOT block - log warnings only)
-- [ ] Document any `Stop` hooks (blocking not supported)
-- [ ] Document any `PreToolUse` blocking (not supported - use logging)
+- [ ] Map `PreToolUse` → `tool.execute.before` (can block via `throw`, modify args, or log — primary agent only)
+- [ ] Convert `Stop` hooks → reactive idle-triggered continue pattern (see [Stop Hook Simulation](#stop-hook-simulation))
+- [ ] Convert `PreToolUse` blocking → `throw` in `tool.execute.before` OR `permission.ask` hook OR permission config
 - [ ] Convert Python logic to TypeScript
 
 ### Testing
