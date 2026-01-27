@@ -15,6 +15,17 @@ Manifest-driven workflows separating Deliverables (what to build) from Invariant
 | `/define` | Define a manifest with deliverables and acceptance criteria |
 | `/do` | Execute a manifest-driven workflow autonomously |
 
+## Task Types
+
+The `/define` command supports domain-specific guidance for different deliverable types:
+
+| Type | Guidance File | Use Cases |
+|------|---------------|-----------|
+| **Code** | `tasks/CODING.md` | Features, APIs, fixes, refactors, tests |
+| **Document** | `tasks/DOCUMENT.md` | Specs, proposals, reports, formal docs |
+| **Research** | `tasks/RESEARCH.md` | Investigations, analyses, comparisons, competitive reviews |
+| **Blog** | `tasks/BLOG.md` | Blog posts, articles, tutorials, newsletters |
+
 ## Skills (Non-User-Invocable)
 
 These skills are called programmatically by `/do`, not directly by users:
