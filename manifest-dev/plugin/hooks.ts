@@ -135,7 +135,7 @@ Do not restart completed work. Resume from where you left off.`
         lastIdleAt: 0,
       }
 
-      if (skillName === "_do" || skillName.endsWith(":_do")) {
+      if (skillName === "do" || skillName.endsWith(":do")) {
         state.hasDoactive = true
         state.doArgs = args?.arguments
         state.hasDone = false

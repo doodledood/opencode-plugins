@@ -1,31 +1,17 @@
 # Conversion Notes
 
-Lessons learned during conversion. Read alongside CONVERSION_GUIDE.md.
+Fine-tuning decisions for the sync operation. These are literal notes about specific requests/choices.
 
-## Model Mapping: Opus → GPT-5.2
+## Model Mapping
 
-When converting `model: opus` agents:
-- Map to `model: openai/gpt-5.2`
-- Add `reasoningEffort: xhigh`
+- `model: opus` → `model: openai/gpt-5.2` with `reasoningEffort: xhigh`
 
-## Dual Invocability Pattern
+## Skill Naming (manifest-dev)
 
-**Pattern**: `command/X.md` + `skill/_X/SKILL.md`
+- `_define` → `define` (skill, no command wrapper)
+- `_do` → `do` (skill, no command wrapper)
 
-In Claude Code, `_define` and `define` were separate skills. In OpenCode:
-- `command/define.md` - user invokes `/define`
-- `skill/_define/SKILL.md` - model invokes `skill({ name: "_define" })`
-
-The command is a thin wrapper:
-```yaml
----
-description: 'Description'
----
-
-Use the skill tool: skill({ name: "_define", arguments: "$ARGUMENTS" })
-```
-
-Keep the underscore prefix on skills to match the source repo pattern.
+OpenCode skills are user-invocable, so no need for thin command wrappers that just call `skill({ name: "..." })`. Use skills directly.
 
 ## Tool Name Mapping
 

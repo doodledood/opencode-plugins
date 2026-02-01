@@ -153,38 +153,46 @@ OpenCode discovers resources from **flat directories**, not nested plugin struct
 
 | Aspect | Commands (`command/*.md`) | Skills (`skill/*/SKILL.md`) |
 |--------|---------------------------|----------------------------|
-| User invocable | Yes (`/command-name`) | No |
+| User invocable | Yes (`/command-name`) | Yes (also user-invocable!) |
 | Model invocable | No | Yes (`skill({ name: "..." })`) |
 | Directory structure | Flat files only | Supports subdirectories |
+
+**Key insight**: OpenCode skills ARE user-invocable (unlike Claude Code). However, commands provide a cleaner UX for user-facing functionality since they appear in the `/` menu with their description.
 
 ### Conversion Table
 
 | Claude Code | → | OpenCode |
 |-------------|---|----------|
-| User-invocable skill (simple) | → | `command/*.md` |
-| User-invocable skill (has supporting files) | → | `command/*.md` + `skill/*/SKILL.md` |
+| User-invocable skill (simple) | → | `command/*.md` (full content, not wrapper) |
+| User-invocable skill (has supporting files) | → | `command/*.md` + supporting files in `skill/*/` |
 | Non-user-invocable skill | → | `skill/*/SKILL.md` |
-| Dual-invocable pattern (`define` + `_define`) | → | `command/define.md` + `skill/_define/SKILL.md` |
 
-### Dual Invocability Pattern
+### No Thin Wrappers Needed
 
-For skills needing BOTH user AND model invocation, create both:
+Since OpenCode skills ARE user-invocable, **don't create thin command wrappers** that just call skills. Use skills directly:
 
-```
-command/define.md           # User types /define
-skill/_define/SKILL.md      # Model calls skill({ name: "_define" })
-```
-
-Command wrapper content:
 ```yaml
+# BAD - unnecessary command wrapper
+command/define.md:
 ---
 description: 'Description here'
 ---
-
-Use the skill tool: skill({ name: "_define", arguments: "$ARGUMENTS" })
+Use the skill tool: skill({ name: "define", arguments: "$ARGUMENTS" })
 ```
 
-See `references/NOTES.md` for additional context.
+```yaml
+# GOOD - skill is directly user-invocable
+skill/define/SKILL.md:
+---
+name: define
+description: 'Description here'
+---
+[Full content here]
+```
+
+**When to use commands vs skills**:
+- **Skills** (`skill/*/SKILL.md`): Preferred for most content. Supports subdirectories for supporting files. User-invocable AND model-invocable.
+- **Commands** (`command/*.md`): Only for simple, flat content that doesn't need supporting files or model invocation.
 
 **Note**: Agents (`agent/*.md`) are different from skills. Check the source directory.
 
