@@ -2,9 +2,11 @@
 # Install/sync OpenCode plugins by copying to ~/.config/opencode/
 #
 # Usage:
-#   ./install.sh                           # Sync default plugins (vibe-workflow, vibe-extras)
+#   ./install.sh                           # Sync default plugins (manifest-dev, vibe-extras)
 #   ./install.sh vibe-workflow             # Sync specific plugin
 #   ./install.sh vibe-workflow,consultant  # Sync multiple (comma-separated)
+#   ./install.sh clean                     # Remove ALL installed plugin files
+#   ./install.sh clean vibe-workflow       # Remove specific plugin files
 #
 # Environment variables:
 #   OPENCODE_PLUGINS    - Comma or space-separated list of plugins, or:
@@ -91,6 +93,61 @@ clean_plugin_files() {
     if [ $removed -gt 0 ]; then
         log_info "  Cleaned $removed existing files"
     fi
+    return $removed
+}
+
+# Clean ALL installed files from config directory
+clean_all() {
+    local total=0
+
+    echo ""
+    echo "=========================================="
+    echo "  OpenCode Plugins Cleaner"
+    echo "=========================================="
+    echo ""
+    log_info "Target: $CONFIG_DIR"
+    echo ""
+
+    shopt -s nullglob
+
+    # Remove all command files
+    local count=0
+    for f in "$CONFIG_DIR/command/"*.md; do
+        [ -e "$f" ] && rm -f "$f" && count=$((count + 1))
+    done
+    [ $count -gt 0 ] && log_success "Removed $count command files" && total=$((total + count))
+
+    # Remove all agent files
+    count=0
+    for f in "$CONFIG_DIR/agent/"*.md; do
+        [ -e "$f" ] && rm -f "$f" && count=$((count + 1))
+    done
+    [ $count -gt 0 ] && log_success "Removed $count agent files" && total=$((total + count))
+
+    # Remove all skill directories
+    count=0
+    for d in "$CONFIG_DIR/skill/"*/; do
+        [ -d "$d" ] && rm -rf "$d" && count=$((count + 1))
+    done
+    [ $count -gt 0 ] && log_success "Removed $count skill directories" && total=$((total + count))
+
+    # Remove all plugin/hook files
+    count=0
+    for f in "$CONFIG_DIR/plugin/"*.ts "$CONFIG_DIR/plugin/"*.js; do
+        [ -e "$f" ] && rm -f "$f" && count=$((count + 1))
+    done
+    [ $count -gt 0 ] && log_success "Removed $count hook files" && total=$((total + count))
+
+    shopt -u nullglob
+
+    echo ""
+    echo "=========================================="
+    if [ $total -gt 0 ]; then
+        log_success "Cleaned $total total files/directories"
+    else
+        log_info "Nothing to clean"
+    fi
+    echo "=========================================="
 }
 
 # Postfix filename with plugin name
@@ -308,8 +365,44 @@ get_plugins() {
     echo "$input" | tr ',' ' '
 }
 
+# Handle clean subcommand
+do_clean() {
+    shift  # Remove "clean" from args
+
+    if [ $# -eq 0 ]; then
+        # No args: clean everything
+        clean_all
+    else
+        # Clean specific plugins
+        echo ""
+        echo "=========================================="
+        echo "  OpenCode Plugins Cleaner"
+        echo "=========================================="
+        echo ""
+        log_info "Target: $CONFIG_DIR"
+        echo ""
+
+        local plugins=$(echo "$*" | tr ',' ' ')
+        for plugin in $plugins; do
+            log_info "Cleaning $plugin..."
+            clean_plugin_files "$plugin"
+        done
+
+        echo ""
+        echo "=========================================="
+        log_success "Done"
+        echo "=========================================="
+    fi
+}
+
 # Main
 main() {
+    # Handle clean subcommand
+    if [ "${1:-}" = "clean" ]; then
+        do_clean "$@"
+        exit 0
+    fi
+
     local plugins=$(get_plugins "$@")
 
     echo ""

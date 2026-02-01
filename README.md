@@ -62,6 +62,9 @@ alias opencode-sync='([ -d /tmp/opencode-plugins ] && git -C /tmp/opencode-plugi
 
 # Sync all plugins
 alias opencode-sync-all='([ -d /tmp/opencode-plugins ] && git -C /tmp/opencode-plugins pull || git clone https://github.com/doodledood/opencode-plugins.git /tmp/opencode-plugins) && OPENCODE_PLUGINS=all /tmp/opencode-plugins/install.sh'
+
+# Clean all installed plugins
+alias opencode-clean='[ -d /tmp/opencode-plugins ] && /tmp/opencode-plugins/install.sh clean || rm -rf ~/.config/opencode/{command,agent,skill,plugin}'
 ```
 
 ### Update Existing Installation
@@ -117,17 +120,25 @@ After installation, commands are available as `/<command>-<plugin>` (e.g., `/rev
 
 ## Uninstall
 
-Remove installed files by plugin:
+Use the `clean` subcommand to remove installed files:
 
 ```bash
-# Remove all vibe-workflow files
-rm ~/.config/opencode/command/*-vibe-workflow.md
-rm ~/.config/opencode/agent/*-vibe-workflow.md
-rm ~/.config/opencode/plugin/vibe-workflow-*.ts
+# Remove ALL installed plugin files
+/tmp/opencode-plugins/install.sh clean
 
-# Or remove everything and reinstall fresh
+# Remove specific plugin(s)
+/tmp/opencode-plugins/install.sh clean vibe-workflow
+/tmp/opencode-plugins/install.sh clean vibe-workflow,consultant
+
+# Or manually remove everything
 rm -rf ~/.config/opencode/{command,agent,skill,plugin}
 ```
+
+The clean command removes files from the standard OpenCode directories:
+- `~/.config/opencode/command/*.md`
+- `~/.config/opencode/agent/*.md`
+- `~/.config/opencode/skill/*/`
+- `~/.config/opencode/plugin/*.ts`
 
 ## Converting Plugins (For Developers)
 
