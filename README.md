@@ -26,7 +26,7 @@ The install script copies contents to these locations, **postfixing filenames wi
 ### Quick Install (Default Plugins)
 
 ```bash
-# Clone/pull and install default plugins (vibe-workflow, vibe-extras)
+# Clone/pull and install default plugins (manifest-dev, vibe-extras)
 ([ -d /tmp/opencode-plugins ] && git -C /tmp/opencode-plugins pull || git clone https://github.com/doodledood/opencode-plugins.git /tmp/opencode-plugins) && /tmp/opencode-plugins/install.sh
 ```
 
@@ -57,7 +57,7 @@ OPENCODE_PLUGINS="vibe-workflow,consultant" /tmp/opencode-plugins/install.sh
 Add to your `~/.zshrc` or `~/.bashrc`:
 
 ```bash
-# Sync default plugins (vibe-workflow, vibe-extras)
+# Sync default plugins (manifest-dev, vibe-extras)
 alias opencode-sync='([ -d /tmp/opencode-plugins ] && git -C /tmp/opencode-plugins pull || git clone https://github.com/doodledood/opencode-plugins.git /tmp/opencode-plugins) && /tmp/opencode-plugins/install.sh'
 
 # Sync all plugins

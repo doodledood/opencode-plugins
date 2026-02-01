@@ -9,7 +9,7 @@
 # Environment variables:
 #   OPENCODE_PLUGINS    - Comma or space-separated list of plugins, or:
 #                         "all" or "" to install all available plugins
-#                         If unset, defaults to: vibe-workflow vibe-extras
+#                         If unset, defaults to: manifest-dev vibe-extras
 #   OPENCODE_CONFIG_DIR - Target directory (default: ~/.config/opencode)
 #
 # Sync behavior:
@@ -282,7 +282,7 @@ sync_plugin() {
 }
 
 # Default plugins when no args and OPENCODE_PLUGINS is not set
-DEFAULT_PLUGINS="vibe-workflow vibe-extras"
+DEFAULT_PLUGINS="manifest-dev vibe-extras"
 
 # Parse plugins from args or env var
 get_plugins() {
