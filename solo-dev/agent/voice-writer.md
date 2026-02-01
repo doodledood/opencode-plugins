@@ -1,6 +1,9 @@
 ---
 description: |
   Generate content in the user's authentic voice using their AUTHOR_VOICE.md document. This agent reads the voice specification and produces content that matches the author's tone, vocabulary, structure, and signature moves.
+mode: subagent
+model: openai/gpt-5.2
+reasoningEffort: xhigh
 
   <example>
   Context: User wants to generate sample texts to calibrate their voice doc.
@@ -17,11 +20,10 @@ tools:
   bash: true
   glob: true
   grep: true
-  question: false
   read: true
   skill: true
   todowrite: true
-mode: subagent
+  question: false
 ---
 
 # Voice Writer Agent

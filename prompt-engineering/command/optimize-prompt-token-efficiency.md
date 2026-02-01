@@ -20,7 +20,7 @@ This skill transforms verbose prompts into token-efficient versions through:
 
 ## Workflow
 
-### Phase 0: Create Todo List (todowrite immediately)
+### Phase 0: Create Task List (use task management immediately)
 
 Create todos tracking workflow phases. List reflects areas of work, not fixed steps.
 
@@ -71,8 +71,7 @@ Copy original content to working_path using Write tool (verification needs a fil
 
 **Step 2.2: Run verifier first**
 
-Launch prompt-token-efficiency-verifier agent via Task tool BEFORE any optimization:
-- subagent_type: "prompt-engineering:prompt-token-efficiency-verifier"
+Use the prompt-token-efficiency-verifier agent BEFORE any optimization:
 - prompt: "Verify prompt token efficiency. File: {working_path}. Check for redundancy, verbose phrasing, filler words, structural inefficiencies, and compression opportunities. Report VERIFIED if already efficient, or INEFFICIENCIES_FOUND with specific details."
 
 **Step 2.3: Handle verifier response**
@@ -102,8 +101,7 @@ For each iteration from 1 to 5:
 1. **Apply compressions from verifier feedback**: For each inefficiency in the verifier's report, apply the suggested compression. Write optimized version to working_path.
    - Only fix inefficiencies the verifier identified - do not add your own improvements
 
-2. **Re-verify**: Launch prompt-token-efficiency-verifier agent via Task tool:
-   - subagent_type: "prompt-engineering:prompt-token-efficiency-verifier"
+2. **Re-verify**: Use the prompt-token-efficiency-verifier agent:
    - prompt: "Verify compression is lossless. Original file: {original_path}. Compressed file: {working_path}. Compare semantic content - check for missing facts, altered meaning, lost emphasis, removed nuance. Report VERIFIED if lossless, or ISSUES_FOUND with specific gaps."
 
 3. **Handle response**:
@@ -195,7 +193,7 @@ Review the changes manually.
 |-----------|------|
 | **Verify first** | Always run verifier before any optimization; maybe prompt is already efficient |
 | **Verifier-driven** | Only fix inefficiencies the verifier identifies - no independent analysis or improvements |
-| **Track progress** | todowrite to track phases; expand todos on iteration |
+| **Track progress** | Use task management to track phases; expand tasks on iteration |
 | **Losslessness** | Never sacrifice semantic information for density; every fact must be preserved |
 | **Nuance preservation** | Keep emphasis, intentional hedging, priority signals; 10% with nuance > 40% without |
 | **No ambiguity** | Compressed must be as unambiguous as original |

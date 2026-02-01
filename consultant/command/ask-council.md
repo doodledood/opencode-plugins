@@ -6,7 +6,7 @@ Consult multiple models in parallel about: $ARGUMENTS
 
 ---
 
-Use the Task tool with `subagent_type='consultant:consultant'`. Specify multi-model consultation.
+Use the consultant agent. Specify multi-model consultation.
 
 **Default models** (use all 3 unless user specifies otherwise):
 - `gpt-5.2-pro`

@@ -149,43 +149,44 @@ OpenCode discovers resources from **flat directories**, not nested plugin struct
 
 ## Skill Classification
 
-### Critical Distinction: Commands vs Skills in OpenCode
+### Commands vs Skills
 
-**OpenCode commands (`command/*.md`):**
-- Only invocable by **users** via `/command-name` in TUI
-- The model **CANNOT** call commands programmatically
-- Appear in autocomplete menu
+| Aspect | Commands (`command/*.md`) | Skills (`skill/*/SKILL.md`) |
+|--------|---------------------------|----------------------------|
+| User invocable | Yes (`/command-name`) | No |
+| Model invocable | No | Yes (`skill({ name: "..." })`) |
+| Directory structure | Flat files only | Supports subdirectories |
 
-**OpenCode skills (`skill/*/SKILL.md`):**
-- Loaded by the **model** via `skill({ name: "skill-name" })` tool
-- Users do NOT see these in the `/` menu
-- Used for programmatic/automated workflows
+### Conversion Table
 
-### Detection Rules: Skill → Command or Skill?
+| Claude Code | → | OpenCode |
+|-------------|---|----------|
+| User-invocable skill (simple) | → | `command/*.md` |
+| User-invocable skill (has supporting files) | → | `command/*.md` + `skill/*/SKILL.md` |
+| Non-user-invocable skill | → | `skill/*/SKILL.md` |
+| Dual-invocable pattern (`define` + `_define`) | → | `command/define.md` + `skill/_define/SKILL.md` |
 
-A Claude Code skill becomes an **OpenCode skill** (NOT command) if ANY of:
-1. Has `user-invocable: false` in frontmatter
-2. Is referenced by any agent, skill, or command for programmatic invocation (e.g., `Skill("plugin:verify")`)
-3. Has more than just `SKILL.md` in its directory (e.g., has `references/`, scripts, etc.)
-4. Description indicates it's called by another command (e.g., "called by /do, not directly")
+### Dual Invocability Pattern
 
-A Claude Code skill becomes an **OpenCode command** if:
-1. It's user-invocable (default) AND
-2. It's NOT referenced for programmatic invocation by other resources AND
-3. It only contains `SKILL.md` (no supporting files)
+For skills needing BOTH user AND model invocation, create both:
 
-**Default**: If unsure, convert to **command** (user-invocable is the default).
+```
+command/define.md           # User types /define
+skill/_define/SKILL.md      # Model calls skill({ name: "_define" })
+```
 
-**Note**: Internal helpers like `chunk-implementor` in vibe-workflow are **agents**, not skills. Check if the file is in `skill/` or `agent/` directory.
+Command wrapper content:
+```yaml
+---
+description: 'Description here'
+---
 
-### Conversion Strategy
+Use the skill tool: skill({ name: "_define", arguments: "$ARGUMENTS" })
+```
 
-| Skill Type | → | OpenCode Target | Why |
-|------------|---|-----------------|-----|
-| User-invocable only | → | `command/*.md` | User invokes via `/command` |
-| Referenced by other resources | → | `skill/*/SKILL.md` | Model loads via `skill()` tool |
-| Has supporting files | → | `skill/*/SKILL.md` | Preserves directory structure |
-| `user-invocable: false` | → | `skill/*/SKILL.md` | Explicit non-user-invocable |
+See `references/NOTES.md` for additional context.
+
+**Note**: Agents (`agent/*.md`) are different from skills. Check the source directory.
 
 ---
 

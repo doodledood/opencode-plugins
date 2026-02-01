@@ -70,7 +70,7 @@ Started: {timestamp}
 
 ## Discovery Areas
 
-Discover enough to assess phase and create actionable strategy. Use question for all questions.
+Discover enough to assess phase and create actionable strategy. Use AskUserQuestion for all questions.
 
 ### Current State
 

@@ -1,0 +1,38 @@
+{
+  "name": "opencode-manifest-dev",
+  "version": "0.39.1",
+  "description": "Manifest-driven workflows for structured task execution with verification gates.",
+  "author": "doodledood",
+  "type": "module",
+  "homepage": "https://github.com/doodledood/opencode-plugins",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/doodledood/opencode-plugins"
+  },
+  "license": "MIT",
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "manifest",
+    "define",
+    "verification",
+    "invariants",
+    "deliverables",
+    "acceptance-criteria",
+    "autonomous",
+    "approach",
+    "trade-offs",
+    "do"
+  ],
+  "opencode": {
+    "type": "plugin",
+    "hooks": [
+      "experimental.session.compacting",
+      "tool.execute.before",
+      "session.idle"
+    ]
+  },
+  "dependencies": {
+    "@opencode-ai/plugin": "^1.0.162"
+  }
+}

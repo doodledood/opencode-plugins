@@ -1,7 +1,7 @@
 {
   "name": "opencode-vibe-extras",
-  "version": "1.7.0",
-  "description": "Standalone utilities that complement the core development workflow",
+  "version": "2.0.0",
+  "description": "Standalone utilities for codebase exploration, web research, git operations, and code maintenance",
   "author": "doodledood <aviram.kofman@gmail.com>",
   "type": "module",
   "homepage": "https://github.com/doodledood/opencode-plugins",
@@ -19,11 +19,11 @@
     "documentation",
     "cleanup",
     "slop",
-    "history-rewrite"
+    "history-rewrite",
+    "research",
+    "exploration",
+    "codebase"
   ],
-  "opencode": {
-    "type": "plugin"
-  },
   "dependencies": {
     "@opencode-ai/plugin": "^1.0.162"
   }

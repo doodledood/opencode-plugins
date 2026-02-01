@@ -1,8 +1,7 @@
 {
   "name": "opencode-solo-dev",
-  "version": "1.20.0",
+  "version": "1.20.1",
   "description": "Toolkit for solo developers to build, manage, and grow their business - customer profiling, brand guidelines, design system, SEO strategy, X/Twitter growth strategy, content creation, and more",
-  "author": "doodledood <aviram.kofman@gmail.com>",
   "type": "module",
   "homepage": "https://github.com/doodledood/opencode-plugins",
   "repository": {
@@ -10,5 +9,31 @@
     "url": "https://github.com/doodledood/opencode-plugins"
   },
   "license": "MIT",
-  "keywords": ["opencode", "opencode-plugin", "solo-dev", "indie-hacker", "solopreneur", "author-voice", "customer-profile", "brand-guidelines", "design-guidelines", "design-system", "ux-audit", "icp", "productivity", "business", "seo", "geo", "seo-strategy", "ai-citations", "x-strategy", "twitter-growth", "social-media"]
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "solo-dev",
+    "indie-hacker",
+    "solopreneur",
+    "author-voice",
+    "customer-profile",
+    "brand-guidelines",
+    "design-guidelines",
+    "design-system",
+    "ux-audit",
+    "icp",
+    "productivity",
+    "business",
+    "seo",
+    "geo",
+    "seo-strategy",
+    "ai-citations",
+    "x-strategy",
+    "twitter-growth",
+    "social-media"
+  ],
+  "dependencies": {
+    "@opencode-ai/plugin": "^1.0.162"
+  },
+  "author": "doodledood <aviram.kofman@gmail.com>"
 }

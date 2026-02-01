@@ -1,35 +1,36 @@
-# solo-dev
+# Solo Dev
 
-Toolkit for solo developers to build, manage, and grow their business - customer profiling, brand guidelines, design system, SEO strategy, X/Twitter growth strategy, content creation, and more.
+Foundational documents for solo developers and small teams.
+
+## Why
+
+AI-assisted development works better when there's documented context about your business, customers, and brand. Instead of re-explaining "who we're building for" every conversation, define it once and let Claude reference it consistently.
+
+## Components
+
+**Skills** (auto-invoked when relevant):
+- `define-customer-profile` - Create CUSTOMER.md that all other decisions flow from
+- `define-brand-guidelines` - Define how to communicate with your customer
+- `define-design-guidelines` - Create UI/UX guidelines that resonate with your customer
+- `define-seo-strategy` - Traditional SEO + AI citation optimization
+- `craft-author-voice` - Capture your writing style for AI replication
+
+**Commands** (explicit invocation):
+- `/write-as-me <topic>` - Generate content in your voice (requires AUTHOR_VOICE.md)
+- `/audit-ux <area>` - Check UI changes against your design guidelines
+
+## Recommended Order
+
+1. Start with `define-customer-profile` - everything else depends on knowing who you're building for
+2. Then brand guidelines, design guidelines as needed
+3. Author voice is independent - create whenever you want consistent content generation
 
 ## Installation
 
 ```bash
-./install.sh solo-dev
+/plugin marketplace add https://github.com/doodledood/claude-code-plugins
+/plugin install solo-dev@claude-code-plugins-marketplace
 ```
-
-## Commands
-
-| Command | Description |
-|---------|-------------|
-| `/audit-ux` | UX audit for your application |
-| `/craft-author-voice` | Create your author voice document |
-| `/define-brand-guidelines` | Define brand guidelines |
-| `/define-customer-profile` | Define ideal customer profile |
-| `/define-design-guidelines` | Define design system guidelines |
-| `/define-seo-strategy` | Define SEO strategy |
-| `/define-x-strategy` | Define X/Twitter growth strategy |
-| `/write-as-me` | Write content in your voice |
-
-## Agents
-
-| Agent | Description |
-|-------|-------------|
-| `design-quality-auditor` | Audit design quality |
-| `design-research` | Design research agent |
-| `seo-researcher` | SEO research agent |
-| `ux-auditor` | UX audit agent |
-| `voice-writer` | Write in author's voice |
 
 ## License
 

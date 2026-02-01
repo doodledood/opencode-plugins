@@ -131,7 +131,6 @@ For prompts involving accumulated findings across steps:
 
 ```markdown
 ---
-name: kebab-case-name
 description: 'What it does. When to use. Trigger terms.'
 ---
 

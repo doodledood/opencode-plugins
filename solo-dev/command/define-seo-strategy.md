@@ -47,7 +47,7 @@ This skill guides you through:
 
 ## Workflow
 
-### Initial Setup (todowrite immediately)
+### Initial Setup (create todos immediately)
 
 **Create todo list** - areas to research/validate, not fixed steps.
 
@@ -155,7 +155,7 @@ options:
 
 **Mark "Input collection" todo `in_progress`.**
 
-Collect required inputs via question.
+Collect required inputs via AskUserQuestion.
 
 **Question 1: Website URL** (Required)
 
@@ -211,9 +211,9 @@ options:
 
 **Mark "Research" todo `in_progress`.**
 
-Launch 3 seo-researcher agents in parallel using the Task tool. Send all three Task calls in a single message.
+Launch 3 seo-researcher agents in parallel. Send all three agent invocations in a single message.
 
-**IMPORTANT**: Use the Task tool with `subagent_type: seo-researcher` for each agent.
+**IMPORTANT**: Use the `seo-researcher` agent for each research task.
 
 **Agent 1: Industry Analysis**
 
@@ -665,7 +665,7 @@ After generating the initial document, validate major sections with the user.
 
 For each validation section:
 1. Mark current section validation `in_progress`
-2. Ask validation question (question)
+2. Ask validation question (AskUserQuestion)
 3. **Write feedback immediately** to research log
 4. If not "Yes": add todo for that section's revision
 5. Update SEO_STRATEGY.md

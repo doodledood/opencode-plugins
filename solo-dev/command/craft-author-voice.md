@@ -59,7 +59,7 @@ options:
 
 ### Phase 1: Discovery
 
-Use question tool with multi-choice options for EVERY question to minimize cognitive load. If question is unavailable, present numbered options and ask the user to reply with the number(s).
+Use AskUserQuestion tool with multi-choice options for EVERY question to minimize cognitive load. If AskUserQuestion is unavailable, present numbered options and ask the user to reply with the number(s).
 
 **Question 1: Primary Content Type**
 
@@ -308,7 +308,7 @@ The agent will read the voice doc and output 3 samples:
 
 **Step 3.2: Collect Feedback Per Sample**
 
-For EACH of the 3 generated samples, use question tool (or numbered options if unavailable):
+For EACH of the 3 generated samples, use AskUserQuestion tool (or numbered options if unavailable):
 
 ```
 header: "Sample [N]"
@@ -387,11 +387,11 @@ When user indicates completion:
 - Track what changes between versions
 
 ### Reduce Cognitive Load
-- ALWAYS use question tool when available - this is critical for UX
+- ALWAYS use AskUserQuestion tool when available - this is critical for UX
 - Present multi-choice questions to minimize user typing/thinking
 - Limit options to 6-8 max per question
 - Use multiSelect for non-exclusive choices
-- Only use free-text for examples/samples or when question unavailable
+- Only use free-text for examples/samples or when AskUserQuestion unavailable
 
 ## Output Location
 

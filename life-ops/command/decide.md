@@ -1,6 +1,5 @@
 ---
 description: 'Personal decision advisor for QUALITY over speed. Exhaustive discovery, option finding, sequential elimination, structured analysis. Use for investments, purchases, career, life decisions. Surfaces hidden factors, tracks eliminations with reasons, confident recommendations. Triggers: help me decide, should I, which should I choose, compare options, what should I do, weighing options.'
-context: fork
 ---
 
 **Decision request**: $ARGUMENTS
@@ -34,7 +33,7 @@ Guide users through decisions via **exhaustive discovery**, **targeted research*
 
 **IMMEDIATELY after reading this skill**, before ANY user interaction:
 1. Run `date +%Y%m%d-%H%M%S` for timestamp
-2. Create todo list using todowrite (see 1.2 template)
+2. Create todo list (see 1.2 template)
 3. Mark first todo `in_progress`
 
 **Why non-negotiable**: Without todo list, phases skipped, write-to-log forgotten, synthesis fails from context rot. Todo list IS the workflow—not optional.
@@ -43,13 +42,13 @@ Guide users through decisions via **exhaustive discovery**, **targeted research*
 
 ---
 
-**Required tools**: question, Read, Write, todowrite; WebSearch or Task (web-researcher) for external decisions
+**Required capabilities**: User questions, file reading/writing, todo tracking; web search or web-researcher agent for external decisions
 
-**Tool syntax**: `Task(subagent_type:'<plugin>:<agent>', prompt:'...', description:'...')`. Task unavailable → use WebSearch.
+**Agent spawning**: Launch agents by specifying plugin:agent and prompt. Agent spawning unavailable → use direct web search.
 
 **Partial availability**: Core tools unavailable → inform user, exit. WebSearch/Task unavailable → skip research, self-knowledge flow. web-researcher not found → WebSearch directly.
 
-**question fallback**: Free-text → map to closest option. Tool fails → natural language.
+**question tool fallback**: Free-text → map to closest option. Tool fails → natural language.
 
 **Research thoroughness**:
 | Level | Sources | Queries | Verification |
@@ -323,7 +322,7 @@ Then → research (if external) or elimination (if enough data).
 
 **Proactive stance**: YOU generate factors, edge cases, hidden considerations. Don't wait—surface what they'd miss.
 
-**Question style**: Default question. Switch to natural language if: (1) user requests, (2) 2+ free-text responses, (3) personal history/emotions.
+**Question style**: Default question tool. Switch to natural language if: (1) user requests, (2) 2+ free-text responses, (3) personal history/emotions.
 
 ## 2.1 Decision Framing & Underlying Need (MUST COMPLETE BEFORE 2.3)
 
@@ -492,10 +491,7 @@ Minimum acceptable? Not ideal—what you could live with."
 - **Ambiguous** (20-80%): Flag with evidence: "Mixed signals on {factor}: {pass evidence} vs {fail evidence}. Your call?"
 - Only ask user when genuinely ambiguous
 
-**Research context if needed**:
-```
-Task(subagent_type:"vibe-workflow:web-researcher",prompt:"quick - Typical {factor} ranges in {category}? Basic/mid/premium.",description:"Market context")
-```
+**Research context if needed**: Use the web-researcher agent to quickly research typical {factor} ranges in {category}, including basic, mid, and premium tiers.
 
 ## 3.3 Categorize Factors
 
@@ -541,18 +537,12 @@ Before elimination, capture intuition:
 
 ## 4.2 Option Discovery
 
-```
-Task(subagent_type:"vibe-workflow:web-researcher",prompt:"medium - Options for {decision}.
+Use the web-researcher agent to discover options for {decision}. Provide the agent with:
+- Requirements: non-negotiables and important factors
+- Context: the user's situation
+- Scope: direct solutions, alternatives, and creative options
 
-REQUIREMENTS:
-- Must: {non-negotiables}
-- Important: {factors}
-- Context: {situation}
-
-FIND: (1) Direct solutions, (2) Alternatives, (3) Creative options
-
-Return by category with descriptions.",description:"Discover options")
-```
+Request results organized by category with descriptions.
 
 ## 4.3 Present Options
 
@@ -589,21 +579,12 @@ If interdependent: Note in log, consider hybrids, adjust for leverage/sequencing
 
 ## 5.1 Deep Research
 
-**CRITICAL**: Use Task (not Skill) to preserve todo state.
+Use the web-researcher agent to research {decision} at the appropriate thoroughness level. Provide:
+- Options list to evaluate
+- Factors to assess with thresholds (e.g., Factor #1 meets {X}?, Factor #2 meets {Y}?)
+- User's context and situation
 
-```
-Task(subagent_type:"vibe-workflow:web-researcher",prompt:"{thoroughness} - Research {decision}.
-
-OPTIONS: {list}
-
-EVALUATE:
-1. {Factor #1}: meets {X}?
-2. {Factor #2}: meets {Y}?
-
-CONTEXT: {situation}
-
-FOR EACH: values with sources, strengths/weaknesses, hidden costs, best/worst for",description:"Research options")
-```
+Request for each option: values with sources, strengths/weaknesses, hidden costs, and best/worst use cases.
 
 **Thoroughness by stakes**: Low→medium, Medium→thorough, High→very thorough
 
@@ -639,7 +620,7 @@ Scan for factors: important (multiple sources), NOT in discovery, could change r
 ```
 
 **Missing cell for Non-Negotiable/Important**:
-1. Targeted: `Task(subagent_type:"vibe-workflow:web-researcher", prompt:"quick - {Factor} for {Option}", description:"Fill gap")`
+1. Targeted: Use the web-researcher agent to quickly research {Factor} for {Option} to fill the data gap.
 2. Still unavailable:
    ```json
    {"questions":[{"question":"No data for {Option}'s {Factor}. How proceed?","header":"Data Gap","options":[{"label":"Assume meets","description":"Optimistic"},{"label":"Assume fails","description":"Conservative"},{"label":"Skip option","description":"Can't evaluate"}],"multiSelect":false}]}

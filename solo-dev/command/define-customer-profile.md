@@ -36,7 +36,7 @@ The discovery questions give you a solid starting point, but **the real magic ha
 
 ## Workflow
 
-### Initial Setup (todowrite immediately)
+### Initial Setup (create todos immediately)
 
 **Create todo list** - areas to discover, not steps. List expands as user answers reveal new areas.
 
@@ -103,7 +103,7 @@ options:
 
 **Mark "Discovery questions" todo `in_progress`.**
 
-Use question tool with multi-choice options for EVERY question. **Put the recommended option FIRST** with "(Recommended)" suffix to reduce cognitive load.
+Use AskUserQuestion tool with multi-choice options for EVERY question. **Put the recommended option FIRST** with "(Recommended)" suffix to reduce cognitive load.
 
 **After EACH question**, append to discovery log:
 ```markdown
@@ -364,7 +364,7 @@ Only proceed to Phase 2/3 when gaps are filled.
 
 If user requested research, launch 2-3 parallel opus agents to gather data. **Skip this phase if user said "No research"**.
 
-**IMPORTANT**: Use the Task tool to launch these agents IN PARALLEL (single message with multiple Task calls):
+**IMPORTANT**: Launch these agents IN PARALLEL (single message with multiple agent invocations):
 
 **Agent 1: ICP Pattern Researcher**
 ```
@@ -682,7 +682,7 @@ After generating the initial document, begin iterative refinement.
 
 For each refinement cycle:
 1. Mark current refinement todo `in_progress`
-2. Ask validation question (question)
+2. Ask validation question (AskUserQuestion)
 3. **Write feedback immediately** to discovery log
 4. If not "Yes": add todo for that section's revision
 5. Update CUSTOMER.md
@@ -843,7 +843,7 @@ This is your **foundational document**. Use it to:
 - Keep discoveries as mental notes instead of todos
 - Skip todo list
 - Finalize with unresolved sections
-- Ask questions without question tool
+- Ask questions without AskUserQuestion tool
 - Forget to expand todos when user reveals complexity
 
 ## Output Location

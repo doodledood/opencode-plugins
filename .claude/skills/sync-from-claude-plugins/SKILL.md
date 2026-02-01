@@ -1,68 +1,64 @@
 ---
-name: sync-from-claude-plugins
-description: Fetch claude-code-plugins repo and convert plugins to OpenCode format. Usage: /sync-from-claude-plugins [plugin-names...] (default: all available plugins)
+name: sync-plugins
+description: Sync plugins from configured source repos to OpenCode format. Usage: /sync-plugins [repo:plugin...] or /sync-plugins --all
 ---
 
-# Sync Claude Code Plugins to OpenCode
+# Sync Plugins to OpenCode
 
-Convert Claude Code plugins to OpenCode format.
+Convert Claude Code plugins from multiple source repos to OpenCode format.
 
-**Source of truth**: `references/CONVERSION_GUIDE.md` contains ALL conversion rules. Refer to it during conversion.
+**Source of truth**:
+- `references/CONVERSION_GUIDE.md` - ALL conversion rules
+- `references/NOTES.md` - Lessons learned and special patterns (MUST READ)
+
+## Source Repos Configuration
+
+Read `references/REPOS.md` for the list of source repos and their plugins.
 
 ## Arguments
 
-- `$ARGUMENTS`: Plugin names and flags (space-separated). If no plugins specified, uses changelog to determine what changed.
+- `$ARGUMENTS`: Space-separated list of `repo:plugin` pairs, plugin names (searches all repos), or flags.
+  - `vibe-workflow` → finds in any repo
+  - `claude-code-plugins:vibe-workflow` → explicit repo
+  - `manifest-dev:manifest-dev` → explicit repo
+  - No args → sync all plugins from all repos
 
 ### Flags
 
-- `--full`: Force full resync of all plugins (skip changelog, do everything from scratch)
+- `--all`: Sync all plugins from all configured repos
+- `--full`: Force full resync (skip changelog, do everything from scratch)
+- `--repo=NAME`: Only sync from specified repo
 - `--reasoning-effort[=LEVEL]`: Add `reasoningEffort` to agent frontmatter (`low`/`medium`/`high`/`xhigh`, default: `medium`)
 
 ## Workflow
 
-### 1. Locate Source Repo
+### 1. Load Repo Config
+
+1. **Read** `references/REPOS.md`
+2. **Parse** the table to get repo configs
+3. **Filter** by `--repo` flag if specified
+
+### 2. For Each Repo
 
 ```bash
+# Find or clone repo
 REPO=""
-for dir in ~/Documents/Projects/claude-code-plugins ~/Lemonade/claude-code-plugins /tmp/claude-code-plugins; do
+for dir in <local-paths>; do
   [ -d "$dir" ] && cd "$dir" && git pull origin main && REPO="$dir" && break
 done
-[ -z "$REPO" ] && git clone https://github.com/doodledood/claude-code-plugins.git /tmp/claude-code-plugins && REPO=/tmp/claude-code-plugins
+[ -z "$REPO" ] && git clone <git-url> /tmp/<repo-name> && REPO=/tmp/<repo-name>
 ```
 
-### 2. Check Changelog (Default Mode)
+### 3. Identify Plugins to Sync
 
-Unless `--full` flag is passed:
+- If specific plugins requested: filter to those
+- If `--all` or no args: sync all plugins listed for this repo
+- Check changelog for incremental sync (unless `--full`)
 
-1. **Read** `$REPO/CHANGELOG.md`
-2. **Find** `[Unreleased]` section entries for requested plugins (or all if none specified)
-3. **Parse** each entry to understand:
-   - Which plugin changed (e.g., `[vibe-experimental]`)
-   - What changed (skill names, agent names, hooks)
-   - Nature of change (new feature, refactor, fix)
-4. **Identify** specific files to sync based on changelog entries
-5. **Skip** hook-only changes if they involve blocking behavior (OpenCode limitation)
+### 4. For Each Plugin
 
-Example changelog parsing:
-```
-- [vibe-experimental] v0.24.5 - manifest-verifier: Rewrite with principles-based gap detection
-  → Sync: agent/manifest-verifier.md
-
-- [vibe-experimental] v0.24.3 - /define, /do: Surface logging discipline
-  → Sync: command/define.md, command/do.md (or skill/ paths in source)
-
-- [vibe-workflow] v2.17.2 - Stop hook: Allow stops on API errors
-  → Skip: OpenCode cannot block stops (document limitation only)
-```
-
-### 3. Targeted Sync
-
-For each identified file:
-
-1. **Read** source file from `$REPO/claude-plugins/<plugin>/`
-2. **Read** corresponding OpenCode file (if exists)
-3. **Compare** and identify actual differences
-4. **Apply** conversions per CONVERSION_GUIDE.md:
+1. **Read** source files from `$REPO/<plugins-dir>/<plugin>/`
+2. **Apply** conversions per CONVERSION_GUIDE.md:
    - Remove `name:` from commands/agents (keep for skills)
    - Remove `user-invocable:` field
    - Convert `model:` to full ID (opus→openai/gpt-5.2, sonnet→anthropic/claude-sonnet-4-5-20250929)
@@ -71,27 +67,14 @@ For each identified file:
    - Replace `CLAUDE.md` → `AGENTS.md`
    - Replace `AskUserQuestion` → `question tool`
    - Replace `Skill("plugin:name")` → `/name` (commands) or `skill({ name: "name" })` (skills)
-5. **Write** updated file
-
-### 4. Full Sync (--full flag only)
-
-If `--full` flag passed, use original workflow:
-
-1. Read `references/CONVERSION_GUIDE.md` completely
-2. Bulk copy all files using `scripts/bulk_copy.sh`
-3. Transform using `scripts/transform.py`
-4. Convert hooks to TypeScript
-5. Create/update package.json and README.md
-6. Validate all files
+3. **Write** to `<plugin>/` in this repo
 
 ### 5. Report Changes
 
-Output summary:
 ```
-Synced from claude-code-plugins:
+Synced from <repo>:
 
 <plugin-name>:
-  - <file>: <brief description of change>
   - <file>: <brief description of change>
 
 Skipped (OpenCode limitations):
@@ -106,7 +89,7 @@ Document but don't attempt to sync:
 - **SubagentStop hooks**: No equivalent event in OpenCode
 - **additionalContext returns**: Hooks cannot inject context mid-conversation
 
-## Output
+## Output Structure
 
 ```
 <plugin>/

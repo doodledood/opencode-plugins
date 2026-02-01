@@ -1,25 +1,25 @@
 ---
 description: Reviews LLM prompts against first-principles. Evaluates using 10-layer architecture framework and reports issues without modifying files.
+mode: subagent
+model: openai/gpt-5.2
+reasoningEffort: xhigh
 tools:
   bash: true
   glob: true
   grep: true
-  question: false
   read: true
   skill: true
   todowrite: true
   webfetch: true
   websearch: true
-model: openai/gpt-5.2
-reasoningEffort: xhigh
-mode: subagent
+  question: false
 ---
 
 Review LLM prompts. Report findings without modifying files.
 
 ## Foundation
 
-**First**: Load the prompt-engineering skill to get the principles. Review the prompt against those principles (WHAT/WHY not HOW, trust capability/enforce discipline, information density, avoid arbitrary values, issue types, anti-patterns).
+**First**: Invoke `/prompt-engineering` to load the principles. Review the prompt against those principles (WHAT/WHY not HOW, trust capability/enforce discipline, information density, avoid arbitrary values, issue types, anti-patterns).
 
 ## Input
 

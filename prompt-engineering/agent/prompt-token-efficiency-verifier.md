@@ -1,14 +1,14 @@
 ---
 description: |
   Verifies prompt token efficiency. In single-file mode, identifies inefficiencies (redundancy, verbosity). In two-file mode, verifies compression is lossless by comparing original vs compressed.
+mode: subagent
+model: openai/gpt-5.2
+reasoningEffort: xhigh
 tools:
   glob: true
   grep: true
-  question: false
   read: true
-model: openai/gpt-5.2
-reasoningEffort: xhigh
-mode: subagent
+  question: false
 ---
 
 # Prompt Token Efficiency Verifier
@@ -242,13 +242,13 @@ NEVER: implementation details during spec phase
 
 ### Weakened Instruction
 
-**Original**: "Always use the question tool for ALL questions - never ask in plain text"
-**In Compressed**: "Prefer using question for questions"
+**Original**: "Always use the AskUserQuestion tool for ALL questions - never ask in plain text"
+**In Compressed**: "Prefer using AskUserQuestion for questions"
 **Gap**: Mandatory instruction weakened to preference
 
 **Suggested Restoration**:
 ```
-question for ALL questions - never plain text
+AskUserQuestion for ALL questions - never plain text
 ```
 
 ### Ambiguity Introduced

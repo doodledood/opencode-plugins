@@ -1,24 +1,33 @@
-# vibe-extras
+# Vibe Extras
 
-Standalone utilities that complement the core development workflow.
+Standalone utilities for codebase exploration, web research, git operations, and code maintenance.
+
+## Commands
+
+**Research & exploration:**
+- `/explore-codebase` - Structural overview with prioritized file list (quick/medium/thorough/very-thorough)
+- `/research-web` - Deep web research with parallel investigators and multi-wave synthesis
+
+**Git utilities:**
+- `/rebase-on-main` - Safe rebasing with conflict resolution guidance
+- `/rewrite-history` - Rewrite branch into narrative-quality commits (backup + byte-identical verification)
+
+**Code maintenance:**
+- `/clean-slop` - Remove AI-generated noise (redundant comments, verbose patterns)
+- `/update-claude-md` - Create or maintain CLAUDE.md project instructions
+
+## Agents
+
+- `codebase-explorer` - Context-gathering agent for finding files to read. Maps codebase structure, returns overview + prioritized file list with line ranges.
+- `web-researcher` - Web research analyst using structured hypothesis tracking to gather and synthesize information from online sources.
 
 ## Installation
 
 ```bash
-./install.sh vibe-extras
+/plugin marketplace add https://github.com/doodledood/claude-code-plugins
+/plugin install vibe-extras@claude-code-plugins-marketplace
 ```
 
-## Commands
+## License
 
-| Command | Description |
-|---------|-------------|
-| `/clean-slop` | Remove AI-generated slop patterns from code |
-| `/rebase-on-main` | Interactive rebase workflow on main branch |
-| `/rewrite-history` | Rewrite git history with improved commit messages |
-| `/update-agents-md` | Update AGENTS.md with project conventions |
-
-## Agents
-
-| Agent | Description |
-|-------|-------------|
-| `slop-cleaner` | Identifies and removes AI-generated slop patterns |
+MIT

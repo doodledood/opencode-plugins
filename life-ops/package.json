@@ -1,8 +1,7 @@
 {
   "name": "opencode-life-ops",
-  "version": "1.8.0",
+  "version": "1.8.1",
   "description": "Personal decision-making and life workflow support",
-  "author": "Claude Code Plugins Marketplace",
   "type": "module",
   "homepage": "https://github.com/doodledood/opencode-plugins",
   "repository": {
@@ -10,5 +9,17 @@
     "url": "https://github.com/doodledood/opencode-plugins"
   },
   "license": "MIT",
-  "keywords": ["opencode", "opencode-plugin", "decisions", "life", "personal", "advisor", "research"]
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "decisions",
+    "life",
+    "personal",
+    "advisor",
+    "research"
+  ],
+  "dependencies": {
+    "@opencode-ai/plugin": "^1.0.162"
+  },
+  "author": "Claude Code Plugins Marketplace <>"
 }

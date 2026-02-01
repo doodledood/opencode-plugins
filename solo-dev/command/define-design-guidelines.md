@@ -143,7 +143,7 @@ If "No", ask what's different and adjust recommendations.
 
 ### Phase 2: Discovery
 
-Use question for all questions. **Put the recommended option FIRST** with "(Recommended)" suffix. **Use the opus agent's analysis to inform ALL recommendations.**
+Use AskUserQuestion for all questions. **Put the recommended option FIRST** with "(Recommended)" suffix. **Use the opus agent's analysis to inform ALL recommendations.**
 
 **Question 1: Aesthetic Direction**
 
@@ -439,7 +439,7 @@ Reference this document for ALL UI work. The test: Would your ICP feel this UI w
 - Deviations are intentional, not accidental
 
 ### Reduce Cognitive Load
-- ALWAYS use question tool when available
+- ALWAYS use AskUserQuestion tool when available
 - **Put recommended option FIRST** with "(Recommended)" suffix
 - **Pre-fill recommendations from agent analysis** - user should be able to accept defaults
 - Present multi-choice questions to minimize typing

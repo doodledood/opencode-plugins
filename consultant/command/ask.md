@@ -6,7 +6,7 @@ Consult an external model about: $ARGUMENTS
 
 ---
 
-Use the Task tool with `subagent_type='consultant:consultant'`. Pass the question/topic above as the consultant prompt.
+Use the consultant agent. Pass the question/topic above as the consultant prompt.
 
 **Defaults**:
 - Model: `gpt-5.2-pro` (unless user specifies another, e.g., "use claude-opus-4-5-20251101 to...")

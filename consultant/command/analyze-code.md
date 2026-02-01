@@ -6,7 +6,7 @@ Analyze code: $ARGUMENTS
 
 ---
 
-Use the Task tool with `subagent_type='consultant:consultant'`. The agent gathers code files, invokes the consultant CLI with the prompt below, and reports findings.
+Use the consultant agent. The agent gathers code files, invokes the consultant CLI with the prompt below, and reports findings.
 
 # Consultant Prompt
 
