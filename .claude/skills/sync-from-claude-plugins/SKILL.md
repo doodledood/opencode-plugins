@@ -46,7 +46,14 @@ REPO=""
 for dir in <local-paths>; do
   [ -d "$dir" ] && cd "$dir" && git pull origin main && REPO="$dir" && break
 done
-[ -z "$REPO" ] && git clone <git-url> /tmp/<repo-name> && REPO=/tmp/<repo-name>
+if [ -z "$REPO" ]; then
+  if [ -d "/tmp/<repo-name>" ]; then
+    cd /tmp/<repo-name> && git pull origin main
+  else
+    git clone <git-url> /tmp/<repo-name>
+  fi
+  REPO=/tmp/<repo-name>
+fi
 ```
 
 ### 3. Identify Plugins to Sync
