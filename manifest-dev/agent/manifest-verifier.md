@@ -44,10 +44,7 @@ Latent requirements emerge from domain understanding. Flag when:
 
 ### Edge cases for new capabilities
 
-New fields, APIs, or features have standard failure modes. Flag when missing:
-- **Data fields**: null/missing, multiple values, stale/cached, invalid states
-- **API integrations**: failure handling, latency/parallelization, rate limits
-- **User-facing changes**: error messages, edge case UI states
+New fields, APIs, or features have characteristic failure modes. Flag when the manifest lacks coverage for the failure modes typical to what's being built.
 
 ### Explicit → Encoded
 
@@ -64,12 +61,34 @@ Complex tasks need validated direction. Flag when:
 - Competing concerns discussed but no trade-offs (T-*) captured
 - High-risk task but no risk areas (R-*) defined
 
+### Outside view grounding
+
+Pre-mortem should be grounded in evidence, not pure imagination. Flag when:
+- No reference class identified (what type of task is this?)
+- No base rate failures logged (what typically goes wrong in this class?)
+- Pre-mortem scenarios don't inherit from known failure patterns
+
 ### Pre-mortem scenario resolution
 
 Failure scenarios raised must be resolved, not left dangling. Flag when:
 - Failure scenario discussed in log but no corresponding INV, AC, R-*, or explicit out-of-scope decision
 - Only immediate/obvious failure modes explored (no downstream, timing, or stakeholder impacts)
 - Scenarios logged but lack disposition (encoded, scoped out, or mitigated)
+- No mental model alignment check (user's vision of "done" vs deliverable definitions)
+
+### Backcasting coverage
+
+Positive dependencies (what must go right) should be surfaced. Flag when:
+- Log shows no backcasting exercise for non-trivial tasks
+- Implicit assumptions about infrastructure, tooling, or user behavior not examined
+- Load-bearing assumptions not resolved (verified, encoded as invariant, or logged as ASM)
+
+### Adversarial self-review
+
+Process self-sabotage patterns should be considered for scope-risky tasks (multi-deliverable, open-ended scope, or history of scope creep). Flag when:
+- Scope-risky task but no adversarial self-review in log
+- Patterns like scope creep, deferred edge cases, or "temporary" solutions not addressed
+- No Process Guidance guards against identified self-sabotage patterns
 
 ### Assumptions audit
 
