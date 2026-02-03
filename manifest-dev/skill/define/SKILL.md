@@ -1,6 +1,6 @@
 ---
 name: define
-description: 'Manifest builder. Converts known requirements into Deliverables + Invariants with verification criteria.'
+description: 'Manifest builder. Plan work, scope tasks, spec out requirements. Converts needs into Deliverables + Invariants with verification criteria.'
 ---
 
 # /define - Manifest Builder
@@ -16,7 +16,7 @@ Build a **comprehensive Manifest** that captures:
 
 Comprehensive means surfacing **latent criteria**—requirements the user doesn't know they have until probed. Users know their surface-level needs; your job is to discover the constraints and edge cases they haven't thought about.
 
-100% upfront is impossible—some criteria only emerge during implementation. Aim for high coverage. The manifest supports amendments for what's discovered later.
+Aim for high coverage. Amendments handle what emerges during implementation.
 
 Output: `/tmp/manifest-{timestamp}.md`
 
@@ -75,7 +75,7 @@ Scope deliverables and verification to repo context. Cross-repo invariants get e
 
 ## Constraints
 
-**All questions use AskUserQuestion** - Every user question goes through AskUserQuestion with options (2-4 per tool limit), one marked "(Recommended)".
+**All questions use the question tool** - Every user question goes through the question tool (tool limit: 2-4 options), one marked "(Recommended)". Never ask open-ended questions—they're cognitively demanding. Present concrete options the user can accept, reject, or adjust.
 
 **Task files supplement probing** - Task files add domain-specific risks and trade-offs as prompts—angles you might not think to check. They don't constrain what to ask; probing adapts to the specific task.
 
@@ -83,7 +83,7 @@ Scope deliverables and verification to repo context. Cross-repo invariants get e
 
 **Preference unknowns — ask early** - Trade-offs, priorities, scope decisions, and style preferences cannot be discovered through exploration. Ask these directly. Provide concrete options with a recommended default. If genuinely low-impact and the user signals "enough", proceed with the recommended default and record as a Known Assumption in the manifest.
 
-**Mark a recommended option** - Every question with options must include a recommended default. For single-select, mark exactly one "(Recommended)". For multi-select, mark sensible defaults or none if all equally valid. Reduces cognitive load — users accept, reject, or adjust rather than evaluating from scratch. AskUserQuestion supports max 4 options per question.
+**Mark a recommended option** - Every question with options must include a recommended default. For single-select, mark exactly one "(Recommended)". For multi-select, mark sensible defaults or none if all equally valid. Reduces cognitive load — users accept, reject, or adjust rather than evaluating from scratch.
 
 **Confirm before encoding** - When you discover constraints from exploration (structural patterns, conventions, existing boundaries), present them to the user before encoding as invariants. "I found X—should this be a hard constraint?" Discovered ≠ confirmed.
 
@@ -105,7 +105,7 @@ Scope deliverables and verification to repo context. Cross-repo invariants get e
 
 **Insights become criteria** - Outside view findings, pre-mortem risks, non-obvious discoveries → convert to INV-G* or AC-*. Don't include insights that aren't encoded as criteria.
 
-**Automate verification** - Use automated methods (commands, subagent review). When using general-purpose subagent, default to opus model. When a criterion seems to require manual verification, probe the user: suggest how it could be made automatable, or ask if they have ideas. Manual only as a last resort or when the user explicitly requests it.
+**Automate verification** - Use automated methods (commands, subagent review). When using general-purpose subagent, default to opus model (verification requires nuanced judgment). When a criterion seems to require manual verification, probe the user: suggest how it could be made automatable, or ask if they have ideas. Manual only as a last resort or when the user explicitly requests it.
 
 ## Approach Section (Complex Tasks)
 
@@ -123,6 +123,22 @@ After defining deliverables, probe for implementation direction. Skip for simple
 
 **Architecture vs Process Guidance**: Architecture = structural decisions (components, patterns, structure). Process Guidance = methodology constraints (tools, manual vs automated). "Add executive summary section covering X, Y, Z" is Architecture. "No bullet points in summary sections" is Process Guidance.
 
+## Outside View Protocol
+
+Before imagining failure, establish what typically fails in this class of task.
+
+**The exercise**: "What's the reference class? What usually goes wrong?"
+
+Identify the task type (refactor, feature, bug fix, etc.). Search for evidence: prior similar tasks, domain knowledge, task file warnings. What issues emerged post-delivery? What patterns caused rejection?
+
+Log the reference class and its known failure modes. Pre-mortem scenarios inherit these as priors—a refactor that "typically introduces regressions" starts with that as high-likelihood.
+
+```
+REFERENCE CLASS: [task type]
+BASE RATE FAILURES: [what typically goes wrong]
+SOURCE: [prior tasks | domain knowledge | task file]
+```
+
 ## Pre-Mortem Protocol
 
 Pre-mortems surface latent criteria—requirements users don't know they have until the right failure scenario makes them obvious. This isn't a checkbox; it's the backbone of comprehensive probing.
@@ -137,7 +153,7 @@ These are lenses for generating scenarios—prompts to activate failure imaginat
 |-----------|-----------------|------------------|
 | **Technical** | What breaks at the code/system level? | Race condition under concurrent access; memory leak at scale |
 | **Integration** | What breaks at boundaries? | API contract violated; schema migration breaks consumers |
-| **Stakeholder** | What causes rejection by users/reviewers? | Doesn't match mental model; missing expected capability |
+| **Stakeholder** | What causes rejection even if technically correct? | Doesn't match reviewer's mental model; solves stated problem but not underlying need; correct scope but wrong emphasis |
 | **Timing** | What fails later that works now? | Works today, breaks at scale; passes review, fails in production |
 | **Edge cases** | What inputs/conditions weren't considered? | Empty input, unicode, malformed data, timeout, concurrent modification |
 | **Dependencies** | What external factors cause failure? | Upstream API changes; library deprecation; environment drift |
@@ -148,12 +164,14 @@ Task files add domain-specific failure scenarios. Use them as fuel for imaginati
 
 For each relevant dimension, generate concrete failure scenarios. Be specific—"something breaks" is useless; "the scheduler runs a job twice when the server restarts mid-execution" is actionable.
 
-**Present scenarios to the user, not just derived questions.** The scenario itself triggers thinking. Compare:
+**Present scenarios to the user with concrete options.** The scenario itself triggers thinking, but don't ask open-ended questions—offer dispositions to choose from:
 
 - Weak: "Are there any race conditions we should worry about?"
-- Strong: "I'm imagining a scenario where two users submit orders at the same moment and both get assigned the same order number. Does concurrent access happen here?"
+- Strong: "I'm imagining two users submitting orders simultaneously and both getting the same order number. How should we handle this?" → Options: "Real risk - add to invariants (Recommended)", "Not possible (single-threaded)", "Already handled (describe how)", "Out of scope for this task"
 
-The concrete scenario helps users recognize whether it applies and often triggers related concerns they wouldn't have surfaced from an abstract question.
+The concrete scenario helps users recognize whether it applies. The options reduce cognitive load—users pick a disposition rather than formulating a response.
+
+**Mental model alignment**: Before finalizing deliverables, present your understanding and check for mismatch: "Here's what 'done' looks like: [concrete description]. Does this match your expectation?" → Options: "Yes, that's right (Recommended)", "Mostly, but also need [X]", "No, I expected [different thing]". Mismatches are latent criteria—expectations they didn't state.
 
 When logging scenarios, capture what matters:
 - **What fails** (the specific scenario)
@@ -165,10 +183,10 @@ Example log entry:
 DIMENSION: Timing
 SCENARIO: Feature works in dev but rate limits hit in production due to external API calls
 LIKELIHOOD: Medium | IMPACT: High
-QUESTION: Are there external API calls? What are the rate limits? Do we need caching or fallback?
+QUESTION: External API rate limits → Options: "APIs exist, need to verify limits (Recommended)", "No external APIs", "APIs exist, limits known and safe", "Real risk - add caching/fallback to invariants"
 ```
 
-When presenting to user: "I'm imagining this failing because we hit external API rate limits in production that we never see in dev. Are there external API calls? Do we know the rate limits?"
+When presenting to user: "I'm imagining this failing because we hit external API rate limits in production. How does this apply?" → Options as above.
 
 ### Scenario Disposition
 
@@ -188,6 +206,37 @@ Pre-mortem probing converges when:
 - User confirms no major failure modes were missed
 
 "I can't think of more scenarios" after trying multiple dimensions = converged. "I haven't tried thinking about it" = not converged.
+
+## Backcasting Protocol
+
+After pre-mortem, backcast to surface positive dependencies.
+
+**The exercise**: "Imagine this task succeeded on first review. What had to go right?"
+
+Pre-mortem asks "what broke?" Backcasting asks "what held?" This reveals load-bearing assumptions you haven't examined.
+
+Focus on implicit assumptions:
+- What existing infrastructure/tooling are you relying on?
+- What user behavior are you assuming?
+- What needs to stay stable that could change?
+
+For each positive dependency, present to user with disposition options: "This assumes [X] remains stable. How should we handle?" → Options: "Safe assumption - log as Known Assumption (Recommended)", "Verify it holds before proceeding", "Encode as invariant", "Actually a risk - add to pre-mortem".
+
+Converges when load-bearing assumptions are surfaced and each is verified, encoded, or logged as Known Assumption.
+
+## Adversarial Self-Review
+
+Red-team yourself: if you wanted this task to fail subtly, what decisions would you make that look reasonable individually?
+
+Pre-mortem imagines external failures. Adversarial self-review imagines process self-sabotage—patterns that compound:
+- Small scope additions ("just one more thing")
+- Edge cases deferred ("we'll handle that later")
+- "Temporary" solutions that become permanent
+- Process shortcuts that erode quality
+
+For each pattern identified, present to user: "This task is susceptible to [pattern]. Should we guard against it?" → Options: "Yes - add as Process Guidance (Recommended)", "Yes - add as verifiable Invariant", "Low risk for this task", "Already covered by [existing constraint]".
+
+Skip for simple tasks. Use for tasks with scope risk, process complexity, or history of scope creep.
 
 ## What the Manifest Needs
 

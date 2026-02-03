@@ -1214,14 +1214,14 @@ model: anthropic/claude-sonnet-4-5-20250929
 |-------|------------|
 | `slop-cleaner` | `agent/slop-cleaner.md` |
 
-### vibe-experimental
+### manifest-dev (formerly vibe-experimental)
 
-**Note**: `verify`, `done`, and `escalate` have `user-invocable: false` - they're called by `/do`, not directly.
+**Note**: `define` has supporting files (`tasks/` directory) so it must be a skill. All skills in this plugin are skills (not commands) since they're either non-user-invocable or have supporting files.
 
 | Skill | Type | → OpenCode |
 |-------|------|------------|
-| `define` | User-invocable | `command/define.md` |
-| `do` | User-invocable | `command/do.md` |
+| `define` | User-invocable (has tasks/) | `skill/define/SKILL.md` |
+| `do` | User-invocable | `skill/do/SKILL.md` |
 | `verify` | **Non-user-invocable** | `skill/verify/SKILL.md` |
 | `done` | **Non-user-invocable** | `skill/done/SKILL.md` |
 | `escalate` | **Non-user-invocable** | `skill/escalate/SKILL.md` |
