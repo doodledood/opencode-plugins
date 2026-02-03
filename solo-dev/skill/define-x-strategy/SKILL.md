@@ -1,4 +1,5 @@
 ---
+name: define-x-strategy
 description: 'Creates personalized X/Twitter growth strategy through guided interview. Based on algorithm-derived principles (exposure equation, phase model). Use when asked about X growth, Twitter strategy, building audience, or social media presence.'
 ---
 
@@ -6,7 +7,7 @@ description: 'Creates personalized X/Twitter growth strategy through guided inte
 
 Create personalized X_STRATEGY.md through discovery interview. Strategy is grounded in algorithm-derived optimal growth principles.
 
-**Before starting**: Read the reference documents in `skills/define-x-strategy/references/`:
+**Before starting**: Read the reference documents in `references/`:
 - `OPTIMAL_STRATEGY.md` — The growth model and optimization principles
 - `ALGORITHM_ANALYSIS.md` — Deep dive into X's recommendation algorithm
 

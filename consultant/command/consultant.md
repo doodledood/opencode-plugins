@@ -452,4 +452,4 @@ The agent constructs the appropriate consultant_cli.py command with all necessar
 - [LiteLLM Documentation](https://docs.litellm.ai/)
 - [Supported Models](https://docs.litellm.ai/docs/providers)
 - [Consultant Plugin README](../../README.md)
-- [Glob Patterns Guide](./references/glob-patterns.md)
+- [Glob Patterns Guide](../references/glob-patterns.md)
