@@ -14,19 +14,18 @@ Standalone utilities for codebase exploration, web research, git operations, and
 
 **Code maintenance:**
 - `/clean-slop` - Remove AI-generated noise (redundant comments, verbose patterns)
-- `/update-claude-md` - Create or maintain CLAUDE.md project instructions
+- `/update-agents-md` - Create or maintain AGENTS.md project instructions
+- `/address-pr-comments` - Triage and fix PR review comments (filters false positives, fixes valid ones)
 
 ## Agents
 
 - `codebase-explorer` - Context-gathering agent for finding files to read. Maps codebase structure, returns overview + prioritized file list with line ranges.
 - `web-researcher` - Web research analyst using structured hypothesis tracking to gather and synthesize information from online sources.
+- `slop-cleaner` - Expert at identifying and removing AI-generated code slop including useless comments and verbose patterns.
 
 ## Installation
 
-```bash
-/plugin marketplace add https://github.com/doodledood/claude-code-plugins
-/plugin install vibe-extras@claude-code-plugins-marketplace
-```
+See the main repository README for installation instructions.
 
 ## License
 
