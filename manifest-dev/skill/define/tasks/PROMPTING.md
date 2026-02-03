@@ -8,30 +8,59 @@ Prompts are manifests: **WHAT and WHY, not HOW**. State goals and constraints. T
 
 ## Quality Gates
 
-| Aspect | Agent | Threshold |
-|--------|-------|-----------|
-| Clarity | general-purpose | No ambiguous instructions or vague language |
-| No conflicts | general-purpose | No contradictory rules or priority collisions |
-| Information density | general-purpose | Every word earns its place |
-| No anti-patterns | general-purpose | No prescriptive HOW, arbitrary limits, weak language |
+| Gate | Threshold | Verify |
+|------|-----------|--------|
+| Clarity | No ambiguous instructions, no vague language, no implicit expectations | general-purpose |
+| No conflicts | No contradictory rules, no priority collisions, edge cases covered | general-purpose |
+| Structure | Critical rules surfaced prominently, clear hierarchy, no unintentional redundancy | general-purpose |
+| Information density | Every word earns its place | general-purpose |
+| No anti-patterns | No prescriptive HOW, arbitrary limits, capability instructions, weak language | general-purpose |
 
-## Risks
+## Context to Discover
 
-- **Prescribing HOW** - step-by-step instructions for things model knows; probe: can this be a goal instead of steps?
-- **Arbitrary limits** - "max 3 iterations" instead of "until converged"; probe: is this a principle or a number?
-- **Weak language** - "try to", "maybe", "if possible"; probe: can this be direct?
-- **Over-engineering** - 10 phases for simple task; probe: does complexity match the task?
-- **Buried critical info** - important rules hidden in middle of prompt
-- **Missing context** - domain terms undefined, success criteria unclear; probe: what does good output look like?
+Before defining a prompt, probe for these—missing context creates ambiguous prompts:
 
-## Trade-offs
+| Context Type | What to Surface | Probe |
+|--------------|-----------------|-------|
+| **Domain knowledge** | Industry terms, conventions, patterns | What jargon should the prompt understand? |
+| **User types** | Who interacts, expertise level, expectations | Who will use this? What do they expect? |
+| **Success criteria** | What good output looks like, what makes it fail | Show me a good/bad example output? |
+| **Edge cases** | Unusual inputs, error handling, boundary conditions | What weird inputs are possible? |
+| **Constraints** | Hard limits (length, format, tone), non-negotiables | What MUST never happen? What limits exist? |
+| **Integration context** | Where prompt fits, what comes before/after | What triggers this? What consumes the output? |
 
-- Brevity vs explicit guidance
-- Flexibility vs specificity
-- Principles vs examples
-- Trust capability vs enforce discipline
+## Issue Types
 
-## Scenario Prompts
+### Clarity
+- **Ambiguous instructions** - multiple valid interpretations; probe: could this be read two ways?
+- **Vague language** - "be helpful", "use good judgment", "when appropriate"; probe: what specifically?
+- **Implicit expectations** - unstated assumptions; probe: what does "good" mean here?
+
+### Conflict
+- **Contradictory rules** - "Be concise" vs "Explain thoroughly"; probe: which wins?
+- **Priority collisions** - two MUST rules that can't both be satisfied; probe: priority clear?
+- **Edge case gaps** - rules don't cover a situation; probe: what happens when X?
+
+### Structure
+- **Buried critical info** - important rules hidden in middle; probe: would skimming miss this?
+- **No hierarchy** - all instructions treated as equal priority; probe: what's most important?
+- **Unintentional redundancy** - same thing said multiple ways (note: repetition can be intentional emphasis)
+
+## Anti-Patterns
+
+| Anti-pattern | Example | Fix |
+|--------------|---------|-----|
+| Prescribing HOW | "First search, then read, then analyze..." | State goal: "Understand the pattern" |
+| Arbitrary limits | "Max 3 iterations", "2-4 examples" | Principle: "until converged", "as needed" |
+| Capability instructions | "Use grep to search", "Read the file" | Remove—model knows how |
+| Rigid checklists | Step-by-step heuristics tables | Convert to principles |
+| Weak language | "Try to", "maybe", "if possible" | Direct: "Do X", "Never Y" |
+| Buried critical info | Important rules in middle | Surface prominently |
+| Over-engineering | 10 phases for a simple task | Match complexity to need |
+
+## Risks & Scenario Prompts
+
+Pre-mortem fuel—imagine the prompt failing:
 
 - **Context rot** - critical instruction forgotten mid-execution; probe: long prompt? multi-step workflow?
 - **Ambiguous interpretation** - instruction parsed differently than intended; probe: could this be read two ways?
@@ -45,11 +74,102 @@ Prompts are manifests: **WHAT and WHY, not HOW**. State goals and constraints. T
 - **Tool use unclear** - model doesn't know when/how to use tools; probe: tool guidance explicit?
 - **Guardrail too loose** - harmful output possible; probe: what outputs must never happen?
 - **Guardrail too tight** - valid use cases blocked; probe: false positives acceptable?
-- **Verbosity mismatch** - too long or too terse for use case; probe: output length expectations?
+- **Verbosity mismatch** - output too long or too terse for use case; probe: output length expectations?
+
+## Trade-offs
+
+Prompt decisions often involve trade-offs—surface these during discovery:
+
+| Tension | Probe |
+|---------|-------|
+| Brevity vs explicit guidance | How much does user need spelled out vs trust capability? |
+| Flexibility vs specificity | Should output vary or follow strict format? |
+| Principles vs examples | Learn from rules or from demonstrations? |
+| Trust capability vs enforce discipline | What guardrails are actually needed? |
+
+## When Updating Prompts
+
+If the task is updating an existing prompt (not creating new):
+
+**High-signal changes only**: Every change must address a real failure mode or materially improve clarity. Don't change for the sake of change.
+
+**Right-sized changes**: Don't overcorrect. One edge case doesn't warrant restructuring.
+
+**Questions to probe**:
+- Does this change address a real failure mode?
+- Am I adding complexity to solve a rare case?
+- Can this be said in fewer words?
+- Am I turning a principle into a rigid rule?
+
+**Over-engineering warning signs** (probe if present):
+- Prompt length doubled or tripled
+- Adding edge cases that won't happen
+- "Improving" clear language into verbose language
+- Adding examples for obvious behaviors
+
+## Prompt Structure Guidance
+
+### Skills/Agents
+
+If creating a skill or agent, probe for:
+- **Name**: kebab-case, max 64 chars
+- **Description**: What it does + When to use + Trigger terms (under 1024 chars)
+- **Mission**: One-line WHAT, not HOW
+- **Empty input handling**: What happens with no arguments?
+- **Multi-phase**: Does it need memento pattern (log file)?
+
+### System Instructions
+
+If creating system instructions, probe for:
+- **Role**: Identity and purpose
+- **Approach**: Principles for thinking, not procedures
+- **Constraints**: MUST > SHOULD > PREFER hierarchy
+- **Output**: Format requirements if any
+
+### Skill Description Pattern
+
+Descriptions drive auto-invocation. Pattern: **What + When + Triggers**
+
+Weak: "Helps with prompts"
+Strong: "Craft or update LLM prompts from first principles. Use when creating new prompts, updating existing ones, or reviewing prompt structure."
 
 ## Multi-Phase Prompts
 
 If prompt accumulates findings across steps, needs memento pattern:
-- Write to log after each step (combat context rot)
-- Read full log before synthesis (restore context)
-- Externalize state to todos (working memory limit ~5-10 items)
+
+| LLM Limitation | Pattern Response |
+|----------------|------------------|
+| Context rot (middle content lost) | Write findings to log after EACH step |
+| Working memory (5-10 items max) | Todo lists externalize tracked areas |
+| Synthesis failure at scale | Read full log BEFORE final output |
+| Recency bias | Refresh moves findings to context end |
+
+Structure when memento applies:
+```
+- [ ] Create log /tmp/{workflow}-*.md
+- [ ] {Area 1}→log; done when {criteria}
+- [ ] {Area 2}→log; done when {criteria}
+- [ ] (expand: areas as discovered)
+- [ ] Refresh: read full log    ← Never skip
+- [ ] Synthesize→artifact; done when complete
+```
+
+Key disciplines:
+- `→log` after each collection step (discipline, not capability)
+- `Refresh: read full log` before synthesis (restores context)
+- Acceptance criteria on each todo ("; done when X")
+
+## Validation Criteria
+
+Manifests for prompting tasks should include ACs covering:
+
+- [ ] All ambiguities resolved (no multiple interpretations)
+- [ ] Domain context captured (terms, conventions, constraints)
+- [ ] Goals stated, not steps prescribed
+- [ ] No arbitrary numbers (or justified if present)
+- [ ] Weak language replaced with direct imperatives
+- [ ] Critical rules surfaced prominently
+- [ ] Complexity matches the task
+- [ ] Each word earns its place
+- [ ] If multi-phase: memento pattern applied correctly
+- [ ] If skill/agent: description follows What + When + Triggers pattern
