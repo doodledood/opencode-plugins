@@ -28,7 +28,17 @@ Read `references/REPOS.md` for the list of source repos and their plugins.
 - `--all`: Sync all plugins from all configured repos
 - `--full`: Force full resync (skip changelog, do everything from scratch)
 - `--repo=NAME`: Only sync from specified repo
-- `--reasoning-effort[=LEVEL]`: Add `reasoningEffort` to agent frontmatter (`low`/`medium`/`high`/`xhigh`, default: `medium`)
+
+## Reasoning Effort (This Repo's Default)
+
+When syncing plugins for this repo, **always** convert `model: opus` agents to:
+
+```yaml
+model: openai/gpt-5.2
+reasoningEffort: xhigh
+```
+
+This applies to all plugins synced here (vibe-workflow, vibe-extras, manifest-dev, consultant, prompt-engineering, solo-dev, etc.). The `xhigh` reasoning effort matches the intent of using a high-capability model like opus.
 
 ## Workflow
 
@@ -68,7 +78,9 @@ fi
 2. **Apply** conversions per CONVERSION_GUIDE.md:
    - Remove `name:` from commands/agents (keep for skills)
    - Remove `user-invocable:` field
-   - Convert `model:` to full ID (opus→openai/gpt-5.2, sonnet→anthropic/claude-sonnet-4-5-20250929)
+   - Convert `model: opus` → `model: openai/gpt-5.2` + `reasoningEffort: xhigh`
+   - Convert `model: sonnet` → `model: anthropic/claude-sonnet-4-5-20250929`
+   - Convert `model: haiku` → `model: anthropic/claude-haiku-4-5-20251001`
    - Convert `tools:` comma list to boolean object
    - Add `mode: subagent` to agents
    - Replace `CLAUDE.md` → `AGENTS.md`
