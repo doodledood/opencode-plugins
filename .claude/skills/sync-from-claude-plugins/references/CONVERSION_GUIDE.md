@@ -153,46 +153,44 @@ OpenCode discovers resources from **flat directories**, not nested plugin struct
 
 | Aspect | Commands (`command/*.md`) | Skills (`skill/*/SKILL.md`) |
 |--------|---------------------------|----------------------------|
-| User invocable | Yes (`/command-name`) | Yes (also user-invocable!) |
+| User invocable | Yes (`/command-name`) | **No** (agent-only) |
 | Model invocable | No | Yes (`skill({ name: "..." })`) |
 | Directory structure | Flat files only | Supports subdirectories |
 
-**Key insight**: OpenCode skills ARE user-invocable (unlike Claude Code). However, commands provide a cleaner UX for user-facing functionality since they appear in the `/` menu with their description.
+**Key difference**: OpenCode skills are **NOT** user-invocable. Only commands appear in the `/` menu. Skills are loaded by agents via the `skill()` tool.
 
 ### Conversion Table
 
 | Claude Code | → | OpenCode |
 |-------------|---|----------|
-| User-invocable skill (simple) | → | `command/*.md` (full content, not wrapper) |
-| User-invocable skill (has supporting files) | → | `command/*.md` + supporting files in `skill/*/` |
+| User-invocable skill (simple) | → | `command/*.md` (full content) |
+| User-invocable skill (has supporting files) | → | `command/*.md` (thin wrapper) + `skill/*/SKILL.md` (full content) |
 | Non-user-invocable skill | → | `skill/*/SKILL.md` |
 
-### No Thin Wrappers Needed
+### Thin Wrappers Required for Skills with Supporting Files
 
-Since OpenCode skills ARE user-invocable, **don't create thin command wrappers** that just call skills. Use skills directly:
+When a user-invocable skill has supporting files (subdirectories), create a thin command wrapper that invokes the skill:
 
 ```yaml
-# BAD - unnecessary command wrapper
-command/define.md:
+# command/define.md - thin wrapper for skill with supporting files
 ---
-description: 'Description here'
+description: 'Plan work, scope tasks, spec out requirements'
 ---
 Use the skill tool: skill({ name: "define", arguments: "$ARGUMENTS" })
 ```
 
 ```yaml
-# GOOD - skill is directly user-invocable
-skill/define/SKILL.md:
+# skill/define/SKILL.md - full content with supporting files
 ---
 name: define
-description: 'Description here'
+description: 'Plan work, scope tasks, spec out requirements'
 ---
-[Full content here]
+[Full content here, can reference ./tasks/*.md etc.]
 ```
 
 **When to use commands vs skills**:
-- **Skills** (`skill/*/SKILL.md`): Preferred for most content. Supports subdirectories for supporting files. User-invocable AND model-invocable.
-- **Commands** (`command/*.md`): Only for simple, flat content that doesn't need supporting files or model invocation.
+- **Commands** (`command/*.md`): For all user-invocable functionality. Either contains full content (simple case) or thin wrapper to skill (when supporting files needed).
+- **Skills** (`skill/*/SKILL.md`): For non-user-invocable prompts OR when supporting files are needed (with a command wrapper for user invocation).
 
 **Note**: Agents (`agent/*.md`) are different from skills. Check the source directory.
 
@@ -1216,12 +1214,12 @@ model: anthropic/claude-sonnet-4-5-20250929
 
 ### manifest-dev (formerly vibe-experimental)
 
-**Note**: `define` has supporting files (`tasks/` directory) so it must be a skill. All skills in this plugin are skills (not commands) since they're either non-user-invocable or have supporting files.
+**Note**: `define` and `do` are user-invocable but `define` has supporting files (`tasks/` directory). Both need thin command wrappers since OpenCode skills are not user-invocable.
 
 | Skill | Type | → OpenCode |
 |-------|------|------------|
-| `define` | User-invocable (has tasks/) | `skill/define/SKILL.md` |
-| `do` | User-invocable | `skill/do/SKILL.md` |
+| `define` | User-invocable (has tasks/) | `command/define.md` (wrapper) + `skill/define/SKILL.md` |
+| `do` | User-invocable | `command/do.md` (wrapper) + `skill/do/SKILL.md` |
 | `verify` | **Non-user-invocable** | `skill/verify/SKILL.md` |
 | `done` | **Non-user-invocable** | `skill/done/SKILL.md` |
 | `escalate` | **Non-user-invocable** | `skill/escalate/SKILL.md` |
