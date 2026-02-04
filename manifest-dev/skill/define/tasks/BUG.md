@@ -28,6 +28,7 @@ Fix must address cause, not symptom. Probe: what's the actual root cause vs. whe
 - **Customer communication gap** - bug fixed, customer not informed; probe: who reported? need follow-up?
 - **Recurrence likely** - same class of bug will happen again; probe: systemic fix possible?
 - **Hotfix vs proper fix** - pressure to ship fast vs fix right; probe: acceptable to patch now, fix later?
+- **Scope variation missed** - bug fixed for reported case, not other affected scopes; probe: other configurations, user segments, or contexts where this could manifest differently?
 
 ## Trade-offs
 

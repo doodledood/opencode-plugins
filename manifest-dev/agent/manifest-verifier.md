@@ -44,7 +44,7 @@ Latent requirements emerge from domain understanding. Flag when:
 
 ### Edge cases for new capabilities
 
-New fields, APIs, or features have characteristic failure modes. Flag when the manifest lacks coverage for the failure modes typical to what's being built.
+New fields, APIs, or features have characteristic failure modes (data edge cases, integration failures, UI error states). Flag when the manifest lacks coverage for the failure modes typical to what's being built.
 
 ### Explicit → Encoded
 
