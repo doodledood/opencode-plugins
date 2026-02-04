@@ -105,18 +105,17 @@ This sync behavior ensures:
 
 Each plugin directory contains a `README.md` with detailed documentation. Browse the directories in this repo or see below for a summary.
 
-After installation, commands are available as `/<command>-<plugin>` (e.g., `/review-vibe-workflow`).
+After installation, commands/skills are available as `/<name>-<plugin>` (e.g., `/define-manifest-dev`, `/clean-slop-vibe-extras`).
 
-| Plugin | Description |
-|--------|-------------|
-| `vibe-workflow` | Planning, implementation, and review workflows |
-| `vibe-extras` | Slop cleaning, git helpers, CLAUDE.md management |
-| `vibe-experimental` | Define/do/verify workflow with acceptance criteria |
-| `consultant` | Expert consulting and code analysis |
-| `prompt-engineering` | Prompt optimization and review tools |
-| `solo-dev` | Brand, design, UX, and content tools for solo devs |
-| `frontend-design` | Frontend design patterns |
-| `life-ops` | Decision-making framework |
+| Plugin | Description | Default |
+|--------|-------------|---------|
+| `manifest-dev` | Define/do/verify workflow with acceptance criteria | ✅ |
+| `vibe-extras` | Slop cleaning, git helpers, AGENTS.md management | ✅ |
+| `consultant` | Expert consulting and code analysis | |
+| `prompt-engineering` | Prompt optimization and review tools | |
+| `solo-dev` | Brand, design, UX, and content tools for solo devs | |
+| `frontend-design` | Frontend design patterns | |
+| `life-ops` | Decision-making framework | |
 
 ## Uninstall
 
