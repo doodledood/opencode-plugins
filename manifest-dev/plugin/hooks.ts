@@ -116,7 +116,36 @@ Do not restart completed work. Resume from where you left off.`
     },
 
     /**
-     * Tool execution tracking - detect /do, /done, /escalate, /verify calls
+     * Command execution tracking - detect user-invoked /do, /done, /escalate
+     * This catches direct user invocations (e.g., typing /do in chat)
+     */
+    "command.execute.before": async (input, output) => {
+      const cmd = input.command
+
+      let state = doWorkflowState.get(input.sessionID) ?? {
+        hasDoactive: false,
+        hasDone: false,
+        hasEscalate: false,
+        idleCount: 0,
+        lastIdleAt: 0,
+      }
+
+      if (cmd === "do" || cmd.endsWith("-do")) {
+        state.hasDoactive = true
+        state.doArgs = input.arguments
+        state.hasDone = false
+        state.hasEscalate = false
+      } else if (cmd === "done" || cmd.endsWith("-done")) {
+        state.hasDone = true
+      } else if (cmd === "escalate" || cmd.endsWith("-escalate")) {
+        state.hasEscalate = true
+      }
+
+      doWorkflowState.set(input.sessionID, state)
+    },
+
+    /**
+     * Tool execution tracking - detect model-invoked skill() calls
      * Note: This only fires for primary agent, not subagents
      */
     "tool.execute.after": async (input, output) => {
@@ -135,14 +164,14 @@ Do not restart completed work. Resume from where you left off.`
         lastIdleAt: 0,
       }
 
-      if (skillName === "do" || skillName.endsWith(":do")) {
+      if (skillName === "do" || skillName.endsWith("-do")) {
         state.hasDoactive = true
         state.doArgs = args?.arguments
         state.hasDone = false
         state.hasEscalate = false
-      } else if (skillName === "done" || skillName.endsWith(":done")) {
+      } else if (skillName === "done" || skillName.endsWith("-done")) {
         state.hasDone = true
-      } else if (skillName === "escalate" || skillName.endsWith(":escalate")) {
+      } else if (skillName === "escalate" || skillName.endsWith("-escalate")) {
         state.hasEscalate = true
       }
 
