@@ -17,7 +17,7 @@ The definitive guide for converting Claude Code plugins to OpenCode format.
 11. [Plugin Manifest Conversion](#plugin-manifest-conversion)
 12. [Known Plugins Classification](#known-plugins-classification)
 13. [Edge Cases & Limitations](#edge-cases--limitations)
-14. [Migration Checklist](#migration-checklist)
+14. [Conversion Rules](#conversion-rules)
 
 ---
 
@@ -190,13 +190,13 @@ description: 'Plan work, scope tasks, spec out requirements'
 [Full content here, can reference ./tasks/*.md etc.]
 ```
 
-**Important**: The `skill()` tool only accepts `name` - it does NOT accept arguments. Place `$ARGUMENTS` in the command body so they're visible in context when the skill is loaded.
+The `skill()` tool only accepts `name` — it does NOT accept arguments. Place `$ARGUMENTS` in the command body so they're visible in context when the skill is loaded.
 
 **When to use commands vs skills**:
 - **Commands** (`command/*.md`): For all user-invocable functionality. Either contains full content (simple case) or thin wrapper to skill (when supporting files needed).
 - **Skills** (`skill/*/SKILL.md`): For non-user-invocable prompts OR when supporting files are needed (with a command wrapper for user invocation).
 
-**Note**: Agents (`agent/*.md`) are different from skills. Check the source directory.
+Agents (`agent/*.md`) are different from skills — check the source directory.
 
 ---
 
@@ -231,7 +231,7 @@ model: anthropic/claude-sonnet-4-5-20250929
 | N/A | `agent:` | Optional - references an agent name to execute the command |
 | N/A | `subtask:` | Add `true` if should run as subagent |
 
-**Note**: The `agent:` field references an **agent name** (e.g., `agent: reviewer`), not a mode. If omitted, the command runs with the default agent.
+The `agent:` field references an **agent name** (e.g., `agent: reviewer`), not a mode. If omitted, the command runs with the default agent.
 
 ### File Path Change
 
@@ -243,7 +243,7 @@ skill/review/SKILL.md
 command/review.md
 ```
 
-Note: OpenCode commands are flat files, not directories.
+OpenCode commands are flat files, not directories.
 
 ---
 
@@ -251,7 +251,7 @@ Note: OpenCode commands are flat files, not directories.
 
 ### Format Comparison
 
-Non-user-invocable skills are nearly identical between platforms.
+Non-user-invocable skills are identical between platforms except for the `user-invocable` field removal.
 
 **Claude Code:**
 ```yaml
@@ -286,7 +286,7 @@ OpenCode finds skills in (order of precedence):
 3. `.claude/skill/<name>/SKILL.md` (Claude-compatible!)
 4. `~/.claude/skill/<name>/SKILL.md` (Claude-compatible!)
 
-This means Claude Code skills can often work without modification.
+Claude Code skills work without modification if they have no `user-invocable` field or supporting files.
 
 ---
 
@@ -332,52 +332,32 @@ tools:
 | N/A | `temperature:` | Optional, add if needed |
 | N/A | `maxSteps:` | Optional iteration limit |
 | N/A | `hidden:` | Optional, hide from autocomplete |
-| N/A | `reasoningEffort:` | Optional, see [Reasoning Effort](#reasoning-effort) |
 
-### Reasoning Effort
+### Tool Mapping (Canonical)
 
-OpenCode supports `reasoningEffort` in agent frontmatter to control thinking depth for supported models (OpenAI reasoning models, Claude with extended thinking).
+This table is the single source of truth for all tool name conversions (frontmatter, hooks, content).
 
-**Automatic for reasoning models**: When converting `model: opus` → `model: openai/gpt-5.2`, automatically add `reasoningEffort: xhigh` for agents. This enables extended reasoning capabilities that match the intent of using a high-capability model.
-
-**When requested for other models**: If the user explicitly requests reasoning effort via the sync skill (e.g., `/sync-from-claude-plugins --reasoning-effort`), add to all agents (not just opus-mapped ones):
-
-```yaml
-reasoningEffort: medium
-```
-
-Valid values: `low`, `medium`, `high`, `xhigh`
-
-For Claude models, you can alternatively use `thinking.budgetTokens`:
-
-```yaml
-thinking:
-  type: enabled
-  budgetTokens: 16000
-```
-
-### Tool Permission Mapping
-
-| Claude Code | OpenCode | Notes |
-|-------------|----------|-------|
-| `Bash` | `bash: true` | |
-| `Read` | `read: true` | |
-| `Edit` | `edit: true` | Covers write, patch, multiedit |
-| `Write` | `edit: true` | Same as edit in OpenCode |
-| `Glob` | `glob: true` | |
-| `Grep` | `grep: true` | |
-| `WebFetch` | `webfetch: true` | |
-| `WebSearch` | `websearch: true` | |
-| `TodoWrite` | `todowrite: true` | Legacy (pre-v2.1.16) |
-| `TodoRead` | `todoread: true` | Legacy (pre-v2.1.16) |
-| `TaskCreate` | `todowrite: true` | v2.1.16+ replacement for TodoWrite |
-| `TaskUpdate` | `todowrite: true` | v2.1.16+ task status/comments/blockers |
-| `TaskList` | `todoread: true` | v2.1.16+ replacement for TodoRead |
-| `TaskGet` | `todoread: true` | v2.1.16+ get task details by ID |
-| `Task` | `task: true` | For spawning subagents |
-| `Skill` | `skill: true` | For loading skills |
-| `SlashCommand` | `skill: true` | Same as Skill in OpenCode |
-| `NotebookEdit` | `edit: true` | No separate notebook permission |
+| Claude Code | OpenCode (frontmatter) | OpenCode (hook `input.tool`) |
+|-------------|------------------------|------------------------------|
+| `Bash` | `bash: true` | `bash` |
+| `Read` | `read: true` | `read` |
+| `Edit` | `edit: true` | `edit` |
+| `Write` | `edit: true` | `edit` |
+| `Glob` | `glob: true` | `glob` |
+| `Grep` | `grep: true` | `grep` |
+| `WebFetch` | `webfetch: true` | `webfetch` |
+| `WebSearch` | `websearch: true` | `websearch` |
+| `TodoWrite` | `todowrite: true` | `todowrite` |
+| `TodoRead` | `todoread: true` | `todoread` |
+| `TaskCreate` | `todowrite: true` | `todowrite` |
+| `TaskUpdate` | `todowrite: true` | `todowrite` |
+| `TaskList` | `todoread: true` | `todoread` |
+| `TaskGet` | `todoread: true` | `todoread` |
+| `Task` | `task: true` | `task` |
+| `Skill` | `skill: true` | `skill` |
+| `SlashCommand` | `skill: true` | `skill` |
+| `NotebookEdit` | `edit: true` | `edit` |
+| `AskUserQuestion` | `question: false` | `question` |
 
 **Additional OpenCode permissions** (no Claude Code equivalent):
 - `list: true` — directory listing
@@ -388,7 +368,7 @@ thinking:
 
 All tools are **enabled by default** in OpenCode. Specifying them explicitly in agent frontmatter ensures the agent has access even if global config restricts them.
 
-**IMPORTANT**: Explicitly set interactive tools to `false` for all subagents since they run autonomously:
+Explicitly set interactive tools to `false` for all subagents since they run autonomously:
 - `question: false` - subagents should not prompt users for input
 
 If a Claude Code agent has no `tools:` line, add a minimal tools section with just the disabled interactive tools:
@@ -418,9 +398,9 @@ Tool permissions use **boolean values**:
 | `Stop` | `event` (session.idle) + `client.session.prompt` | **Reactive** | Cannot block, but can resume session (see [Stop Hook Simulation](#stop-hook-simulation)) |
 | `SubagentStop` | `event` (session.created + parentID) | **Reactive** | Detect child sessions, react via prompt/abort (see [Subagent Activity Detection](#subagent-activity-detection)) |
 
-**CRITICAL**: Session lifecycle events (`session.created`, `session.idle`) are caught via the **`event`** hook, NOT as direct hook keys. The `event` hook receives `{ event: Event }` where `event.type` can be `"session.created"`, `"session.idle"`, etc.
+Session lifecycle events (`session.created`, `session.idle`) are caught via the **`event`** hook, NOT as direct hook keys. The `event` hook receives `{ event: Event }` where `event.type` can be `"session.created"`, `"session.idle"`, etc.
 
-**IMPORTANT**: OpenCode's `tool.execute.before` can block execution by **throwing an error** (there is no `output.abort` field, but `throw new Error(...)` works). It can also modify `output.args`. For first-class policy enforcement, use `permission.ask` hooks or permission config. **Caveat**: These hooks only fire for the primary agent — subagent and MCP tool calls do not trigger them.
+OpenCode's `tool.execute.before` blocks execution by **throwing an error** (no `output.abort` field — use `throw new Error(...)`). It can also modify `output.args`. For first-class policy enforcement, use `permission.ask` hooks or permission config. These hooks only fire for the primary agent — subagent and MCP tool calls do not trigger them.
 
 ### Complete Hooks Interface (Reference)
 
@@ -481,195 +461,33 @@ The `event` hook receives events with `event.type` set to one of:
 | Server | `server.connected` |
 | TUI | `tui.prompt.append`, `tui.command.execute`, `tui.toast.show` |
 
-### Complete TypeScript Hook Template
+### Hook Implementation Notes
 
-Create `plugin/hooks.ts`:
+**Plugin signature**: `Plugin = async ({ project, client, $, directory, worktree, serverUrl }) => Hooks`
 
-```typescript
-import type { Plugin } from "@opencode-ai/plugin"
+**API constraints**:
+- Session events (`session.created`, `session.idle`) go through the `event` hook
+- `tool.execute.before/after` use `input.tool` (NOT `input.call.name`)
+- `tool.execute.before` blocks via `throw new Error()`, modifies via `output.args`
+- `tool.execute.before/after` only fire for primary agent (not subagents or MCP tools)
+- Hooks cannot return `additionalContext` — use system transform hooks instead
 
-/**
- * OpenCode hooks for <plugin-name> plugin.
- * Converted from Python hooks in claude-code-plugins.
- *
- * PluginInput parameters:
- * - client: OpenCode SDK client for logging and AI interactions
- * - project: Current project information
- * - directory: Current working directory
- * - worktree: Git worktree path
- * - serverUrl: OpenCode server URL
- * - $: Bun shell API for executing commands
- *
- * CRITICAL API NOTES:
- * - Session events (session.created, session.idle) go through the `event` hook
- * - tool.execute.before/after use `input.tool` (NOT input.call.name)
- * - tool.execute.before can block via `throw new Error()`, or modify output.args
- * - tool.execute.before/after only fire for primary agent, NOT subagents or MCP tools
- * - No additionalContext return is supported
- */
+**Logging**: `await client.app.log({ service: "name", level: "info"|"warn"|"error"|"debug", message: "..." })`
 
-export const MyPlugin: Plugin = async ({ project, client, $, directory, worktree, serverUrl }) => {
-  return {
-    /**
-     * Event handler for session lifecycle events
-     * Catches session.created, session.idle, etc.
-     * Converted from: SessionStart and Stop hooks
-     */
-    event: async ({ event }) => {
-      if (event.type === "session.created") {
-        await client.app.log({
-          service: "my-plugin",
-          level: "info",
-          message: "Session started"
-        });
-      }
+### Tool Names in Hooks
 
-      if (event.type === "session.idle") {
-        // Can reactively resume session via client.session.prompt
-        // See "Stop Hook Simulation" section for full pattern
-        await client.app.log({
-          service: "my-plugin",
-          level: "debug",
-          message: "Session idle"
-        });
-      }
-    },
+See [Tool Mapping (Canonical)](#tool-mapping-canonical) for the full mapping. In hooks, use the lowercase OpenCode name from the third column (e.g., `input.tool === "todowrite"`).
 
-    /**
-     * System prompt transformation - inject context
-     * This is the main way to add context at session start.
-     * Converted from: SessionStart hook (additionalContext)
-     */
-    "experimental.chat.system.transform": async (input, output) => {
-      output.system.push(`<system-reminder>Your reminder text here</system-reminder>`);
-    },
-
-    /**
-     * Session compacting - preserve context during compaction
-     * Converted from: PostCompact / SessionStart with "compact" matcher
-     */
-    "experimental.session.compacting": async (input, output) => {
-      output.context.push(`<preserved-state>Recovery info for compacted sessions</preserved-state>`);
-    },
-
-    /**
-     * After tool execution - react to tool results
-     * Converted from: PostToolUse hook
-     *
-     * NOTE: CANNOT return additionalContext - just log or modify output
-     */
-    "tool.execute.after": async (input, output) => {
-      // Filter by tool name using input.tool (NOT input.call.name)
-      if (input.tool !== "todo") return;
-
-      await client.app.log({
-        service: "my-plugin",
-        level: "info",
-        message: "Todo tool executed"
-      });
-    },
-
-    /**
-     * Before tool execution - modify args, log, or block via throw
-     * Converted from: PreToolUse hook
-     *
-     * Can modify output.args, log warnings, or throw to block execution.
-     * NOTE: Only fires for primary agent — not subagent or MCP tool calls.
-     */
-    "tool.execute.before": async (input, output) => {
-      // Use input.tool (NOT input.call.name)
-      if (input.tool !== "bash") return;
-
-      // Access args via output.args (can read and modify)
-      const args = output.args as { command?: string } | undefined;
-
-      // Example: Block dangerous commands by throwing
-      if (args?.command?.includes("rm -rf")) {
-        throw new Error("Blocked dangerous command");
-      }
-
-      // Example: Log a warning (non-blocking)
-      if (args?.command?.includes("sudo")) {
-        await client.app.log({
-          service: "my-plugin",
-          level: "warn",
-          message: "Warning: sudo command invoked"
-        });
-      }
-    },
-  };
-};
-
-export default MyPlugin;
-```
-
-### Alternative: Simple Default Export
-
-For simpler plugins:
-
-```typescript
-import type { Plugin } from "@opencode-ai/plugin"
-
-const MyPlugin: Plugin = async ({ client }) => {
-  return {
-    event: async ({ event }) => {
-      if (event.type === "session.created") {
-        await client.app.log({
-          service: "my-plugin",
-          level: "info",
-          message: "Session started"
-        });
-      }
-    },
-
-    "experimental.chat.system.transform": async (input, output) => {
-      output.system.push("<system-reminder>Your context here</system-reminder>");
-    },
-  };
-};
-
-export default MyPlugin;
-```
-
-### Tool Name Mapping in Hooks
-
-These are the tool names seen in `input.tool` within hook callbacks.
-
-| Claude Code Tool | OpenCode Tool Name | Notes |
-|-----------------|-------------------|-------|
-| `TodoWrite` | `todowrite` | Legacy (pre-v2.1.16) |
-| `TodoRead` | `todoread` | Legacy (pre-v2.1.16) |
-| `TaskCreate` | `todowrite` | v2.1.16+ replacement for TodoWrite |
-| `TaskUpdate` | `todowrite` | v2.1.16+ task status/blockers |
-| `TaskList` | `todoread` | v2.1.16+ replacement for TodoRead |
-| `TaskGet` | `todoread` | v2.1.16+ get task by ID |
-| `Bash` | `bash` | |
-| `Read` | `read` | |
-| `Edit` | `edit` | |
-| `Write` | `edit` | |
-| `Skill` | `skill` | |
-| `Task` | `task` | |
-| `AskUserQuestion` | `question` | |
-
-**Note**: Claude Code v2.1.16+ replaced `TodoWrite`/`TodoRead` with `TaskCreate`/`TaskUpdate`/`TaskList`/`TaskGet`. All four map to OpenCode's `todowrite`/`todoread`. In hooks, check for both old and new tool names for compatibility.
+Claude Code v2.1.16+ replaced `TodoWrite`/`TodoRead` with `TaskCreate`/`TaskUpdate`/`TaskList`/`TaskGet` — all map to OpenCode's `todowrite`/`todoread`.
 
 ### Context Injection
 
-**At session start**: Use `experimental.chat.system.transform` to push to `output.system`:
-```typescript
-"experimental.chat.system.transform": async (input, output) => {
-  output.system.push("<system-reminder>Your message</system-reminder>");
-}
-```
+| When | Hook | Target |
+|------|------|--------|
+| Session start | `experimental.chat.system.transform` | `output.system.push(...)` |
+| During compaction | `experimental.session.compacting` | `output.context.push(...)` |
 
-**During compaction**: Use `experimental.session.compacting` to push to `output.context`:
-```typescript
-"experimental.session.compacting": async (input, output) => {
-  output.context.push("<system-reminder>Recovery context</system-reminder>");
-}
-```
-
-**NOTE**: Unlike Claude Code, OpenCode hooks **CANNOT return additionalContext** from `tool.execute.after` or other hooks. Use the system transform hooks above instead.
+Unlike Claude Code, OpenCode hooks **cannot return additionalContext** from `tool.execute.after` or other hooks. Use the system transform hooks instead.
 
 ### What Cannot Be Converted
 
@@ -683,32 +501,17 @@ These are the tool names seen in `input.tool` within hook callbacks.
 | Python dependencies | Different runtime | Find TypeScript alternatives |
 | additionalContext returns | Hooks cannot return additionalContext | Use system transform hooks |
 
-**IMPORTANT**: OpenCode's `tool.execute.before` **can block** execution by throwing an error (there is no `output.abort` field, but `throw new Error(...)` works). However, this hook **only fires for the primary agent** — subagent and MCP tool calls are not intercepted.
+OpenCode's `tool.execute.before` **can block** execution by throwing an error (no `output.abort` field — use `throw new Error(...)`). This hook **only fires for the primary agent** — subagent and MCP tool calls are not intercepted.
 
-**Blocking approaches** (from most to least granular):
+**Blocking approaches** (most to least granular):
 
-1. **Permission config** — Declarative deny/ask/allow rules (see [Permission Config](#permission-config))
-2. **`permission.ask` hook** — Programmatic allow/deny/ask decisions:
+| Approach | How | Scope |
+|----------|-----|-------|
+| Permission config | Declarative deny/ask/allow rules in `opencode.json` | System-wide |
+| `permission.ask` hook | Set `output.status = "deny"` | Primary agent only |
+| `tool.execute.before` | `throw new Error(...)` | Primary agent only |
 
-```typescript
-"permission.ask": async (input, output) => {
-  if (shouldBlock(input)) {
-    output.status = "deny";
-  }
-}
-```
-
-3. **`tool.execute.before` throw** — Block with custom logic:
-
-```typescript
-"tool.execute.before": async (input, output) => {
-  if (input.tool === "bash" && output.args.command?.includes("rm -rf")) {
-    throw new Error("Blocked dangerous command");
-  }
-}
-```
-
-**Note**: All three approaches only apply to the **primary agent**. For subagent enforcement, use agent-level tool permissions in frontmatter (see [Subagent Activity Detection](#subagent-activity-detection)).
+For subagent enforcement, use agent-level tool permissions in frontmatter.
 
 ### Logging
 
@@ -766,190 +569,38 @@ OpenCode supports declarative permission rules in `opencode.json` that control t
 
 ### Stop Hook Simulation
 
-OpenCode cannot synchronously block a session from going idle the way Claude Code stop hooks can. However, you can **reactively simulate stop hooks** by detecting `session.idle`, evaluating conditions, and programmatically resuming the session via `client.session.prompt`.
+OpenCode cannot synchronously block session idle. Simulate via reactive pattern:
 
-#### How It Works
+1. Subscribe to `session.idle` via `event` hook
+2. Evaluate stop conditions (dirty tree, failing tests, incomplete TODOs)
+3. If work remains, call `client.session.prompt({ path: { id: sessionID }, body: { parts: [...] } })` to resume
 
-1. Subscribe to `session.idle` via the `event` hook
-2. When idle fires, run your stop conditions (e.g., dirty working tree, failing tests, incomplete TODOs)
-3. If conditions indicate work remains, call `client.session.prompt` to inject a continuation prompt into the same session
-4. The session resumes as if the user typed a new message
+**Guardrails** (prevent infinite loops):
+- Per-session run limits and debounce intervals
+- Deterministic checks (flaky tests cause oscillation)
+- Logging via `client.app.log`
 
-#### Implementation Pattern
-
-```typescript
-import type { Plugin } from "@opencode-ai/plugin"
-
-export const AutoContinue: Plugin = async ({ client, $ }) => {
-  // Per-session state to prevent infinite loops
-  const state = new Map<string, { runs: number; lastAt: number }>()
-
-  const MAX_RUNS_PER_SESSION = 10
-  const MIN_MS_BETWEEN_RUNS = 5_000
-
-  async function shouldContinue(): Promise<{ ok: boolean; reason?: string }> {
-    // Example: continue if working tree has uncommitted changes
-    const diff = await $`git diff --name-only`.text()
-    if (diff.trim().length > 0) {
-      return { ok: true, reason: `Working tree not clean:\n${diff}` }
-    }
-
-    // Example: continue if tests are failing
-    // const test = await $`bun test`.nothrow()
-    // if (test.exitCode !== 0) {
-    //   return { ok: true, reason: `Tests failing (exit ${test.exitCode}).` }
-    // }
-
-    return { ok: false }
-  }
-
-  async function continueSession(sessionID: string, reason: string) {
-    await client.session.prompt({
-      path: { id: sessionID },
-      body: {
-        parts: [{
-          type: "text",
-          text:
-            `Do not stop yet. Continue until completion.\n` +
-            `Reason: ${reason}\n\n` +
-            `Next steps:\n` +
-            `- Fix remaining issues implied by the reason.\n` +
-            `- Re-run necessary checks.\n` +
-            `- Summarize what changed and why.\n`,
-        }],
-      },
-    })
-  }
-
-  return {
-    event: async ({ event }) => {
-      if (event.type !== "session.idle") return
-
-      const sessionID = event.properties.sessionID
-      const now = Date.now()
-      const s = state.get(sessionID) ?? { runs: 0, lastAt: 0 }
-
-      // Guardrails: cap total resumes and enforce debounce
-      if (s.runs >= MAX_RUNS_PER_SESSION) return
-      if (now - s.lastAt < MIN_MS_BETWEEN_RUNS) return
-
-      const decision = await shouldContinue()
-      if (!decision.ok) return
-
-      state.set(sessionID, { runs: s.runs + 1, lastAt: now })
-      await continueSession(sessionID, decision.reason ?? "Unspecified condition")
-    },
-  }
-}
-
-export default AutoContinue
-```
-
-#### Common Stop Conditions
-
-| Condition | Check |
-|-----------|-------|
-| Dirty working tree | `git diff --name-only` non-empty |
-| Tests failing | Test runner exits non-zero |
-| Lint/format violations | Linter exits non-zero |
-| Typecheck errors | `tsc --noEmit` exits non-zero |
-| TODOs remaining | Watch `todo.updated` events or query session state |
-
-#### Guardrails (Required)
-
-Always implement these safeguards to prevent infinite loops:
-
-1. **Max resumes per session** - Cap total auto-continues (e.g., 10)
-2. **Debounce interval** - Minimum time between resumes (e.g., 5 seconds)
-3. **Deterministic checks** - Flaky tests will cause oscillation
-4. **Logging** - Use `client.app.log` for observability
-
-#### Implementation Styles
-
-| Style | Description | Best For |
-|-------|-------------|----------|
-| **In-process plugin** | Plugin in `.opencode/plugins/` subscribes to `session.idle` and calls `client.session.prompt` | Linting, small checks, "continue until clean" |
-| **Out-of-process supervisor** | Separate process uses `opencode serve` + SDK event stream (`client.event.subscribe()` SSE) to observe and resume sessions | Multi-project control, centralized policy, long-running workflows |
-
-#### Limitations vs Claude Code Stop Hooks
+**Common conditions**: `git diff --name-only` non-empty, test runner exits non-zero, linter fails, `tsc --noEmit` fails
 
 | Aspect | Claude Code | OpenCode |
 |--------|-------------|----------|
 | Timing | Synchronous (blocks before idle) | Reactive (resumes after idle) |
-| Veto stopping | Yes (return `decision: "block"`) | No (session goes idle, then resumes) |
-| User visibility | Transparent | User may briefly see idle state |
-| Loop safety | Built-in | Must implement guardrails manually |
-
-**Note on `noReply`**: The SDK documents `body.noReply: true` for context-only injection. However, behavior may vary across OpenCode versions. For stop hook simulation, use explicit continuation prompts rather than `noReply`.
+| Veto stopping | Yes (`decision: "block"`) | No (goes idle, then resumes) |
+| Loop safety | Built-in | Manual guardrails required |
 
 ### Subagent Activity Detection
 
-Claude Code's `SubagentStop` hook lets you intercept when a subagent finishes. OpenCode has no direct equivalent, but subagent activity can be **detected reactively** through child session monitoring.
-
-#### How It Works
-
-OpenCode subagents run in child sessions. The session creation API supports a `parentID` field, and you can query `/session/:id/children` to enumerate a session's subagents. By watching `session.created` events and checking for parent relationships, you can detect subagent spawning and react accordingly.
-
-#### Detection Pattern
-
-```typescript
-import type { Plugin } from "@opencode-ai/plugin"
-
-export const SubagentMonitor: Plugin = async ({ client }) => {
-  // Track known parent sessions
-  const parentSessions = new Set<string>()
-
-  return {
-    event: async ({ event }) => {
-      // Detect new child sessions (subagent spawned)
-      if (event.type === "session.created") {
-        const parentID = event.properties.parentID
-        if (parentID) {
-          await client.app.log({
-            service: "subagent-monitor",
-            level: "info",
-            message: `Subagent spawned: session ${event.properties.sessionID} (parent: ${parentID})`,
-          })
-          parentSessions.add(parentID)
-        }
-      }
-
-      // Detect child session going idle (subagent "stopped")
-      if (event.type === "session.idle") {
-        const sessionID = event.properties.sessionID
-        // Check if this is a child session by querying parent
-        // or maintaining your own parent→child map
-        await client.app.log({
-          service: "subagent-monitor",
-          level: "debug",
-          message: `Session idle: ${sessionID}`,
-        })
-      }
-    },
-  }
-}
-
-export default SubagentMonitor
-```
-
-#### Capabilities and Limitations
+OpenCode subagents run in child sessions. Detect via `session.created` events with `parentID`, react via `session.idle` for child sessions.
 
 | Goal | Possible? | How |
 |------|-----------|-----|
-| **Detect** subagent spawning | ✅ Yes | Watch `session.created` with `parentID` |
-| **React** to subagent completion | ✅ Yes | Watch `session.idle` for child sessions, then prompt/abort |
-| **Query** child sessions | ✅ Yes | Use `/session/:id/children` endpoint |
-| **Veto** subagent spawning | ❌ No | No cancellable "before subagent" hook |
-| **Intercept** subagent tool calls | ❌ No | `tool.execute.before/after` don't fire for subagent calls |
+| Detect subagent spawning | ✅ | Watch `session.created` with `parentID` |
+| React to subagent completion | ✅ | Watch `session.idle` for child sessions |
+| Query child sessions | ✅ | `/session/:id/children` endpoint |
+| Veto subagent spawning | ❌ | No cancellable "before subagent" hook |
+| Intercept subagent tool calls | ❌ | Hooks don't fire for subagent calls |
 
-#### Enforcement Strategy
-
-Since plugin hooks don't reliably intercept subagent tool calls, use a two-layer approach:
-
-1. **Agent-level tool permissions** (preventive) — Configure subagent tool restrictions in agent frontmatter (`tools: { bash: false }`) to enforce security boundaries
-2. **Plugin-based monitoring** (reactive) — Use session event detection for observability, logging, and orchestration
-
-**Prefer agent config over plugin hooks for security-critical restrictions on subagents.**
+**Enforcement**: Use agent-level tool permissions in frontmatter for security; plugin hooks for observability only.
 
 ---
 
@@ -987,7 +638,7 @@ Task completed successfully.
 Load the done skill: skill({ name: "done" })
 ```
 
-**Note**: The `skill()` tool only accepts `name` - it loads the SKILL.md content into the conversation. Arguments must be placed in context before calling skill(), not passed to the tool.
+The `skill()` tool only accepts `name` — it loads the SKILL.md content into the conversation. Arguments must be placed in context before calling skill(), not passed to the tool.
 
 ### Task Tool References
 
@@ -1028,18 +679,9 @@ Apply these transformations to prompt content:
 | `Skill\("[\w-]+:([\w-]+)"\)` | `skill({ name: "$1" })` | Skill calls → skill tool |
 | `Skill\("[\w-]+:([\w-]+)",\s*"([^"]*)"\)` | `$2\n\nLoad the $1 skill: skill({ name: "$1" })` | With args - place args in context first |
 
-**Note**: The `skill()` tool does NOT accept arguments. When converting Skill() calls with arguments, place the argument text in context before the skill() call.
+The `skill()` tool does NOT accept arguments. When converting Skill() calls with arguments, place the argument text in context before the skill() call.
 
-**Tool name replacements:**
-| Pattern | Replacement | Notes |
-|---------|-------------|-------|
-| `AskUserQuestion` | `question` | User question tool |
-| `TodoWrite` | `todowrite` | Legacy todo write tool |
-| `TodoRead` | `todoread` | Legacy todo read tool |
-| `TaskCreate` | `todowrite` | v2.1.16+ task creation |
-| `TaskUpdate` | `todowrite` | v2.1.16+ task status/blockers |
-| `TaskList` | `todoread` | v2.1.16+ task listing |
-| `TaskGet` | `todoread` | v2.1.16+ task details |
+**Tool name replacements:** See [Tool Mapping (Canonical)](#tool-mapping-canonical).
 
 **Other replacements:**
 | Pattern | Replacement | Notes |
@@ -1170,11 +812,10 @@ model: anthropic/claude-sonnet-4-5-20250929
 }
 ```
 
-**Notes**:
 - Use `"type": "module"` for ESM format
 - The `opencode` field describes the plugin type and hooks for npm registry metadata
 - Add `@opencode-ai/plugin` dependency for TypeScript types
-- **Important**: This package.json is for npm publishing. OpenCode does NOT read it for discovery. Files must be installed to `~/.config/opencode/` directories
+- This package.json is for npm publishing. OpenCode does NOT read it for discovery — files must be installed to `~/.config/opencode/` directories
 
 ---
 
@@ -1273,65 +914,49 @@ OpenCode uses glob patterns that accept **both** singular and plural:
 
 ---
 
-## Migration Checklist
+## Conversion Rules
 
-### Per Plugin
+### Resource Classification
 
-- [ ] Create `package.json` from `plugin.json` (use singular paths!)
-- [ ] Classify each skill (see [Skill Classification](#skill-classification)):
-  - [ ] Check for `user-invocable: false` → skill
-  - [ ] Check if referenced by other resources via `Skill()` → skill
-  - [ ] Check if has supporting files (not just SKILL.md) → skill
-  - [ ] Otherwise → command (default)
-- [ ] Convert command-bound skills → `command/<name>.md`
-- [ ] Convert skill-bound skills → `skill/<name>/SKILL.md`
-- [ ] Convert agents → `agent/<name>.md`
-- [ ] Convert hooks → `plugin/hooks.ts` (see [Converting Hooks](#converting-hooks))
-- [ ] Update `Skill()` references: commands → `/command`, skills → `skill({ name: "..." })`
-- [ ] Update all model names to full IDs (see [Model Mapping](#model-mapping))
-- [ ] Update tool lists in agents to boolean format (`true`/`false`)
-- [ ] **Rename files with "claude-md" → "agents-md"** (see [OpenCode Terminology](#opencode-terminology-claudemd--agentsmd))
-- [ ] **Replace CLAUDE.md → AGENTS.md in all content**
-- [ ] Create README for converted plugin
+For each resource in the source plugin, classify and transform:
 
-### Per Skill/Command
+| If resource is... | Then → |
+|-------------------|--------|
+| Skill with `user-invocable: false` | `skill/<name>/SKILL.md` |
+| Skill referenced only via `Skill()` (not user-facing) | `skill/<name>/SKILL.md` |
+| Skill with supporting files (subdirectories) | `command/<name>.md` (wrapper) + `skill/<name>/SKILL.md` |
+| Skill (user-invocable, simple) | `command/<name>.md` |
+| Agent | `agent/<name>.md` |
+| Python hook | `plugin/hooks.ts` |
+| `plugin.json` | `package.json` |
 
-- [ ] Remove `name:` from frontmatter (commands only)
-- [ ] Add `agent:` field if command should use specific agent (optional)
-- [ ] Convert `model:` to full ID
-- [ ] Replace `Skill()` calls: → `/command` or → `skill({ name: "..." })`
-- [ ] Replace `Task` tool references
+### Transformations by Type
 
-### Per Agent
+**Commands** (from user-invocable skills):
+- Remove `name:` from frontmatter (filename = command name)
+- Convert `model:` to full ID
+- Replace `Skill()` → `/command` or `skill({ name: "..." })`
 
-- [ ] Remove `name:` from frontmatter
-- [ ] Add `mode: subagent`
-- [ ] Convert `tools:` to permission object
-- [ ] Convert `model:` to full ID
-- [ ] Add `reasoningEffort:` if requested via sync skill (see [Reasoning Effort](#reasoning-effort))
-- [ ] Update prompt content references
+**Skills** (from non-user-invocable skills):
+- Keep `name:` in frontmatter
+- Remove `user-invocable: false`
 
-### Per Hook (if source has `hooks/` directory)
+**Agents**:
+- Remove `name:` from frontmatter
+- Add `mode: subagent`
+- Convert `tools:` comma list → permission object with booleans
+- Add `question: false` for subagents
+- Convert `model:` to full ID
 
-- [ ] Create `plugin/hooks.ts` (or `plugins/hooks.ts`)
-- [ ] Add `@opencode-ai/plugin` dependency
-- [ ] Use `event` hook for session lifecycle (session.created, session.idle)
-- [ ] Use `experimental.chat.system.transform` for context injection at start
-- [ ] Map `PostCompact` → `experimental.session.compacting`
-- [ ] Map `PostToolUse` → `tool.execute.after` (use `input.tool` not `input.call.name`)
-- [ ] Map `PreToolUse` → `tool.execute.before` (can block via `throw`, modify args, or log — primary agent only)
-- [ ] Convert `Stop` hooks → reactive idle-triggered continue pattern (see [Stop Hook Simulation](#stop-hook-simulation))
-- [ ] Convert `PreToolUse` blocking → `throw` in `tool.execute.before` OR `permission.ask` hook OR permission config
-- [ ] Convert Python logic to TypeScript
+**Hooks**:
+- Convert Python → TypeScript
+- Map hook types per [Event Mapping](#event-mapping)
 
-### Testing
-
-- [ ] Test each command via `/command-name`
-- [ ] Verify agents spawn correctly
-- [ ] Check skill discovery works
-- [ ] Validate prompt transformations
-- [ ] Verify hooks fire correctly
-- [ ] Test with different OpenCode models
+**All content**:
+- Replace `CLAUDE.md` → `AGENTS.md`
+- Replace `claude-md` → `agents-md` in filenames and references
+- Apply model ID conversions
+- Apply tool name conversions
 
 ---
 
@@ -1363,7 +988,6 @@ description: What it does
 description: What it does
 mode: subagent
 model: <full-model-id>  # see Model Mapping
-reasoningEffort: medium  # optional, only if requested via sync skill
 tools:
   read: true
   edit: true
@@ -1387,7 +1011,7 @@ tools:
 | `Skill("plugin:foo")` | `skill({ name: "foo" })` | `skill({ name: "foo-<plugin>" })` |
 | `Skill("plugin:foo", "args")` | `args\n\nskill({ name: "foo" })` | `args\n\nskill({ name: "foo-<plugin>" })` |
 
-**Note**: The `skill()` tool only accepts `name` - no arguments parameter. Place arguments in context before the skill() call. The install script updates skill names to include the plugin postfix.
+The `skill()` tool only accepts `name` — no arguments parameter. Place arguments in context before the skill() call. The install script updates skill names to include the plugin postfix.
 
 **Other transformations:**
 
@@ -1396,7 +1020,7 @@ tools:
 | `model: opus/sonnet/haiku` | See [Model Mapping](#model-mapping) |
 | `tools: Bash, Read, ...` | See [Tool Permission Mapping](#tool-permission-mapping) |
 
-**Note**: The install script adds `-<plugin>` postfix to command filenames. Skill directories also get postfixed (e.g., `skill/verify-<plugin>/SKILL.md`).
+The install script adds `-<plugin>` postfix to command filenames. Skill directories also get postfixed (e.g., `skill/verify-<plugin>/SKILL.md`).
 
 ### Directory Structure
 
