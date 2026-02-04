@@ -169,14 +169,16 @@ OpenCode discovers resources from **flat directories**, not nested plugin struct
 
 ### Thin Wrappers Required for Skills with Supporting Files
 
-When a user-invocable skill has supporting files (subdirectories), create a thin command wrapper that invokes the skill:
+When a user-invocable skill has supporting files (subdirectories), create a thin command wrapper that loads the skill:
 
 ```yaml
 # command/define.md - thin wrapper for skill with supporting files
 ---
 description: 'Plan work, scope tasks, spec out requirements'
 ---
-Use the skill tool: skill({ name: "define", arguments: "$ARGUMENTS" })
+Task: $ARGUMENTS
+
+Load the define skill: skill({ name: "define" })
 ```
 
 ```yaml
@@ -187,6 +189,8 @@ description: 'Plan work, scope tasks, spec out requirements'
 ---
 [Full content here, can reference ./tasks/*.md etc.]
 ```
+
+**Important**: The `skill()` tool only accepts `name` - it does NOT accept arguments. Place `$ARGUMENTS` in the command body so they're visible in context when the skill is loaded.
 
 **When to use commands vs skills**:
 - **Commands** (`command/*.md`): For all user-invocable functionality. Either contains full content (simple case) or thin wrapper to skill (when supporting files needed).
@@ -977,11 +981,13 @@ Skill("vibe-experimental:done", "task completed")
 
 OpenCode:
 ```markdown
-Use the skill tool: skill({ name: "verify" })
-Use the skill tool with arguments: skill({ name: "done", arguments: "task completed" })
+Load the verify skill: skill({ name: "verify" })
+
+Task completed successfully.
+Load the done skill: skill({ name: "done" })
 ```
 
-**Note**: The `skill()` tool is OpenCode's native way to programmatically load skill content into the conversation. It returns the SKILL.md content for the agent to use.
+**Note**: The `skill()` tool only accepts `name` - it loads the SKILL.md content into the conversation. Arguments must be placed in context before calling skill(), not passed to the tool.
 
 ### Task Tool References
 
@@ -1020,7 +1026,9 @@ Apply these transformations to prompt content:
 | Pattern | Replacement | Notes |
 |---------|-------------|-------|
 | `Skill\("[\w-]+:([\w-]+)"\)` | `skill({ name: "$1" })` | Skill calls → skill tool |
-| `Skill\("[\w-]+:([\w-]+)",\s*"([^"]*)"\)` | `skill({ name: "$1", arguments: "$2" })` | With args |
+| `Skill\("[\w-]+:([\w-]+)",\s*"([^"]*)"\)` | `$2\n\nLoad the $1 skill: skill({ name: "$1" })` | With args - place args in context first |
+
+**Note**: The `skill()` tool does NOT accept arguments. When converting Skill() calls with arguments, place the argument text in context before the skill() call.
 
 **Tool name replacements:**
 | Pattern | Replacement | Notes |
@@ -1377,9 +1385,9 @@ tools:
 | Find | Replace (Source) | After Install |
 |------|------------------|---------------|
 | `Skill("plugin:foo")` | `skill({ name: "foo" })` | `skill({ name: "foo-<plugin>" })` |
-| `Skill("plugin:foo", "args")` | `skill({ name: "foo", arguments: "args" })` | `skill({ name: "foo-<plugin>", arguments: "args" })` |
+| `Skill("plugin:foo", "args")` | `args\n\nskill({ name: "foo" })` | `args\n\nskill({ name: "foo-<plugin>" })` |
 
-**Note**: The install script automatically updates internal references (`/command` and `skill({ name: "..." })`) to include the plugin postfix.
+**Note**: The `skill()` tool only accepts `name` - no arguments parameter. Place arguments in context before the skill() call. The install script updates skill names to include the plugin postfix.
 
 **Other transformations:**
 
