@@ -43,9 +43,9 @@ Domain-specific guidance available in:
 
 **Composition**: Code-change tasks combine CODING.md (base quality gates) with domain-specific guidance. Domains aren't mutually exclusive—a "bug fix that requires refactoring" benefits from both BUG.md and REFACTOR.md. Related domains compound coverage.
 
-**Task files are supplementary, not exhaustive**. Probing is adaptive—driven by the specific task, user responses, and what you discover. Task files add angles you might not think to check; they don't replace judgment about what matters for this task.
+**Task file structures are presumed relevant.** Task files contain quality gates, reviewer agents, risks, scenarios, and trade-offs. These are angles you won't think to check on your own — they exist precisely because they're easy to miss. Every table and checklist in applicable task files must be **resolved**: either presented to the user for selection, or explicitly skipped with logged reasoning (e.g., "CODING.md testability gate skipped: task is prompt-only, no code changes"). Silent drops are the failure mode — not over-asking.
 
-**Actionable structures in task files** — Task files contain quality gates, risks, scenarios, trade-offs, and other structures that inform probing. Engage with what's relevant to the task — these are angles you might not think to check on your own. When task files contain tables or checklists specifically, those require explicit user selection (see constraint: **Encode task file structures**).
+Probing beyond task files is adaptive — driven by the specific task, user responses, and what you discover. Task files don't cap what to ask; they set a floor.
 
 ## Existing Manifest Feedback
 
@@ -79,9 +79,11 @@ Scope deliverables and verification to repo context. Cross-repo invariants get e
 
 **All questions use question tool** - Every user question goes through question tool (tool limit: 2-4 options), one marked "(Recommended)". Never ask open-ended questions—they're cognitively demanding. Present concrete options the user can accept, reject, or adjust.
 
-**Task files supplement probing** - Task files add domain-specific risks and trade-offs as prompts—angles you might not think to check. They don't constrain what to ask; probing adapts to the specific task.
+**Resolve all task file structures** — After reading task files, extract every table and checklist (quality gates, reviewer agents with thresholds, risk lists, scenario prompts) and log each as a pending item. Resolve each by either:
+1. **Present to user** for selection via question tool — selected items encoded as INV-G* or AC-*, unselected items explicitly scoped out
+2. **Skip with logged justification** — when a structure genuinely doesn't apply to this task, log why (e.g., "CODING.md type-safety gate: project is Python, no type system")
 
-**Encode task file structures** — After reading task files, extract every table and checklist (quality gates, reviewer agents with thresholds, risk lists, scenario prompts). Present each to the user for selection via question tool. Selected items must be encoded as INV-G* or AC-*. Unselected items are explicitly scoped out. Don't defer to synthesis—these are structural decisions that compound when missed.
+Don't defer to synthesis — these are structural decisions that compound when missed. The flexibility is in justifying what to skip, not in whether to engage.
 
 **Discoverable unknowns — search first** - Facts about the project (existing structure, patterns, conventions, prior decisions) are discoverable through Domain Grounding. Don't ask the user about facts you could discover. Only ask about discoverable facts when: multiple plausible candidates exist, searches yield nothing but the fact is needed, or the ambiguity is actually about intent not fact. When asking, present what you found and recommend one option.
 
@@ -97,13 +99,28 @@ Scope deliverables and verification to repo context. Cross-repo invariants get e
 
 **Probe input artifacts** - When input references external documents (file paths, URLs), ask: "Should [document] be a verification source?" If yes, encode as Global Invariant.
 
-**Log after every action** - Write to `/tmp/define-discovery-{timestamp}.md` immediately after each discovery (domain findings, interview answers, exploration insights). Goal: another agent reading only the log could resume the interview. Read full log before synthesis.
+**Log is working memory** - Write to `/tmp/define-discovery-{timestamp}.md` immediately after each discovery. The log is not a narrative record — it's the source of truth for what's been found and what still needs resolution. Another agent reading only the log could resume the interview.
+
+Every actionable item gets logged with resolution status:
+- `- [ ]` PENDING — needs resolution (present to user, probe further, or encode)
+- `- [x]` RESOLVED — encoded as INV/AC/PG/ASM, confirmed by user, or answered
+- `- [~]` SKIPPED — explicitly scoped out with reasoning
+
+Log pending items as they emerge — from any source:
+- Task file structures after reading task files (quality gates, risks, scenarios)
+- Domain grounding findings needing user confirmation before encoding
+- Pre-mortem scenarios needing disposition (encode, scope out, or mitigate)
+- User constraints needing INV/AC/PG mapping
+- Backcasting assumptions needing resolution
+- Follow-up questions triggered by earlier answers
+
+Read full log before synthesis. Unresolved `- [ ]` items must be addressed first.
 
 **Confirm understanding periodically** - Before transitioning to a new topic area or after resolving a cluster of related questions, synthesize your current understanding back to the user: "Here's what I've established so far: [summary]. Correct?" This catches interpretation drift early—a misunderstanding in round 2 compounds through round 8 if never checked.
 
 **Batch related questions** - Group related questions into a single turn rather than asking one at a time. Batching keeps momentum and reduces round-trips without sacrificing depth. Each batch should cover a coherent topic area—don't mix unrelated concerns in one batch.
 
-**Stop when converged** - Err on more probing. Convergence requires: domain grounded (pre-mortem scenarios are project-specific, not generic), pre-mortem scenarios logged with dispositions (see Pre-Mortem Protocol), edge cases probed, and no obvious areas left unexplored. Only then, if very confident further questions would yield nothing new, move to synthesis. Remaining low-impact unknowns that don't warrant further probing are recorded as Known Assumptions in the manifest. User can signal "enough" to override.
+**Stop when converged** - Err on more probing. Convergence requires: domain grounded (pre-mortem scenarios are project-specific, not generic), pre-mortem scenarios logged with dispositions (see Pre-Mortem Protocol), edge cases probed, no unresolved `- [ ]` items in the log, and no obvious areas left unexplored. Only then, if very confident further questions would yield nothing new, move to synthesis. Remaining low-impact unknowns that don't warrant further probing are recorded as Known Assumptions in the manifest. User can signal "enough" to override.
 
 **Verify before finalizing** - After writing manifest, invoke manifest-verifier with the manifest and discovery log. If status is CONTINUE, ask the outputted questions, log new answers, update manifest, re-verify. Loop until COMPLETE or user signals "enough".
 
@@ -145,15 +162,17 @@ What "exploration" means depends on the domain. For code tasks, explore the code
 
 **Scoping**: Explore what's relevant to the task description, not the entire domain. Focus on the affected area and its immediate context.
 
-Log findings to the discovery file:
+Log findings to the discovery file — both narrative context and pending items:
 ```
 DOMAIN GROUNDING: [area explored]
 PATTERNS FOUND: [existing conventions, approaches]
 CONSTRAINTS FOUND: [what the existing context assumes or requires]
 IMPLICATIONS FOR TASK: [how this shapes what we build]
-```
 
-**Confirm before encoding** — discovered patterns are candidates, not confirmed invariants. Present to user: "I found [pattern]. Should this be a hard constraint for this task?"
+Pending:
+- [ ] Confirm: [pattern X] as constraint?
+- [ ] Confirm: [convention Y] as invariant?
+```
 
 **Convergence**: Domain grounding converges when you understand the affected area well enough to generate project-specific failure scenarios—not generic ones. If you can only imagine generic failures, you haven't grounded enough. If you can imagine failures that reference specific components, patterns, or conventions in this context, you have.
 
@@ -217,7 +236,7 @@ Example log entry:
 DIMENSION: Timing
 SCENARIO: Feature works in dev but rate limits hit in production due to external API calls
 LIKELIHOOD: Medium | IMPACT: High
-QUESTION: External API rate limits → Options: "APIs exist, need to verify limits (Recommended)", "No external APIs", "APIs exist, limits known and safe", "Real risk - add caching/fallback to invariants"
+- [ ] Ask user: External API rate limits → Options: "Real risk - add to invariants (Recommended)", "No external APIs", "APIs exist, limits known and safe", "Out of scope"
 ```
 
 When presenting to user: "I'm imagining this failing because we hit external API rate limits in production. How does this apply?" → Options as above.
