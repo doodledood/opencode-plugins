@@ -2,10 +2,16 @@
 
 New functionality: features, APIs, enhancements.
 
+## Quality Gates
+
+- **Requirements traceability** — every specified requirement maps to implementation; nothing lost between spec and code
+- **Behavior completeness** — all specified use cases and interactions implemented, not just the happy path
+- **Error experience** — feature failures produce clear, actionable feedback to the user, not silent failures or raw stack traces
+
 ## Risks
 
 - **Scope creep** - feature expands beyond original intent
-- **Breaking consumers** - changes to API, DB schema, config break downstream; probe: who consumes this?
+- **Breaking consumers** - downstream consumers not identified before changing interfaces; probe: who consumes this? how will they know?
 - **Missing edge cases** - happy path works, edge cases crash
 - **Security blind spot** - auth, user data, external input not reviewed
 - **Silent production failure** - works in dev, no observability in prod
@@ -24,6 +30,10 @@ New functionality: features, APIs, enhancements.
 - **Documentation drift** - feature ships, docs don't match; probe: what docs need updating?
 - **Notification/feedback gap** - action succeeds silently; probe: does user know it worked?
 - **Mobile/offline behavior** - works online, breaks offline; probe: connectivity assumptions?
+- **Performance degradation** - feature works at test scale, degrades at production volume; probe: data volume? concurrent users? growth rate?
+- **Orphaned resources** - feature creates data/state that grows unboundedly with no cleanup path; probe: what does this create? who cleans it up?
+- **Graceful degradation missing** - feature fails and takes down surrounding functionality; probe: blast radius? what else breaks?
+- **Accessibility gap** - feature works but excludes users; probe: keyboard navigation? screen readers? color contrast?
 
 ## Trade-offs
 
@@ -31,3 +41,5 @@ New functionality: features, APIs, enhancements.
 - Flexibility vs simplicity
 - Feature completeness vs ship date
 - New abstraction vs inline solution
+- User-facing polish vs implementation effort
+- Graceful degradation vs fail-fast

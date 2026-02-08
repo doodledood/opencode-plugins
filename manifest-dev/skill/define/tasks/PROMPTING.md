@@ -10,11 +10,20 @@ Prompts are manifests: **WHAT and WHY, not HOW**. State goals and constraints. T
 
 | Gate | Threshold | Verify |
 |------|-----------|--------|
-| Clarity | No ambiguous instructions, no vague language, no implicit expectations | general-purpose |
-| No conflicts | No contradictory rules, no priority collisions, edge cases covered | general-purpose |
-| Structure | Critical rules surfaced prominently, clear hierarchy, no unintentional redundancy | general-purpose |
-| Information density | Every word earns its place | general-purpose |
-| No anti-patterns | No prescriptive HOW, arbitrary limits, capability instructions, weak language | general-purpose |
+| Clarity | No ambiguous instructions, no vague language, no implicit expectations | Read each instruction aloud—flag any with multiple valid interpretations |
+| No conflicts | No contradictory rules, no priority collisions, edge cases covered | Identify all MUST/SHOULD rules, check for pairs that can't both be satisfied |
+| Structure | Critical rules surfaced prominently, clear hierarchy, no unintentional redundancy | Skim first and last paragraphs only—are critical rules visible? |
+| Information density | Every word earns its place | Remove each sentence—if nothing is lost, it didn't earn its place |
+| No anti-patterns | No prescriptive HOW, arbitrary limits, capability instructions, weak language | Scan for HOW language, arbitrary numbers, tool names, "try to"/"maybe" |
+| Invocation fit | Prompt's expected trigger, caller identity, and output consumer match actual deployment context | Compare prompt's assumptions against where it runs (auto-invoked vs user-facing, output to human vs agent) |
+| Domain context | Domain terms, conventions, and constraints captured—not guessed | Check domain-specific language against source material or user confirmation |
+| Complexity fit | Prompt complexity matches the task—not over-engineered, not under-specified | Compare prompt structure depth to task difficulty |
+| Memento (if multi-phase) | Multi-step prompts externalize state correctly | Verify log-after-each-step and read-before-synthesis disciplines present |
+| Description (if skill/agent) | Description follows What + When + Triggers pattern | Check description drives correct auto-invocation |
+| Edge case coverage | Prompt handles boundary inputs and unusual conditions, not just the happy path | Identify edge cases from domain; verify prompt addresses each |
+| Model-prompt fit | Prompt stays within model capabilities—doesn't assume unreliable behaviors | Flag instructions requiring capabilities the model doesn't reliably have |
+| Guardrail calibration | Safety boundaries neither too loose (harmful output possible) nor too tight (valid use cases blocked) | Test boundary cases—does the guardrail correctly allow/block? |
+| Output calibration | Output format, length, and detail level match the use case and consumer | Compare expected output characteristics against actual consumer needs |
 
 ## Context to Discover
 
@@ -53,7 +62,7 @@ Before defining a prompt, probe for these—missing context creates ambiguous pr
 | Prescribing HOW | "First search, then read, then analyze..." | State goal: "Understand the pattern" |
 | Arbitrary limits | "Max 3 iterations", "2-4 examples" | Principle: "until converged", "as needed" |
 | Capability instructions | "Use grep to search", "Read the file" | Remove—model knows how |
-| Rigid checklists | Step-by-step heuristics tables | Convert to principles |
+| Rigid checklists in authored prompts | "Step 1: search. Step 2: read. Step 3: analyze." baked into the prompt | Convert to goal + constraints (discipline patterns like memento are exempt) |
 | Weak language | "Try to", "maybe", "if possible" | Direct: "Do X", "Never Y" |
 | Buried critical info | Important rules in middle | Surface prominently |
 | Over-engineering | 10 phases for a simple task | Match complexity to need |
@@ -65,7 +74,7 @@ Pre-mortem fuel—imagine the prompt failing:
 - **Context rot** - critical instruction forgotten mid-execution; probe: long prompt? multi-step workflow?
 - **Ambiguous interpretation** - instruction parsed differently than intended; probe: could this be read two ways?
 - **Capability assumption** - assumes model can do something unreliably; probe: within model strengths?
-- **Conflicting instructions** - two rules can't both be satisfied; probe: priority clear? edge cases?
+- **Conflicting instructions** - two rules within the prompt can't both be satisfied; probe: priority clear? edge cases?
 - **Edge case unhandled** - prompt works for typical input, fails on unusual; probe: what weird inputs are possible?
 - **Wrong model assumption** - prompt tuned for one model, used with another; probe: model-specific behaviors?
 - **Overfitting to examples** - follows examples too literally; probe: are examples representative?
@@ -75,6 +84,9 @@ Pre-mortem fuel—imagine the prompt failing:
 - **Guardrail too loose** - harmful output possible; probe: what outputs must never happen?
 - **Guardrail too tight** - valid use cases blocked; probe: false positives acceptable?
 - **Verbosity mismatch** - output too long or too terse for use case; probe: output length expectations?
+- **Unverifiable output** - prompt produces output no one can judge as correct or incorrect; probe: can a reviewer distinguish good from bad output without the author explaining intent?
+- **Regression on update** - change fixes one issue but silently breaks existing behavior that was correct; probe: what currently works that this change could affect?
+- **Composition conflict** - prompt works in isolation but contradicts system instructions, tool definitions, or other prompts it's embedded with; probe: what else will be in context when this runs?
 
 ## Trade-offs
 
@@ -140,7 +152,7 @@ If prompt accumulates findings across steps, needs memento pattern:
 | LLM Limitation | Pattern Response |
 |----------------|------------------|
 | Context rot (middle content lost) | Write findings to log after EACH step |
-| Working memory (5-10 items max) | Todo lists externalize tracked areas |
+| Working memory is limited | Todo lists externalize tracked areas |
 | Synthesis failure at scale | Read full log BEFORE final output |
 | Recency bias | Refresh moves findings to context end |
 
@@ -158,18 +170,3 @@ Key disciplines:
 - `→log` after each collection step (discipline, not capability)
 - `Refresh: read full log` before synthesis (restores context)
 - Acceptance criteria on each todo ("; done when X")
-
-## Validation Criteria
-
-Manifests for prompting tasks should include ACs covering:
-
-- [ ] All ambiguities resolved (no multiple interpretations)
-- [ ] Domain context captured (terms, conventions, constraints)
-- [ ] Goals stated, not steps prescribed
-- [ ] No arbitrary numbers (or justified if present)
-- [ ] Weak language replaced with direct imperatives
-- [ ] Critical rules surfaced prominently
-- [ ] Complexity matches the task
-- [ ] Each word earns its place
-- [ ] If multi-phase: memento pattern applied correctly
-- [ ] If skill/agent: description follows What + When + Triggers pattern

@@ -70,9 +70,27 @@ fi
 
 - If specific plugins requested: filter to those
 - If `--all` or no args: sync all plugins listed for this repo
-- Check changelog for incremental sync (unless `--full`)
 
-### 4. For Each Plugin
+### 4. For Each Plugin — Incremental Sync via SYNC.md
+
+Each plugin directory has a `SYNC.md` tracking the last synced source commit (repo, path, commit hash, date).
+
+**If `SYNC.md` exists and has a commit hash** (and `--full` not set):
+1. `cd $REPO && git diff <last-commit>..HEAD -- <plugins-dir>/<plugin>/` to get changed files
+2. If diff is empty → skip plugin ("already up to date")
+3. If diff exists → read only the changed source files + their converted counterparts
+4. Apply conversions to changed files only, write updates
+5. Record new HEAD commit in `SYNC.md`
+
+**If `SYNC.md` missing or `--full` flag set**:
+1. Full sync — read all source files, apply all conversions, write everything
+2. Create/update `SYNC.md` with current HEAD commit
+
+This avoids reading and diffing every file on every sync.
+
+### 5. Apply Conversions
+
+For each file (changed or all):
 
 1. **Read** source files from `$REPO/<plugins-dir>/<plugin>/`
 2. **Apply** conversions per CONVERSION_GUIDE.md:
@@ -88,16 +106,23 @@ fi
    - Replace `Skill("plugin:name")` → `/name` (commands) or `skill({ name: "name" })` (skills)
 3. **Write** to `<plugin>/` in this repo
 
-### 5. Report Changes
+### 6. Update SYNC.md
+
+After successful sync, update `<plugin>/SYNC.md` with the current HEAD commit of the source repo. This is the last step — only written after all files are synced.
+
+### 7. Report Changes
 
 ```
 Synced from <repo>:
 
-<plugin-name>:
+<plugin-name> (<old-commit>..<new-commit>):
   - <file>: <brief description of change>
 
 Skipped (OpenCode limitations):
   - <description of hook changes that can't be ported>
+
+Already up to date:
+  - <plugin-name> (at <commit>)
 ```
 
 ## OpenCode Limitations

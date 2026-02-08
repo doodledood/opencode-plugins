@@ -6,7 +6,7 @@ Manifest-driven workflows separating **what to build** (Deliverables) from **rul
 
 A structured approach to task definition and execution:
 
-1. **Approach** (complex tasks) - Validated implementation direction: architecture, execution order, risks, trade-offs
+1. **Approach** (complex tasks) - Initial direction, not rigid plan: architecture, execution order, risks, trade-offs
 2. **Global Invariants** - Rules that apply to the ENTIRE task (e.g., "tests must pass")
 3. **Deliverables** - Specific items to complete, each with **Acceptance Criteria**
    - ACs can be positive ("user can log in") or negative ("passwords are hashed")
@@ -21,9 +21,9 @@ A structured approach to task definition and execution:
 - **Mental Model:** [Key concepts/architecture]
 
 ## 2. Approach (Complex Tasks Only)
-*Validated implementation direction.*
+*Initial direction, not rigid plan. Expect adjustment when reality diverges.*
 
-- **Architecture:** [High-level HOW - validated direction]
+- **Architecture:** [High-level HOW - starting direction]
 - **Execution Order:** D1 → D2 → D3 | Rationale: [why]
 - **Risk Areas:**
   - [R-1] [What could go wrong] | Detect: [how you'd know]
@@ -115,7 +115,7 @@ Specialized review agents spawned in parallel during `/verify`:
 | `code-simplicity-reviewer` | Unnecessary complexity, over-engineering, cognitive burden |
 | `code-testability-reviewer` | Code that requires excessive mocking, business logic hard to verify in isolation |
 | `type-safety-reviewer` | TypeScript type holes, opportunities to make invalid states unrepresentable |
-| `claude-md-adherence-reviewer` | Verifies code changes comply with CLAUDE.md instructions and project standards |
+| `agents-md-adherence-reviewer` | Verifies code changes comply with AGENTS.md instructions and project standards |
 | `docs-reviewer` | Audits documentation accuracy against recent code changes |
 
 ## Hooks
