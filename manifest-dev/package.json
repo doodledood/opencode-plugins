@@ -1,6 +1,6 @@
 {
   "name": "opencode-manifest-dev",
-  "version": "0.46.0",
+  "version": "0.46.2",
   "description": "Manifest-driven workflows for structured task execution with verification gates.",
   "author": "doodledood",
   "type": "module",
