@@ -2,11 +2,6 @@
 description: |
   Verifies prompt token efficiency. In single-file mode, identifies inefficiencies (redundancy, verbosity). In two-file mode, verifies compression is lossless by comparing original vs compressed.
 mode: subagent
-tools:
-  glob: true
-  grep: true
-  read: true
-  question: false
 ---
 
 # Prompt Token Efficiency Verifier

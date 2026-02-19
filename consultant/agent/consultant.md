@@ -29,17 +29,6 @@ description: |
   </commentary>
   </example>
 mode: subagent
-tools:
-  bash: true
-  edit: true
-  glob: true
-  grep: true
-  read: true
-  skill: true
-  todowrite: true
-  webfetch: true
-  websearch: true
-  question: false
 ---
 
 # Consultant Agent

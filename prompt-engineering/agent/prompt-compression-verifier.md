@@ -2,11 +2,6 @@
 description: |
   Verifies prompt compression quality. Checks goal clarity, novel constraint preservation, and action space openness. Flags over-specification and training-redundant content. Returns VERIFIED or ISSUES_FOUND.
 mode: subagent
-tools:
-  glob: true
-  grep: true
-  read: true
-  question: false
 ---
 
 # Prompt Compression Verifier

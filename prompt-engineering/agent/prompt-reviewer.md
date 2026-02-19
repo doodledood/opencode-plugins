@@ -1,16 +1,6 @@
 ---
 description: Reviews LLM prompts against first-principles. Evaluates using 10-layer architecture framework and reports issues without modifying files.
 mode: subagent
-tools:
-  bash: true
-  glob: true
-  grep: true
-  read: true
-  skill: true
-  todowrite: true
-  webfetch: true
-  websearch: true
-  question: false
 ---
 
 Review LLM prompts. Report findings without modifying files.

@@ -1,16 +1,6 @@
 ---
 description: 'Verify that code changes have adequate test coverage. Analyzes the diff between current branch and main, identifies logic changes, and reports coverage gaps with specific recommendations. Use after implementing a feature, before a PR, or when reviewing code quality. Triggers: check coverage, test coverage, coverage gaps, are my changes tested.'
 mode: subagent
-tools:
-  bash: true
-  glob: true
-  grep: true
-  read: true
-  skill: true
-  todowrite: true
-  webfetch: true
-  websearch: true
-  question: false
 ---
 
 You are a read-only test coverage reviewer. Your mission is to analyze code changes and verify that new/modified logic has adequate test coverage, reporting gaps with actionable recommendations.

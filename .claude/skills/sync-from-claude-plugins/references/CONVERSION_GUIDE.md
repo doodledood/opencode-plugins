@@ -299,7 +299,7 @@ Claude Code skills work without modification if they have no `user-invocable` fi
 ---
 name: bug-fixer
 description: Expert bug investigator and fixer
-tools: Bash, Glob, Grep, Read, Edit, Write, WebFetch, TodoWrite, WebSearch
+tools: Bash, Glob, Grep, Read, Edit, Write, TodoWrite
 model: opus
 ---
 ```
@@ -311,12 +311,6 @@ description: Expert bug investigator and fixer
 mode: subagent
 model: openai/gpt-5.2
 temperature: 0.3
-tools:
-  read: true
-  edit: true
-  bash: true
-  webfetch: true
-  websearch: true
 ---
 ```
 
@@ -326,62 +320,44 @@ tools:
 |-------------|----------|--------|
 | `name:` | (filename) | **Remove** |
 | `description:` | `description:` | Keep |
-| `tools:` (comma list) | `tools:` (object) | **Convert format** |
+| `tools:` (comma list) | *(omit)* | **Remove** — subagents inherit all tools by default |
 | `model:` | `model:` | Convert to full ID |
 | N/A | `mode:` | **Add** `subagent` or `primary` |
 | N/A | `temperature:` | Optional, add if needed |
 | N/A | `maxSteps:` | Optional iteration limit |
 | N/A | `hidden:` | Optional, hide from autocomplete |
 
-### Tool Mapping (Canonical)
+### Tool Handling
 
-This table is the single source of truth for all tool name conversions (frontmatter, hooks, content).
+**Default approach: omit `tools:` entirely.** OpenCode subagents inherit all available tools by default. Do not convert Claude Code's `tools:` list into an OpenCode `tools:` object — just remove it. The agent will automatically have access to all tools configured in the environment (including web tools like Tavily, MCP tools, etc.).
 
-| Claude Code | OpenCode (frontmatter) | OpenCode (hook `input.tool`) |
-|-------------|------------------------|------------------------------|
-| `Bash` | `bash: true` | `bash` |
-| `Read` | `read: true` | `read` |
-| `Edit` | `edit: true` | `edit` |
-| `Write` | `edit: true` | `edit` |
-| `Glob` | `glob: true` | `glob` |
-| `Grep` | `grep: true` | `grep` |
-| `WebFetch` | `webfetch: true` | `webfetch` |
-| `WebSearch` | `websearch: true` | `websearch` |
-| `TodoWrite` | `todowrite: true` | `todowrite` |
-| `TodoRead` | `todoread: true` | `todoread` |
-| `TaskCreate` | `todowrite: true` | `todowrite` |
-| `TaskUpdate` | `todowrite: true` | `todowrite` |
-| `TaskList` | `todoread: true` | `todoread` |
-| `TaskGet` | `todoread: true` | `todoread` |
-| `Task` | `task: true` | `task` |
-| `Skill` | `skill: true` | `skill` |
-| `SlashCommand` | `skill: true` | `skill` |
-| `NotebookEdit` | `edit: true` | `edit` |
-| `AskUserQuestion` | `question: false` | `question` |
+Only add a `tools:` section if you need to **restrict** specific tools (rare).
 
-**Additional OpenCode permissions** (no Claude Code equivalent):
-- `list: true` — directory listing
-- `lsp: true` — LSP queries
-- `codesearch: true` — code search
-- `external_directory: true` — paths outside project
-- `doom_loop: true` — repeated identical calls
+### Tool Name Mapping (for hooks and content only)
 
-All tools are **enabled by default** in OpenCode. Specifying them explicitly in agent frontmatter ensures the agent has access even if global config restricts them.
+This table maps Claude Code tool names to OpenCode equivalents. This is used for **hook code** (`input.tool` checks) and **prompt content** references — NOT for agent frontmatter (which should omit `tools:`).
 
-Explicitly set interactive tools to `false` for all subagents since they run autonomously:
-- `question: false` - subagents should not prompt users for input
-
-If a Claude Code agent has no `tools:` line, add a minimal tools section with just the disabled interactive tools:
-```yaml
-tools:
-  question: false
-```
-
-### Permission Values
-
-Tool permissions use **boolean values**:
-- `true` - Tool is permitted
-- `false` - Tool is denied (or simply omit the tool)
+| Claude Code | OpenCode (hook `input.tool`) |
+|-------------|------------------------------|
+| `Bash` | `bash` |
+| `Read` | `read` |
+| `Edit` | `edit` |
+| `Write` | `edit` |
+| `Glob` | `glob` |
+| `Grep` | `grep` |
+| `WebFetch` | *(no direct equivalent — web access via configured tools like Tavily)* |
+| `WebSearch` | *(no direct equivalent — web access via configured tools like Tavily)* |
+| `TodoWrite` | `todowrite` |
+| `TodoRead` | `todoread` |
+| `TaskCreate` | `todowrite` |
+| `TaskUpdate` | `todowrite` |
+| `TaskList` | `todoread` |
+| `TaskGet` | `todoread` |
+| `Task` | `task` |
+| `Skill` | `skill` |
+| `SlashCommand` | `skill` |
+| `NotebookEdit` | `edit` |
+| `AskUserQuestion` | `question` |
 
 ---
 
@@ -898,8 +874,9 @@ OpenCode uses glob patterns that accept **both** singular and plural:
 2. **SubagentStop hooks (synchronous)**: No cancellable hook, but can reactively detect child sessions and prompt/abort (see [Subagent Activity Detection](#subagent-activity-detection))
 3. **Subagent tool interception**: `tool.execute.before/after` don't fire for subagent tool calls — use agent-level tool permissions for enforcement
 4. **MCP tool interception**: MCP tool calls don't trigger hooks
-5. **Complex Python deps**: Must find TypeScript alternatives
-6. **Model auto-routing**: Claude Code uses Haiku for searches automatically
+5. **WebFetch / WebSearch**: No direct equivalents — web access is via environment-configured tools (e.g., Tavily); agents inherit these automatically
+6. **Complex Python deps**: Must find TypeScript alternatives
+7. **Model auto-routing**: Claude Code uses Haiku for searches automatically
 
 ### Requires Manual Work
 
@@ -945,8 +922,7 @@ For each resource in the source plugin, classify and transform:
 **Agents**:
 - Remove `name:` from frontmatter
 - Add `mode: subagent`
-- Convert `tools:` comma list → permission object with booleans
-- Add `question: false` for subagents
+- Remove `tools:` entirely (subagents inherit all tools by default)
 - Convert `model:` to full ID
 
 **Hooks**:
@@ -989,10 +965,6 @@ description: What it does
 description: What it does
 mode: subagent
 model: <full-model-id>  # see Model Mapping
-tools:
-  read: true
-  edit: true
-  bash: true
 ---
 ```
 
@@ -1019,7 +991,7 @@ The `skill()` tool only accepts `name` — no arguments parameter. Place argumen
 | Find | Replace |
 |------|---------|
 | `model: opus/sonnet/haiku` | See [Model Mapping](#model-mapping) |
-| `tools: Bash, Read, ...` | See [Tool Permission Mapping](#tool-permission-mapping) |
+| `tools: Bash, Read, ...` | **Remove entirely** — subagents inherit all tools |
 
 The install script adds `-<plugin>` postfix to command filenames. Skill directories also get postfixed (e.g., `skill/verify-<plugin>/SKILL.md`).
 
