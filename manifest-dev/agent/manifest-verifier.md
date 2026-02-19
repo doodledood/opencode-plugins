@@ -1,12 +1,10 @@
 ---
 description: 'Reviews /define manifests for gaps and outputs actionable continuation steps. Returns specific questions to ask and areas to probe so interview can continue.'
 mode: subagent
-model: openai/gpt-5.2
-reasoningEffort: xhigh
 tools:
-  read: true
-  grep: true
   glob: true
+  grep: true
+  read: true
   question: false
 ---
 

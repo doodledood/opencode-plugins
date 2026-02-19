@@ -1,6 +1,6 @@
 {
   "name": "opencode-prompt-engineering",
-  "version": "2.3.3",
+  "version": "2.3.4",
   "description": "Tools for crafting, reviewing, analyzing, refining, and optimizing LLM prompts for clarity, precision, goal effectiveness, and token efficiency",
   "type": "module",
   "homepage": "https://github.com/doodledood/opencode-plugins",

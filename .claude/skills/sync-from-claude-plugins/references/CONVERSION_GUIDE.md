@@ -740,6 +740,7 @@ This is the **canonical reference** for model ID conversion. All other sections 
 
 | Claude Code | OpenCode Full ID | Notes |
 |-------------|------------------|-------|
+| `inherit` | *(remove model line)* | OpenCode inherits by default; also remove `reasoningEffort:` if present |
 | `opus` | `openai/gpt-5.2` | Agents get `reasoningEffort: xhigh` |
 | `sonnet` | `anthropic/claude-sonnet-4-5-20250929` | |
 | `haiku` | `anthropic/claude-haiku-4-5-20251001` | |

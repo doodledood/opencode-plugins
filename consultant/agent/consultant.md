@@ -29,7 +29,6 @@ description: |
   </commentary>
   </example>
 mode: subagent
-model: anthropic/claude-sonnet-4-5-20250929
 tools:
   bash: true
   edit: true

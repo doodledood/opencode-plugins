@@ -6,7 +6,7 @@ Manifest-driven workflows separating **what to build** (Deliverables) from **rul
 
 A structured approach to task definition and execution:
 
-1. **Approach** (complex tasks) - Initial direction, not rigid plan: architecture, execution order, risks, trade-offs
+1. **Approach** (complex tasks) - Validated implementation direction: architecture, execution order, risks, trade-offs
 2. **Global Invariants** - Rules that apply to the ENTIRE task (e.g., "tests must pass")
 3. **Deliverables** - Specific items to complete, each with **Acceptance Criteria**
    - ACs can be positive ("user can log in") or negative ("passwords are hashed")
@@ -79,12 +79,15 @@ A structured approach to task definition and execution:
 | Task Type | File | When Loaded |
 |-----------|------|-------------|
 | Code | `skills/define/tasks/CODING.md` | APIs, features, fixes, refactors, tests |
-| Document | `skills/define/tasks/DOCUMENT.md` | Specs, proposals, reports, articles, docs |
-| Blog | `skills/define/tasks/BLOG.md` | Blog posts, content writing |
-| Research | `skills/define/tasks/RESEARCH.md` | Research tasks, analysis, investigation |
+| Writing | `skills/define/tasks/WRITING.md` | Prose, articles, emails, marketing copy, social media (base for Blog, Document) |
+| Document | `skills/define/tasks/DOCUMENT.md` | Specs, proposals, reports, formal docs (+ WRITING.md base) |
+| Blog | `skills/define/tasks/BLOG.md` | Blog posts, tutorials, newsletters (+ WRITING.md base) |
+| Research | `skill/define/tasks/research/RESEARCH.md` + source files | Research tasks, analysis, investigation. Source-specific guidance in `tasks/research/sources/` |
 | Other | (none) | Doesn't fit above categories |
 
 The universal flow (core principles, manifest schema) works without any task file.
+
+Task files use compressed domain awareness for probing; full reference material lives in `skills/define/tasks/references/` for `/verify` agents (e.g., `references/research/` contains meta-research evidence across 7 disciplines).
 
 ### Internal
 
@@ -111,6 +114,7 @@ Specialized review agents spawned in parallel during `/verify`:
 |-------|-------|
 | `code-bugs-reviewer` | Audits code changes for logical bugs without making modifications |
 | `code-coverage-reviewer` | Verifies code changes have adequate test coverage, reports gaps |
+| `code-design-reviewer` | Design fitness--reinvented wheels, code vs configuration boundary, under-engineering, interface foresight |
 | `code-maintainability-reviewer` | DRY violations, coupling, cohesion, consistency, dead code, architectural boundaries |
 | `code-simplicity-reviewer` | Unnecessary complexity, over-engineering, cognitive burden |
 | `code-testability-reviewer` | Code that requires excessive mocking, business logic hard to verify in isolation |

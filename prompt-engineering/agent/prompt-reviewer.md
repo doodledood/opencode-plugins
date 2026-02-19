@@ -1,8 +1,6 @@
 ---
 description: Reviews LLM prompts against first-principles. Evaluates using 10-layer architecture framework and reports issues without modifying files.
 mode: subagent
-model: openai/gpt-5.2
-reasoningEffort: xhigh
 tools:
   bash: true
   glob: true

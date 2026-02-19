@@ -492,6 +492,7 @@ Minimum acceptable? Not ideal—what you could live with."
 - Only ask user when genuinely ambiguous
 
 **Research context if needed**: Use the web-researcher agent to quickly research typical {factor} ranges in {category}, including basic, mid, and premium tiers.
+Read the research file path returned by the agent to get full findings.
 
 ## 3.3 Categorize Factors
 
@@ -543,6 +544,7 @@ Use the web-researcher agent to discover options for {decision}. Provide the age
 - Scope: direct solutions, alternatives, and creative options
 
 Request results organized by category with descriptions.
+Read the research file path returned by the agent to get full findings.
 
 ## 4.3 Present Options
 
@@ -585,6 +587,7 @@ Use the web-researcher agent to research {decision} at the appropriate thoroughn
 - User's context and situation
 
 Request for each option: values with sources, strengths/weaknesses, hidden costs, and best/worst use cases.
+Read the research file path returned by the agent to get full findings.
 
 **Thoroughness by stakes**: Low→medium, Medium→thorough, High→very thorough
 
@@ -620,7 +623,7 @@ Scan for factors: important (multiple sources), NOT in discovery, could change r
 ```
 
 **Missing cell for Non-Negotiable/Important**:
-1. Targeted: Use the web-researcher agent to quickly research {Factor} for {Option} to fill the data gap.
+1. Targeted: Use the web-researcher agent to quickly research {Factor} for {Option} to fill the data gap — read the returned file path for findings.
 2. Still unavailable:
    ```json
    {"questions":[{"question":"No data for {Option}'s {Factor}. How proceed?","header":"Data Gap","options":[{"label":"Assume meets","description":"Optimistic"},{"label":"Assume fails","description":"Conservative"},{"label":"Skip option","description":"Can't evaluate"}],"multiSelect":false}]}

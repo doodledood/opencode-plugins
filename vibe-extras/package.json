@@ -1,6 +1,6 @@
 {
   "name": "opencode-vibe-extras",
-  "version": "2.1.0",
+  "version": "2.4.0",
   "description": "Standalone utilities for codebase exploration, web research, git operations, and code maintenance",
   "author": "doodledood <aviram.kofman@gmail.com>",
   "type": "module",
@@ -22,7 +22,9 @@
     "history-rewrite",
     "research",
     "exploration",
-    "codebase"
+    "codebase",
+    "review",
+    "persona"
   ],
   "dependencies": {
     "@opencode-ai/plugin": "^1.0.162"

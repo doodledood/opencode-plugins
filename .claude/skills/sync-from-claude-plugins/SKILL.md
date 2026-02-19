@@ -92,10 +92,15 @@ This avoids reading and diffing every file on every sync.
 
 For each file (changed or all):
 
+**Reference files** (task files, `references/*.md`, supporting data) that don't have frontmatter needing conversion: `cp` from source to target, then grep for `CLAUDE.md`/`.claude/` — if no hits, done. If hits, apply content transformations.
+
+**Files needing conversion** (agents, commands, skills with frontmatter, package.json, README):
+
 1. **Read** source files from `$REPO/<plugins-dir>/<plugin>/`
 2. **Apply** conversions per CONVERSION_GUIDE.md:
    - Remove `name:` from commands/agents (keep for skills)
    - Remove `user-invocable:` field
+   - Convert `model: inherit` → **remove the model line** (OpenCode inherits by default; also remove `reasoningEffort:` if present)
    - Convert `model: opus` → `model: openai/gpt-5.2` + `reasoningEffort: xhigh`
    - Convert `model: sonnet` → `model: anthropic/claude-sonnet-4-5-20250929`
    - Convert `model: haiku` → `model: anthropic/claude-haiku-4-5-20251001`

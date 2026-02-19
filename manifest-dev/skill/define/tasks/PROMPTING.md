@@ -72,9 +72,6 @@ Before defining a prompt, probe for these—missing context creates ambiguous pr
 Pre-mortem fuel—imagine the prompt failing:
 
 - **Context rot** - critical instruction forgotten mid-execution; probe: long prompt? multi-step workflow?
-- **Ambiguous interpretation** - instruction parsed differently than intended; probe: could this be read two ways?
-- **Capability assumption** - assumes model can do something unreliably; probe: within model strengths?
-- **Conflicting instructions** - two rules within the prompt can't both be satisfied; probe: priority clear? edge cases?
 - **Edge case unhandled** - prompt works for typical input, fails on unusual; probe: what weird inputs are possible?
 - **Wrong model assumption** - prompt tuned for one model, used with another; probe: model-specific behaviors?
 - **Overfitting to examples** - follows examples too literally; probe: are examples representative?
@@ -84,7 +81,6 @@ Pre-mortem fuel—imagine the prompt failing:
 - **Guardrail too loose** - harmful output possible; probe: what outputs must never happen?
 - **Guardrail too tight** - valid use cases blocked; probe: false positives acceptable?
 - **Verbosity mismatch** - output too long or too terse for use case; probe: output length expectations?
-- **Unverifiable output** - prompt produces output no one can judge as correct or incorrect; probe: can a reviewer distinguish good from bad output without the author explaining intent?
 - **Regression on update** - change fixes one issue but silently breaks existing behavior that was correct; probe: what currently works that this change could affect?
 - **Composition conflict** - prompt works in isolation but contradicts system instructions, tool definitions, or other prompts it's embedded with; probe: what else will be in context when this runs?
 
@@ -170,3 +166,4 @@ Key disciplines:
 - `→log` after each collection step (discipline, not capability)
 - `Refresh: read full log` before synthesis (restores context)
 - Acceptance criteria on each todo ("; done when X")
+

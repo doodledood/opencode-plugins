@@ -37,13 +37,20 @@ Domain-specific guidance available in:
 | **Bug** | Defects, errors, regressions, "not working", "broken" | `tasks/BUG.md` |
 | **Refactor** | Restructuring, reorganization, "clean up", pattern changes | `tasks/REFACTOR.md` |
 | **Prompting** | LLM prompts, skills, agents, system instructions | `tasks/PROMPTING.md` |
-| **Document** | Specs, proposals, reports, formal docs | `tasks/DOCUMENT.md` |
-| **Research** | Investigations, analyses, comparisons | `tasks/RESEARCH.md` |
-| **Blog** | Blog posts, articles, tutorials | `tasks/BLOG.md` |
+| **Writing** | Prose, articles, emails, marketing copy, social media, creative writing (base for Blog, Document) | `tasks/WRITING.md` |
+| **Document** | Specs, proposals, reports, formal docs (base: Writing) | `tasks/DOCUMENT.md` |
+| **Research** | Investigations, analyses, comparisons | `tasks/research/RESEARCH.md` |
+| **Blog** | Blog posts, articles, tutorials (base: Writing) | `tasks/BLOG.md` |
 
-**Composition**: Code-change tasks combine CODING.md (base quality gates) with domain-specific guidance. Domains aren't mutually exclusive—a "bug fix that requires refactoring" benefits from both BUG.md and REFACTOR.md. Related domains compound coverage.
+**Composition**: Code-change tasks combine CODING.md (base quality gates) with domain-specific guidance. Text-authoring tasks combine WRITING.md (base prose quality) with content-type guidance—a "blog post" benefits from both WRITING.md and BLOG.md, a "technical proposal" from both WRITING.md and DOCUMENT.md. Research tasks compose RESEARCH.md (base research methodology) with source-type files—when web research is identified as relevant, load `tasks/research/sources/SOURCE_WEB.md` alongside `tasks/research/RESEARCH.md`. RESEARCH.md's Data Sources table lists available source files and probes which sources apply. Domains aren't mutually exclusive—a "bug fix that requires refactoring" benefits from both BUG.md and REFACTOR.md. Related domains compound coverage.
 
 **Task file structures are presumed relevant.** Task files contain quality gates, reviewer agents, risks, scenarios, and trade-offs. These are angles you won't think to check on your own — they exist precisely because they're easy to miss. Every table and checklist in applicable task files must be **resolved**: either presented to the user for selection, or explicitly skipped with logged reasoning (e.g., "CODING.md testability gate skipped: task is prompt-only, no code changes"). Silent drops are the failure mode — not over-asking.
+
+**Task file content types.** Four categories, each handled differently:
+- **Resolvable** (tables/checklists: quality gates, risks, scenarios, trade-offs) — resolve via interview, encode as INV/AC or explicitly skip.
+- **Compressed awareness** (bold-labeled one-line domain summaries, not tables/checklists) — informs your probing; no resolution needed.
+- **Process guidance hints** (counter-instinctive practices) — practices LLMs would get wrong without explicit guidance. Two modes: **candidates** (labeled as PG candidates, presented as batch after scenarios, user selects) and **defaults** (`## Defaults` section, included in manifest without probing, user reviews manifest and removes if not applicable). Both become PG-* in the manifest.
+- **Reference files** (`references/*.md`) — detailed lookup data for `/verify` agents. Do not load during the interview.
 
 Probing beyond task files is adaptive — driven by the specific task, user responses, and what you discover. Task files don't cap what to ask; they set a floor.
 
@@ -121,8 +128,6 @@ Read full log before synthesis. Unresolved `- [ ]` items must be addressed first
 **Batch related questions** - Group related questions into a single turn rather than asking one at a time. Batching keeps momentum and reduces round-trips without sacrificing depth. Each batch should cover a coherent topic area—don't mix unrelated concerns in one batch.
 
 **Stop when converged** - Err on more probing. Convergence requires: domain grounded (pre-mortem scenarios are project-specific, not generic), pre-mortem scenarios logged with dispositions (see Pre-Mortem Protocol), edge cases probed, no unresolved `- [ ]` items in the log, and no obvious areas left unexplored. Only then, if very confident further questions would yield nothing new, move to synthesis. Remaining low-impact unknowns that don't warrant further probing are recorded as Known Assumptions in the manifest. User can signal "enough" to override.
-
-**Verify before finalizing** - After writing manifest, invoke manifest-verifier with the manifest and discovery log. If status is CONTINUE, ask the outputted questions, log new answers, update manifest, re-verify. Loop until COMPLETE or user signals "enough".
 
 **Insights become criteria** - Domain grounding findings, outside view findings, pre-mortem risks, non-obvious discoveries → convert to INV-G* or AC-*. Don't include insights that aren't encoded as criteria. This applies equally to task file content — quality gates, risks, and scenario dispositions must be traceable to manifest criteria or they're aspirational, not enforced.
 
@@ -386,6 +391,23 @@ Manifests support amendments during execution:
 - Reference original ID: "INV-G1.1 amends INV-G1"
 - Track in manifest: `## Amendments`
 
+## Verification Loop
+
+After writing the manifest, invoke the manifest-verifier agent. Pass only the file paths — no summary, framing, or commentary:
+
+```
+Invoke the manifest-verifier agent with: "Manifest: /tmp/manifest-{timestamp}.md | Log: /tmp/define-discovery-{timestamp}.md"
+```
+
+The verifier returns **CONTINUE** or **COMPLETE**:
+
+- **CONTINUE**: Present the verifier's questions to the user, log answers to the discovery file, update the manifest, then invoke the verifier again.
+- **COMPLETE**: Proceed to summary for approval.
+
+Repeat until COMPLETE or user signals "enough".
+
+Do not paraphrase, filter, or editorialize the verifier's questions — present them directly. Do not add context, justification, or steering to the invocation. The verifier sees what you may have missed; let it assess independently.
+
 ## Summary for Approval
 
 Before asking for approval, output a scannable summary that enables full manifest review without reading the structured document.
@@ -404,7 +426,14 @@ Before asking for approval, output a scannable summary that enables full manifes
 - Abstracting instead of compressing ("3 deliverables covering auth")
 - Omitting "obvious" things that could still be wrong
 
+**After presenting the summary**, wait for the user's response. User responses mean:
+- **Approval** (e.g., "looks good", "approved") → proceed to Complete
+- **Feedback** (e.g., "also add X", "change Y", "use Z skill in process") → revise the manifest, re-present summary. Do not implement.
+- **Explicit /do invocation** → /define is done; /do takes over
+
 ## Complete
+
+/define ends here. Output the manifest path and stop.
 
 ```text
 Manifest complete: /tmp/manifest-{timestamp}.md

@@ -15,7 +15,10 @@ Standalone utilities for codebase exploration, web research, git operations, and
 **Code maintenance:**
 - `/clean-slop` - Remove AI-generated noise (redundant comments, verbose patterns)
 - `/update-agents-md` - Create or maintain AGENTS.md project instructions
-- `/address-pr-comments` - Triage and fix PR review comments (filters false positives, fixes valid ones)
+
+**Code review:**
+- `/build-review-persona` - Mine GitHub review history to generate a calibrated review-as-me command
+- `/address-pr-comments` - Triage and fix PR review comments with false positive detection
 
 ## Agents
 

@@ -22,8 +22,6 @@ user: "Review the UX for all the form changes in this branch"
 assistant: "I'll use the ux-auditor agent to perform a comprehensive UX audit of the form-related changes."
 <launches ux-auditor agent with focus area: forms>
 </example>
-model: openai/gpt-5.2
-reasoningEffort: xhigh
 tools:
   bash: true
   glob: true

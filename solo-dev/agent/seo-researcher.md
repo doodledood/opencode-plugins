@@ -28,8 +28,6 @@ assistant: "I'll use the seo-researcher agent to research the citation patterns 
 The user needs platform-specific research. The seo-researcher agent will gather current data on how each AI platform selects sources.
 </commentary>
 </example>
-model: openai/gpt-5.2
-reasoningEffort: xhigh
 tools:
   bash: true
   glob: true

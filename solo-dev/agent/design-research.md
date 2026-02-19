@@ -28,8 +28,6 @@ assistant: "I'll use the design-research agent to analyze your customer profile 
 The user needs design research specific to their customer segment. The design-research agent will read the customer profile, research industry patterns, and provide tailored recommendations.
 </commentary>
 </example>
-model: openai/gpt-5.2
-reasoningEffort: xhigh
 tools:
   bash: true
   glob: true

@@ -1,7 +1,7 @@
 {
   "name": "opencode-solo-dev",
-  "version": "1.20.1",
-  "description": "Toolkit for solo developers to build, manage, and grow their business - customer profiling, brand guidelines, design system, SEO strategy, X/Twitter growth strategy, content creation, and more",
+  "version": "1.21.0",
+  "description": "Toolkit for solo developers to build, manage, and grow their business - customer profiling, brand guidelines, design system, SEO strategy, X/Twitter growth strategy, and more",
   "type": "module",
   "homepage": "https://github.com/doodledood/opencode-plugins",
   "repository": {

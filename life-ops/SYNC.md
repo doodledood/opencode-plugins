@@ -4,5 +4,5 @@
 |-------|-------|
 | Source repo | claude-code-plugins |
 | Source path | claude-plugins/life-ops |
-| Last synced commit | 027499d3c4ad66a44a5d408412887f27d2d04c9d |
-| Last synced date | 2026-02-08 |
+| Last synced commit | 589ce24224ce3a218e74c7f9fbc7623161717cb4 |
+| Last synced date | 2026-02-19 |
